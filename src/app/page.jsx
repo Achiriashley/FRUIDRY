@@ -3,13 +3,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { getProductImages } from "@/lib/product-images";
 import { products } from "@/lib/products";
 
-const featuredSlugs = ["golden-mango-slices", "wild-blueberries", "tropical-trail-mix"];
+const featuredSlugs = ["freeze-dried-strawberries", "freeze-dried-mango", "berry-crunch-mix"];
 
 const values = [
   {
-    icon: "☀️",
-    title: "Slow dried",
-    text: "Low-temperature drying keeps the flavour, colour and nutrients in.",
+    icon: "❄️",
+    title: "Freeze-dried",
+    text: "Frozen fresh, then dried under vacuum with no high heat, so the flavour, colour and nutrients stay in.",
   },
   {
     icon: "🌱",
@@ -17,9 +17,9 @@ const values = [
     text: "No added sugar, sulphites or preservatives. Just fruit.",
   },
   {
-    icon: "♻️",
-    title: "Kind packaging",
-    text: "Resealable pouches made from compostable materials.",
+    icon: "✨",
+    title: "Stays crunchy",
+    text: "Light and crunchy, and resealable pouches keep every piece crisp.",
   },
 ];
 
@@ -36,11 +36,11 @@ export default function Home() {
               100% fruit · 0% fuss
             </p>
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-5xl">
-              Dried fruit, <span className="text-brand">naturally</span> delicious.
+              Freeze-dried fruit, <span className="text-brand">naturally</span> delicious.
             </h1>
             <p className="mt-4 max-w-md text-lg text-stone-600">
-              Fruidry dries ripe fruit slowly so you get real flavour in every bite, with nothing
-              added.
+              Fruidry freeze-dries ripe fruit so you get real flavour and a satisfying crunch, with
+              nothing added.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -58,7 +58,7 @@ export default function Home() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 text-5xl sm:text-6xl" aria-hidden>
-            {["🥭", "🍓", "🍍", "🍎", "🫐", "🍌", "🍑", "🍒", "🥥"].map((e) => (
+            {["🍓", "🥭", "🫐", "🍎", "🍍", "🍌", "🍑", "🍒", "🍇"].map((e) => (
               <div
                 key={e}
                 className="flex aspect-square items-center justify-center rounded-2xl bg-white/70 shadow-sm"

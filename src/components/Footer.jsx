@@ -7,7 +7,7 @@ export function Footer() {
         <div>
           <p className="text-lg font-bold text-white">🍊 Fruidry</p>
           <p className="mt-2 text-sm">
-            Naturally dried fruit snacks with nothing added and nothing hidden.
+            Freeze-dried fruit snacks with nothing added and nothing hidden.
           </p>
         </div>
         <div>
@@ -35,7 +35,7 @@ export function Footer() {
           <ul className="mt-2 space-y-1 text-sm">
             <li>No added sugar</li>
             <li>No preservatives</li>
-            <li>Compostable packaging</li>
+            <li>Freeze-dried, never fried</li>
           </ul>
         </div>
       </div>

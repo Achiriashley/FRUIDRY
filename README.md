@@ -1,6 +1,6 @@
 # Fruidry
 
-The storefront for Fruidry, a brand of naturally dried fruit snacks. It is built with
+The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built with
 [Next.js](https://nextjs.org) (App Router), React (JavaScript/JSX) and Tailwind CSS.
 
 ## Features
@@ -47,8 +47,8 @@ Put a photo for each product in `public/products/`, named after the product's
 `slug` in `src/lib/products.js`:
 
 ```
-public/products/golden-mango-slices.jpg
-public/products/wild-blueberries.webp
+public/products/freeze-dried-mango.jpg
+public/products/freeze-dried-strawberries.webp
 ```
 
 Supported formats are `.jpg`, `.jpeg`, `.png`, `.webp` and `.avif`. Square images of

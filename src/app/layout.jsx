@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "Fruidry | Naturally dried fruit",
+    default: "Fruidry | Freeze-dried fruit",
     template: "%s | Fruidry",
   },
   description:
-    "Fruidry makes naturally dried fruit snacks with no added sugar and no preservatives.",
+    "Fruidry makes crunchy freeze-dried fruit snacks with no added sugar and no preservatives.",
 };
 
 export default function RootLayout({ children }) {

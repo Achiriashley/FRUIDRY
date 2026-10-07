@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Our story",
-  description: "How Fruidry started and how we make our dried fruit.",
+  description: "How Fruidry started and how we make our freeze-dried fruit.",
 };
 
 const steps = [
@@ -18,13 +18,13 @@ const steps = [
   },
   {
     n: "03",
-    title: "Dry it slowly",
-    text: "Low, gentle heat for up to 24 hours locks in flavour and nutrients.",
+    title: "Freeze and dry",
+    text: "We flash-freeze the fruit, then a vacuum turns the ice straight to vapour. No high heat, so flavour, colour and nutrients stay in.",
   },
   {
     n: "04",
     title: "Pack it fresh",
-    text: "Sealed into compostable pouches the same day it comes out of the dryer.",
+    text: "Sealed into airtight, resealable pouches the same day, so every piece stays crunchy.",
   },
 ];
 
@@ -34,12 +34,14 @@ export default function AboutPage() {
       <h1 className="text-4xl font-extrabold tracking-tight">Our story</h1>
       <div className="mt-6 space-y-4 text-lg text-stone-700">
         <p>
-          Fruidry started with a simple frustration: most dried fruit on the shelf was coated in
-          sugar, oil or preservatives. We wanted snacks that tasted like the fruit they came from.
+          Fruidry started with a simple frustration: most dried fruit on the shelf was chewy, sticky
+          or coated in sugar, oil or preservatives. We wanted snacks that tasted like the fruit they
+          came from.
         </p>
         <p>
-          So we began drying fruit ourselves, slowly and at low temperatures. The result is chewy
-          mango, crisp apple and jammy berries, with nothing added.
+          So we turned to freeze-drying. Fruit is frozen at peak ripeness and the water is gently
+          removed under vacuum. The result is crunchy strawberries, golden mango and crisp apple
+          that taste like fresh fruit, with nothing added.
         </p>
       </div>
 
