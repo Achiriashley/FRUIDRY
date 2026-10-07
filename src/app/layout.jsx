@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/components/CartProvider";
 import { Footer } from "@/components/Footer";
@@ -15,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: {
     default: "Fruidry | Naturally dried fruit",
     template: "%s | Fruidry",
@@ -24,12 +23,9 @@ export const metadata: Metadata = {
     "Fruidry makes naturally dried fruit snacks with no added sugar and no preservatives.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <CartProvider>
           <Header />

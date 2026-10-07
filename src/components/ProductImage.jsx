@@ -1,5 +1,4 @@
 import Image from "next/image";
-import type { Product } from "@/lib/products";
 
 export function ProductImage({
   product,
@@ -8,13 +7,6 @@ export function ProductImage({
   emojiClassName = "text-7xl",
   className = "",
   preload = false,
-}: {
-  product: Product;
-  src?: string;
-  sizes: string;
-  emojiClassName?: string;
-  className?: string;
-  preload?: boolean;
 }) {
   return (
     <div

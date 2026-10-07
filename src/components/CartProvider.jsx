@@ -1,40 +1,20 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { getProduct, type Product } from "@/lib/products";
-
-type CartLine = { slug: string; quantity: number };
-type CartItem = CartLine & { product: Product };
-
-type CartContextValue = {
-  items: CartItem[];
-  count: number;
-  subtotal: number;
-  addItem: (slug: string, quantity?: number) => void;
-  updateQuantity: (slug: string, quantity: number) => void;
-  removeItem: (slug: string) => void;
-  clear: () => void;
-};
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getProduct } from "@/lib/products";
 
 const STORAGE_KEY = "fruidry-cart";
 
-const CartContext = createContext<CartContextValue | null>(null);
+const CartContext = createContext(null);
 
-function readStoredCart(): CartLine[] {
+function readStoredCart() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (line): line is CartLine =>
+      (line) =>
         typeof line?.slug === "string" &&
         typeof line?.quantity === "number" &&
         line.quantity > 0 &&
@@ -45,8 +25,8 @@ function readStoredCart(): CartLine[] {
   }
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>([]);
+export function CartProvider({ children }) {
+  const [lines, setLines] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -65,19 +45,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [lines, loaded]);
 
-  const addItem = useCallback((slug: string, quantity = 1) => {
+  const addItem = useCallback((slug, quantity = 1) => {
     setLines((prev) => {
       const existing = prev.find((l) => l.slug === slug);
       if (existing) {
-        return prev.map((l) =>
-          l.slug === slug ? { ...l, quantity: l.quantity + quantity } : l,
-        );
+        return prev.map((l) => (l.slug === slug ? { ...l, quantity: l.quantity + quantity } : l));
       }
       return [...prev, { slug, quantity }];
     });
   }, []);
 
-  const updateQuantity = useCallback((slug: string, quantity: number) => {
+  const updateQuantity = useCallback((slug, quantity) => {
     setLines((prev) =>
       quantity <= 0
         ? prev.filter((l) => l.slug !== slug)
@@ -85,13 +63,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const removeItem = useCallback((slug: string) => {
+  const removeItem = useCallback((slug) => {
     setLines((prev) => prev.filter((l) => l.slug !== slug));
   }, []);
 
   const clear = useCallback(() => setLines([]), []);
 
-  const value = useMemo<CartContextValue>(() => {
+  const value = useMemo(() => {
     const items = lines.flatMap((line) => {
       const product = getProduct(line.slug);
       return product ? [{ ...line, product }] : [];
@@ -110,7 +88,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-export function useCart(): CartContextValue {
+export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
   return ctx;

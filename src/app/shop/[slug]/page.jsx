@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/AddToCartButton";
@@ -11,16 +10,14 @@ export function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/shop/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }) {
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) return { title: "Product not found" };
   return { title: product.name, description: product.tagline };
 }
 
-export default async function ProductPage({ params }: PageProps<"/shop/[slug]">) {
+export default async function ProductPage({ params }) {
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) notFound();
@@ -47,7 +44,9 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
           preload
         />
         <div className="flex flex-col justify-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-brand">{categoryLabel}</p>
+          <p className="text-sm font-semibold uppercase tracking-wider text-brand">
+            {categoryLabel}
+          </p>
           <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-lg text-stone-600">{product.tagline}</p>
           <p className="mt-4 text-3xl font-bold">
@@ -57,7 +56,10 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
           <p className="mt-6 text-stone-700">{product.description}</p>
           <ul className="mt-6 flex flex-wrap gap-2">
             {product.highlights.map((h) => (
-              <li key={h} className="rounded-full bg-white px-3 py-1 text-sm text-stone-700 shadow-sm">
+              <li
+                key={h}
+                className="rounded-full bg-white px-3 py-1 text-sm text-stone-700 shadow-sm"
+              >
                 ✓ {h}
               </li>
             ))}

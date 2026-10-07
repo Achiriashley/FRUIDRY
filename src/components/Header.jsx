@@ -11,7 +11,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-stone-200 bg-cream/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand"
+        >
           <span aria-hidden>🍊</span> Fruidry
         </Link>
         <nav className="flex items-center gap-1 sm:gap-4">

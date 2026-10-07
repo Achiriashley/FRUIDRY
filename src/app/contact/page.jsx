@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
 import { ContactForm } from "./ContactForm";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Contact",
   description: "Get in touch with the Fruidry team.",
 };
@@ -12,8 +11,8 @@ export default function ContactPage() {
       <div>
         <h1 className="text-4xl font-extrabold tracking-tight">Say hello</h1>
         <p className="mt-4 text-lg text-stone-600">
-          Questions about an order, wholesale or our fruit? Send us a message
-          and we&apos;ll reply soon.
+          Questions about an order, wholesale or our fruit? Send us a message and we&apos;ll reply
+          soon.
         </p>
         <ul className="mt-8 space-y-3 text-stone-700">
           <li>📧 hello@fruidry.example</li>

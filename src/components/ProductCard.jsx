@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { formatPrice, type Product } from "@/lib/products";
+import { formatPrice } from "@/lib/products";
 import { AddToCartButton } from "./AddToCartButton";
 import { ProductImage } from "./ProductImage";
 
-export function ProductCard({ product, image }: { product: Product; image?: string }) {
+export function ProductCard({ product, image }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md">
       <Link href={`/shop/${product.slug}`} className="block" tabIndex={-1} aria-hidden>

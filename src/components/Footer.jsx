@@ -13,9 +13,21 @@ export function Footer() {
         <div>
           <p className="font-semibold text-white">Explore</p>
           <ul className="mt-2 space-y-1 text-sm">
-            <li><Link href="/shop" className="hover:text-white">Shop all</Link></li>
-            <li><Link href="/about" className="hover:text-white">Our story</Link></li>
-            <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+            <li>
+              <Link href="/shop" className="hover:text-white">
+                Shop all
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" className="hover:text-white">
+                Our story
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-white">
+                Contact
+              </Link>
+            </li>
           </ul>
         </div>
         <div>

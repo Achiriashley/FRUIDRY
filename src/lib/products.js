@@ -1,26 +1,11 @@
-export type Category = "classics" | "tropical" | "berries" | "mixes";
-
-export type Product = {
-  slug: string;
-  name: string;
-  category: Category;
-  price: number;
-  weight: string;
-  emoji: string;
-  color: string;
-  tagline: string;
-  description: string;
-  highlights: string[];
-};
-
-export const categories: { id: Category; label: string }[] = [
+export const categories = [
   { id: "classics", label: "Classics" },
   { id: "tropical", label: "Tropical" },
   { id: "berries", label: "Berries" },
   { id: "mixes", label: "Mixes" },
 ];
 
-export const products: Product[] = [
+export const products = [
   {
     slug: "sun-dried-apricots",
     name: "Sun-Dried Apricots",
@@ -153,11 +138,11 @@ export const products: Product[] = [
   },
 ];
 
-export function getProduct(slug: string): Product | undefined {
+export function getProduct(slug) {
   return products.find((p) => p.slug === slug);
 }
 
-export function formatPrice(value: number): string {
+export function formatPrice(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

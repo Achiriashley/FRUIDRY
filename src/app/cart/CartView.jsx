@@ -4,25 +4,27 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { ProductImage } from "@/components/ProductImage";
-import type { ProductImages } from "@/lib/product-images";
 import { formatPrice } from "@/lib/products";
 
 const FREE_SHIPPING_THRESHOLD = 35;
 const SHIPPING_FEE = 4.99;
 
-export function CartView({ images }: { images: ProductImages }) {
+export function CartView({ images }) {
   const { items, subtotal, updateQuantity, removeItem, clear } = useCart();
   const [ordered, setOrdered] = useState(false);
 
   if (ordered) {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
-        <p className="text-5xl" aria-hidden>🎉</p>
-        <h2 className="mt-4 text-2xl font-bold">Thanks for your order!</h2>
-        <p className="mt-2 text-stone-600">
-          This is a demo checkout, so no payment was taken.
+        <p className="text-5xl" aria-hidden>
+          🎉
         </p>
-        <Link href="/shop" className="mt-6 inline-block rounded-full bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark">
+        <h2 className="mt-4 text-2xl font-bold">Thanks for your order!</h2>
+        <p className="mt-2 text-stone-600">This is a demo checkout, so no payment was taken.</p>
+        <Link
+          href="/shop"
+          className="mt-6 inline-block rounded-full bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark"
+        >
           Keep shopping
         </Link>
       </div>
@@ -32,10 +34,15 @@ export function CartView({ images }: { images: ProductImages }) {
   if (items.length === 0) {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
-        <p className="text-5xl" aria-hidden>🧺</p>
+        <p className="text-5xl" aria-hidden>
+          🧺
+        </p>
         <h2 className="mt-4 text-2xl font-bold">Your cart is empty</h2>
         <p className="mt-2 text-stone-600">Find a snack you love in the shop.</p>
-        <Link href="/shop" className="mt-6 inline-block rounded-full bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark">
+        <Link
+          href="/shop"
+          className="mt-6 inline-block rounded-full bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark"
+        >
           Browse the shop
         </Link>
       </div>

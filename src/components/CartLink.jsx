@@ -13,9 +13,7 @@ export function CartLink() {
       <span aria-hidden>🛒</span>
       <span>Cart</span>
       {count > 0 && (
-        <span className="rounded-full bg-white px-2 text-xs font-bold text-brand">
-          {count}
-        </span>
+        <span className="rounded-full bg-white px-2 text-xs font-bold text-brand">{count}</span>
       )}
     </Link>
   );

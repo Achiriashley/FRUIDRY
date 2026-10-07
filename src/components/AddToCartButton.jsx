@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useCart } from "./CartProvider";
 
-export function AddToCartButton({
-  slug,
-  withQuantity = false,
-}: {
-  slug: string;
-  withQuantity?: boolean;
-}) {
+export function AddToCartButton({ slug, withQuantity = false }) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);

@@ -1,7 +1,7 @@
 # Fruidry
 
 The storefront for Fruidry, a brand of naturally dried fruit snacks. It is built with
-[Next.js](https://nextjs.org) (App Router), React, TypeScript and Tailwind CSS.
+[Next.js](https://nextjs.org) (App Router), React (JavaScript/JSX) and Tailwind CSS.
 
 ## Features
 
@@ -36,15 +36,15 @@ Open [http://localhost:3000](http://localhost:3000).
 src/
   app/              Routes (home, shop, product, cart, about, contact)
   components/       Header, footer, product card, cart provider, etc.
-  lib/products.ts   Product catalogue data and helpers
+  lib/products.js   Product catalogue data and helpers
 ```
 
-To add or edit products, change `src/lib/products.ts`.
+To add or edit products, change `src/lib/products.js`.
 
 ## Product photos
 
 Put a photo for each product in `public/products/`, named after the product's
-`slug` in `src/lib/products.ts`:
+`slug` in `src/lib/products.js`:
 
 ```
 public/products/golden-mango-slices.jpg

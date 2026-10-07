@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { ProductImages } from "@/lib/product-images";
-import { categories, products, type Category } from "@/lib/products";
+import { categories, products } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
 
-export function ShopGrid({ images }: { images: ProductImages }) {
-  const [active, setActive] = useState<Category | "all">("all");
+export function ShopGrid({ images }) {
+  const [active, setActive] = useState("all");
   const visible = active === "all" ? products : products.filter((p) => p.category === active);
 
-  const filters = [{ id: "all" as const, label: "All" }, ...categories];
+  const filters = [{ id: "all", label: "All" }, ...categories];
 
   return (
     <div>

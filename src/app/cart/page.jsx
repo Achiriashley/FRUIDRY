@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { getProductImages } from "@/lib/product-images";
 import { CartView } from "./CartView";
 
-export const metadata: Metadata = { title: "Your cart" };
+export const metadata = { title: "Your cart" };
 
 export default function CartPage() {
   return (
