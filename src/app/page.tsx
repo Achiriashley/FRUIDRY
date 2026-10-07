@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
+import { getProductImages } from "@/lib/product-images";
 import { products } from "@/lib/products";
 
 const featuredSlugs = ["golden-mango-slices", "wild-blueberries", "tropical-trail-mix"];
@@ -11,6 +12,7 @@ const values = [
 ];
 
 export default function Home() {
+  const images = getProductImages();
   const featured = products.filter((p) => featuredSlugs.includes(p.slug));
 
   return (
@@ -68,7 +70,7 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.slug} product={product} image={images[product.slug]} />
           ))}
         </div>
       </section>

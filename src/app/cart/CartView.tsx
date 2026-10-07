@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import { ProductImage } from "@/components/ProductImage";
+import type { ProductImages } from "@/lib/product-images";
 import { formatPrice } from "@/lib/products";
 
 const FREE_SHIPPING_THRESHOLD = 35;
 const SHIPPING_FEE = 4.99;
 
-export function CartView() {
+export function CartView({ images }: { images: ProductImages }) {
   const { items, subtotal, updateQuantity, removeItem, clear } = useCart();
   const [ordered, setOrdered] = useState(false);
 
@@ -49,12 +51,13 @@ export function CartView() {
       <ul className="divide-y divide-stone-200 rounded-2xl bg-white shadow-sm">
         {items.map(({ product, quantity }) => (
           <li key={product.slug} className="flex items-center gap-4 p-4">
-            <div
-              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${product.color} text-3xl`}
-              aria-hidden
-            >
-              {product.emoji}
-            </div>
+            <ProductImage
+              product={product}
+              src={images[product.slug]}
+              sizes="64px"
+              emojiClassName="text-3xl"
+              className="h-16 w-16 shrink-0 rounded-xl"
+            />
             <div className="min-w-0 flex-1">
               <Link href={`/shop/${product.slug}`} className="font-semibold hover:text-brand">
                 {product.name}

@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { formatPrice, type Product } from "@/lib/products";
 import { AddToCartButton } from "./AddToCartButton";
+import { ProductImage } from "./ProductImage";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, image }: { product: Product; image?: string }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md">
-      <Link href={`/shop/${product.slug}`} className="block">
-        <div
-          className={`flex aspect-square items-center justify-center bg-gradient-to-br ${product.color} text-7xl transition group-hover:scale-[1.02]`}
-          aria-hidden
-        >
-          {product.emoji}
-        </div>
+      <Link href={`/shop/${product.slug}`} className="block" tabIndex={-1} aria-hidden>
+        <ProductImage
+          product={product}
+          src={image}
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="aspect-square transition group-hover:scale-[1.02]"
+        />
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">

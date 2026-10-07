@@ -40,3 +40,20 @@ src/
 ```
 
 To add or edit products, change `src/lib/products.ts`.
+
+## Product photos
+
+Put a photo for each product in `public/products/`, named after the product's
+`slug` in `src/lib/products.ts`:
+
+```
+public/products/golden-mango-slices.jpg
+public/products/wild-blueberries.webp
+```
+
+Supported formats are `.jpg`, `.jpeg`, `.png`, `.webp` and `.avif`. Square images of
+about 800×800 px or larger look best, because they are cropped to a square. Products
+without a photo show their emoji tile instead.
+
+`npm run dev` picks up new photos when you reload the page. For production, run
+`npm run build` again after adding photos.

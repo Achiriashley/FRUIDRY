@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductImage } from "@/components/ProductImage";
+import { getProductImages } from "@/lib/product-images";
 import { categories, formatPrice, getProduct, products } from "@/lib/products";
 
 export function generateStaticParams() {
@@ -23,6 +25,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
   const product = getProduct(slug);
   if (!product) notFound();
 
+  const images = getProductImages();
   const categoryLabel = categories.find((c) => c.id === product.category)?.label;
   const related = products
     .filter((p) => p.category === product.category && p.slug !== product.slug)
@@ -35,12 +38,14 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
       </Link>
 
       <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <div
-          className={`flex aspect-square items-center justify-center rounded-3xl bg-gradient-to-br ${product.color} text-[9rem]`}
-          aria-hidden
-        >
-          {product.emoji}
-        </div>
+        <ProductImage
+          product={product}
+          src={images[product.slug]}
+          sizes="(min-width: 768px) 50vw, 100vw"
+          emojiClassName="text-[9rem]"
+          className="aspect-square rounded-3xl"
+          preload
+        />
         <div className="flex flex-col justify-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-brand">{categoryLabel}</p>
           <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{product.name}</h1>
@@ -68,7 +73,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
           <h2 className="mb-6 text-2xl font-bold">You might also like</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((p) => (
-              <ProductCard key={p.slug} product={p} />
+              <ProductCard key={p.slug} product={p} image={images[p.slug]} />
             ))}
           </div>
         </section>
