@@ -7,7 +7,7 @@ const EXTENSIONS = [".webp", ".avif", ".jpg", ".jpeg", ".png"];
 
 /**
  * Finds a photo for each product in public/products, named after the
- * product slug (e.g. freeze-dried-mango.jpg). Products without a photo
+ * product slug (e.g. mixed-fruit-pack.jpg). Products without a photo
  * are left out and fall back to their emoji tile.
  */
 export function getProductImages() {

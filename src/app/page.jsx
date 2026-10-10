@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductImage } from "@/components/ProductImage";
 import { getProductImages } from "@/lib/product-images";
-import { products } from "@/lib/products";
-
-const featuredSlugs = ["freeze-dried-strawberries", "freeze-dried-mango", "berry-crunch-mix"];
+import { formatPrice, products } from "@/lib/products";
 
 const values = [
   {
@@ -25,7 +25,6 @@ const values = [
 
 export default function Home() {
   const images = getProductImages();
-  const featured = products.filter((p) => featuredSlugs.includes(p.slug));
 
   return (
     <>
@@ -85,18 +84,64 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <h2 className="text-3xl font-bold tracking-tight">Customer favourites</h2>
-          <Link href="/shop" className="text-sm font-semibold text-brand hover:underline">
-            View all →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((product) => (
-            <ProductCard key={product.slug} product={product} image={images[product.slug]} />
-          ))}
-        </div>
+        {products.length === 1 ? (
+          <FeaturedProduct product={products[0]} image={images[products[0].slug]} />
+        ) : (
+          <>
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <h2 className="text-3xl font-bold tracking-tight">Our range</h2>
+              <Link href="/shop" className="text-sm font-semibold text-brand hover:underline">
+                View all →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.slug} product={product} image={images[product.slug]} />
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </>
+  );
+}
+
+function FeaturedProduct({ product, image }) {
+  return (
+    <div className="grid items-center gap-10 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-2 md:p-10">
+      <ProductImage
+        product={product}
+        src={image}
+        sizes="(min-width: 768px) 50vw, 100vw"
+        emojiClassName="text-[8rem]"
+        className="aspect-square rounded-2xl"
+      />
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-wider text-brand">Our pack</p>
+        <h2 className="mt-1 text-3xl font-extrabold tracking-tight">{product.name}</h2>
+        <p className="mt-2 text-lg text-stone-600">{product.tagline}</p>
+        <p className="mt-4 text-3xl font-bold">
+          {formatPrice(product.price)}{" "}
+          <span className="text-base font-normal text-stone-500">/ {product.weight}</span>
+        </p>
+        <p className="mt-4 text-stone-700">{product.description}</p>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {product.highlights.map((h) => (
+            <li key={h} className="rounded-full bg-orange-50 px-3 py-1 text-sm text-stone-700">
+              ✓ {h}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <AddToCartButton slug={product.slug} withQuantity />
+          <Link
+            href={`/shop/${product.slug}`}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            More details →
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
