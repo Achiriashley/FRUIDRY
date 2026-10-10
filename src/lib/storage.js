@@ -9,16 +9,25 @@ import path from "node:path";
 export function supabaseConfig() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (key?.startsWith("sb_publishable_")) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is set to a publishable key. Use the secret key " +
+        "(sb_secret_...) or the legacy service_role key from Supabase → Project Settings → API Keys.",
+    );
+  }
   return url && key ? { url: url.replace(/\/$/, ""), key } : null;
 }
 
 export async function supabaseRequest(config, table, query, init = {}) {
+  // New secret keys (sb_secret_...) go only in the apikey header. Legacy
+  // service_role keys are JWTs ("eyJ...") and also need the Authorization header.
+  const isLegacyJwt = config.key.startsWith("eyJ");
   const res = await fetch(`${config.url}/rest/v1/${table}${query}`, {
     ...init,
     cache: "no-store",
     headers: {
       apikey: config.key,
-      Authorization: `Bearer ${config.key}`,
+      ...(isLegacyJwt ? { Authorization: `Bearer ${config.key}` } : {}),
       "Content-Type": "application/json",
       ...init.headers,
     },
