@@ -1,8 +1,9 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { endAdminSession, isAdmin, passwordMatches, startAdminSession } from "@/lib/admin-auth";
-import { ORDER_STATUS, getOrder, newReceiptNumber, saveOrder } from "@/lib/orders";
+import { PRODUCTS_TAG, saveProductEdits } from "@/lib/catalog";
+import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
 
 export async function login(_prev, formData) {
   if (!passwordMatches(String(formData.get("password") ?? ""))) {
@@ -29,7 +30,7 @@ async function updateOrder(formData, change) {
 
 export async function confirmPayment(formData) {
   await updateOrder(formData, (order) =>
-    order.status === ORDER_STATUS.confirmed
+    isPaid(order)
       ? null
       : {
           ...order,
@@ -47,7 +48,7 @@ export async function rejectPayment(formData) {
       .slice(0, 300) ||
     "We could not find this payment. Please check the transaction ID and try again.";
   await updateOrder(formData, (order) =>
-    order.status === ORDER_STATUS.confirmed
+    isPaid(order)
       ? null
       : {
           ...order,
@@ -55,4 +56,51 @@ export async function rejectPayment(formData) {
           rejection: { reason, rejectedAt: new Date().toISOString() },
         },
   );
+}
+
+export async function markDelivered(formData) {
+  await updateOrder(formData, (order) =>
+    order.status !== ORDER_STATUS.confirmed
+      ? null
+      : {
+          ...order,
+          status: ORDER_STATUS.delivered,
+          delivery: { deliveredAt: new Date().toISOString() },
+        },
+  );
+}
+
+const LIMITS = { name: 80, tagline: 120, description: 1000, weight: 30 };
+
+export async function saveProduct(_prev, formData) {
+  if (!(await isAdmin())) return { status: "error", errors: { form: "Please sign in again." } };
+
+  const text = (field) => String(formData.get(field) ?? "").trim();
+  const fields = {
+    name: text("name"),
+    tagline: text("tagline"),
+    description: text("description"),
+    weight: text("weight"),
+    price: Number(text("price")),
+    highlights: text("highlights")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 8),
+    inStock: formData.get("inStock") === "on",
+  };
+
+  const errors = {};
+  for (const [field, max] of Object.entries(LIMITS)) {
+    if (!fields[field]) errors[field] = "This can't be empty.";
+    else if (fields[field].length > max) errors[field] = `Keep this under ${max} characters.`;
+  }
+  if (!Number.isInteger(fields.price) || fields.price < 1) {
+    errors.price = "Enter a whole number of FCFA, e.g. 2500.";
+  }
+  if (Object.keys(errors).length > 0) return { status: "error", errors };
+
+  await saveProductEdits(text("slug"), fields);
+  updateTag(PRODUCTS_TAG);
+  return { status: "success" };
 }

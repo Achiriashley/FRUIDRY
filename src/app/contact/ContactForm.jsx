@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { submitContact } from "./actions";
+import { submitKeepingInput } from "@/lib/use-keep-form";
 
 const initialState = { status: "idle" };
 
@@ -23,7 +24,11 @@ export function ContactForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm" noValidate>
+    <form
+      onSubmit={submitKeepingInput(formAction)}
+      className="space-y-4 rounded-2xl bg-white p-6 shadow-sm"
+      noValidate
+    >
       <div>
         <label htmlFor="name" className="text-sm font-medium">
           Name

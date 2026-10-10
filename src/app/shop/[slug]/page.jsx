@@ -1,26 +1,38 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImage } from "@/components/ProductImage";
 import { getProductImages } from "@/lib/product-images";
-import { categories, formatPrice, getProduct, products } from "@/lib/products";
+import { getProduct, getProducts } from "@/lib/catalog";
+import { categories, formatPrice } from "@/lib/products";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const products = await getProducts();
   return products.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) return { title: "Product not found" };
   return { title: product.name, description: product.tagline };
 }
 
-export default async function ProductPage({ params }) {
+export default function ProductPage({ params }) {
+  return (
+    <Suspense fallback={<div className="mx-auto min-h-[60vh] max-w-6xl px-4 py-12" />}>
+      <ProductDetails params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductDetails({ params }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
+  const products = await getProducts();
 
   const images = getProductImages();
   const categoryLabel = categories.find((c) => c.id === product.category)?.label;
@@ -65,7 +77,7 @@ export default async function ProductPage({ params }) {
             ))}
           </ul>
           <div className="mt-8">
-            <AddToCartButton slug={product.slug} withQuantity />
+            <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
           </div>
         </div>
       </div>

@@ -3,7 +3,8 @@ import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImage } from "@/components/ProductImage";
 import { getProductImages } from "@/lib/product-images";
-import { formatPrice, products } from "@/lib/products";
+import { getProducts } from "@/lib/catalog";
+import { formatPrice } from "@/lib/products";
 
 const values = [
   {
@@ -23,7 +24,8 @@ const values = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts();
   const images = getProductImages();
 
   return (
@@ -133,7 +135,7 @@ function FeaturedProduct({ product, image }) {
           ))}
         </ul>
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <AddToCartButton slug={product.slug} withQuantity />
+          <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
           <Link
             href={`/shop/${product.slug}`}
             className="text-sm font-semibold text-brand hover:underline"

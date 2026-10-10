@@ -12,7 +12,9 @@ export function Receipt({ order }) {
         </p>
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight">Payment confirmed</h1>
         <p className="mt-1 text-stone-600">
-          Thank you, {order.customer.name}! We&apos;ll call you to arrange delivery.
+          {order.delivery
+            ? `Thank you, ${order.customer.name}! Your order was delivered on ${formatOrderDate(order.delivery.deliveredAt)}.`
+            : `Thank you, ${order.customer.name}! We'll call you to arrange delivery.`}
         </p>
       </div>
 

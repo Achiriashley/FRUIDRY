@@ -1,13 +1,13 @@
 "use server";
 
 import { ORDER_STATUS, createOrder, newOrderId, newOrderReference } from "@/lib/orders";
-import { getProduct } from "@/lib/products";
+import { getProducts } from "@/lib/catalog";
 import { normalizeCameroonPhone } from "@/lib/shop-config";
 
 const MAX_QUANTITY = 50;
 
 // Rebuild the order lines from the catalogue so prices always come from the server.
-function parseItems(raw) {
+function parseItems(raw, products) {
   let lines;
   try {
     lines = JSON.parse(String(raw ?? "[]"));
@@ -18,7 +18,7 @@ function parseItems(raw) {
 
   const items = [];
   for (const line of lines) {
-    const product = getProduct(line?.slug);
+    const product = products.find((p) => p.slug === line?.slug);
     const quantity = Number(line?.quantity);
     if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
       return null;
@@ -35,13 +35,17 @@ export async function placeOrder(_prev, formData) {
   const notes = String(formData.get("notes") ?? "")
     .trim()
     .slice(0, 500);
-  const items = parseItems(formData.get("items"));
+  const products = await getProducts();
+  const items = parseItems(formData.get("items"), products);
+  const soldOut = items?.find((item) => !products.find((p) => p.slug === item.slug)?.inStock);
 
   const errors = {};
   if (!name) errors.name = "Please enter your name.";
   if (!phone) errors.phone = "Enter a Cameroon mobile number, e.g. 6XX XX XX XX.";
   if (!address) errors.address = "Tell us where to deliver your order.";
   if (!items) errors.form = "Your cart is empty or out of date. Please refresh the page.";
+  else if (soldOut)
+    errors.form = `Sorry, ${soldOut.name} is sold out. Remove it from your cart to continue.`;
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
   const order = {

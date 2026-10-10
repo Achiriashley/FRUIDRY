@@ -7,6 +7,7 @@ import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/products";
 import { shopConfig } from "@/lib/shop-config";
 import { placeOrder } from "./actions";
+import { submitKeepingInput } from "@/lib/use-keep-form";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200";
@@ -49,7 +50,7 @@ export function CheckoutForm() {
 
   return (
     <form
-      action={formAction}
+      onSubmit={submitKeepingInput(formAction)}
       noValidate
       className="grid items-start gap-8 md:grid-cols-[1fr_18rem]"
     >

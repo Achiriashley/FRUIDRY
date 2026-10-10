@@ -1,13 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getProduct } from "@/lib/products";
 
 const STORAGE_KEY = "fruidry-cart";
 
 const CartContext = createContext(null);
 
-function readStoredCart() {
+function readStoredCart(knownSlugs) {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -18,23 +17,23 @@ function readStoredCart() {
         typeof line?.slug === "string" &&
         typeof line?.quantity === "number" &&
         line.quantity > 0 &&
-        getProduct(line.slug) !== undefined,
+        knownSlugs.has(line.slug),
     );
   } catch {
     return [];
   }
 }
 
-export function CartProvider({ children }) {
+export function CartProvider({ products, children }) {
   const [lines, setLines] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     // Hydrate from localStorage after mount so server and client markup match.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLines(readStoredCart());
+    setLines(readStoredCart(new Set(products.map((p) => p.slug))));
     setLoaded(true);
-  }, []);
+  }, [products]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -71,7 +70,7 @@ export function CartProvider({ children }) {
 
   const value = useMemo(() => {
     const items = lines.flatMap((line) => {
-      const product = getProduct(line.slug);
+      const product = products.find((p) => p.slug === line.slug);
       return product ? [{ ...line, product }] : [];
     });
     return {
@@ -83,7 +82,7 @@ export function CartProvider({ children }) {
       removeItem,
       clear,
     };
-  }, [lines, addItem, updateQuantity, removeItem, clear]);
+  }, [lines, products, addItem, updateQuantity, removeItem, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

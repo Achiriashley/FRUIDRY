@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { submitPayment } from "./actions";
+import { submitKeepingInput } from "@/lib/use-keep-form";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200";
@@ -10,7 +11,7 @@ export function PaymentForm({ orderId, defaultPhone }) {
   const [state, formAction, pending] = useActionState(submitPayment, { status: "idle" });
 
   return (
-    <form action={formAction} noValidate className="mt-4 space-y-4">
+    <form onSubmit={submitKeepingInput(formAction)} noValidate className="mt-4 space-y-4">
       <input type="hidden" name="orderId" value={orderId} />
       <div>
         <label htmlFor="transactionId" className="text-sm font-medium">

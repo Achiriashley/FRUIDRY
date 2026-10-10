@@ -1,6 +1,8 @@
 export const categories = [{ id: "mixes", label: "Mixes" }];
 
-export const products = [
+// Starting details for each product. Price, text and stock can be changed later
+// from the admin panel (/admin/products), which saves its edits on top of these.
+export const defaultProducts = [
   {
     slug: "mixed-fruit-pack",
     name: "Mixed Fruit Pack",
@@ -13,12 +15,9 @@ export const products = [
     description:
       "Our signature pack: a colourful mix of freeze-dried fruit, frozen at peak ripeness and dried until light and crunchy. Eat it straight from the pouch, or sprinkle it on yoghurt, cereal or porridge.",
     highlights: ["100% fruit", "No added sugar", "No preservatives", "Light & crunchy"],
+    inStock: true,
   },
 ];
-
-export function getProduct(slug) {
-  return products.find((p) => p.slug === slug);
-}
 
 export function formatPrice(value) {
   return new Intl.NumberFormat("fr-CM", {

@@ -24,7 +24,7 @@ export function ProductCard({ product, image }) {
         <p className="text-sm text-stone-600">{product.tagline}</p>
         <p className="text-xs text-stone-500">{product.weight}</p>
         <div className="mt-auto pt-2">
-          <AddToCartButton slug={product.slug} />
+          <AddToCartButton slug={product.slug} inStock={product.inStock} size="sm" />
         </div>
       </div>
     </article>

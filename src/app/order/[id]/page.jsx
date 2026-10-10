@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ORDER_STATUS, formatOrderDate, getOrder } from "@/lib/orders";
+import { ORDER_STATUS, formatOrderDate, getOrder, isPaid } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { shopConfig, ussdCode, ussdHref } from "@/lib/shop-config";
 import { AutoRefresh } from "@/components/AutoRefresh";
@@ -24,7 +24,7 @@ async function OrderDetails({ params }) {
   const order = await getOrder(id);
   if (!order) notFound();
 
-  if (order.status === ORDER_STATUS.confirmed) {
+  if (isPaid(order)) {
     return <Receipt order={order} />;
   }
 

@@ -1,189 +1,129 @@
-import { headers } from "next/headers";
 import Link from "next/link";
-import { connection } from "next/server";
 import { Suspense } from "react";
-import { AutoRefresh } from "@/components/AutoRefresh";
-import { adminPasswordConfigured, isAdmin } from "@/lib/admin-auth";
-import { ORDER_STATUS, formatOrderDate, listOrders } from "@/lib/orders";
+import { ORDER_STATUS, isPaid, listOrders } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
-import { confirmPayment, logout, rejectPayment } from "./actions";
-import { LoginForm } from "./LoginForm";
+import { getSiteUrl } from "@/lib/site-url";
+import { AdminPage, AdminShell } from "./AdminShell";
+import { OrderCard } from "./OrderCard";
 
-export const metadata = { title: "Orders admin", robots: { index: false } };
+export const metadata = { title: "Admin dashboard", robots: { index: false } };
 
-const SECTIONS = [
-  { status: ORDER_STATUS.paymentSubmitted, title: "Payment to check", empty: "Nothing to check." },
-  { status: ORDER_STATUS.awaitingPayment, title: "Waiting for payment", empty: "None." },
-  { status: ORDER_STATUS.rejected, title: "Payment rejected", empty: "None." },
-  { status: ORDER_STATUS.confirmed, title: "Confirmed", empty: "None yet." },
-];
-
-export default function AdminPage() {
+export default function DashboardPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
+    <AdminPage>
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
-        <AdminContent />
+        <AdminShell active="dashboard" autoRefresh>
+          {async () => {
+            const [orders, siteUrl] = await Promise.all([listOrders(), getSiteUrl()]);
+            return <Dashboard orders={orders} siteUrl={siteUrl} />;
+          }}
+        </AdminShell>
       </Suspense>
-    </div>
+    </AdminPage>
   );
 }
 
-async function AdminContent() {
-  // Read the password and orders at request time, not when the site is built.
-  await connection();
-  if (!adminPasswordConfigured()) {
-    return (
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold">Admin is not set up</h1>
-        <p className="mt-2 text-stone-600">
-          Set the <code className="font-mono">ADMIN_PASSWORD</code> environment variable and restart
-          the site to use this page.
-        </p>
-      </div>
-    );
-  }
-  if (!(await isAdmin())) return <LoginForm />;
+// Calendar month in Cameroon time, e.g. "2026-10".
+function monthKey(iso) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Douala",
+    year: "numeric",
+    month: "2-digit",
+  }).format(new Date(iso));
+}
 
-  const [orders, siteUrl] = await Promise.all([listOrders(), getSiteUrl()]);
+function Stat({ label, value, hint, href, highlight = false }) {
+  const body = (
+    <div
+      className={`h-full rounded-2xl p-5 shadow-sm ${highlight ? "bg-yellow-100" : "bg-white"} ${
+        href ? "transition hover:shadow-md" : ""
+      }`}
+    >
+      <p className="text-sm text-stone-600">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold">{value}</p>
+      {hint && <p className="mt-1 text-xs text-stone-500">{hint}</p>}
+    </div>
+  );
+  return href ? <Link href={href}>{body}</Link> : body;
+}
+
+function Dashboard({ orders, siteUrl }) {
+  const paid = orders.filter(isPaid);
+  const thisMonth = monthKey(new Date().toISOString());
+  const paidThisMonth = paid.filter((o) => monthKey(o.receipt.confirmedAt) === thisMonth);
+  const sum = (list) => list.reduce((total, o) => total + o.total, 0);
+  const packs = (list) =>
+    list.reduce((total, o) => total + o.items.reduce((n, item) => n + item.quantity, 0), 0);
+
+  const toCheck = orders.filter((o) => o.status === ORDER_STATUS.paymentSubmitted);
+  const toDeliver = orders.filter((o) => o.status === ORDER_STATUS.confirmed);
+  const awaiting = orders.filter((o) => o.status === ORDER_STATUS.awaitingPayment);
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-extrabold tracking-tight">Orders</h1>
-        <form action={logout}>
-          <button type="submit" className="text-sm text-stone-600 underline hover:text-brand">
-            Sign out
-          </button>
-        </form>
-      </div>
-      <AutoRefresh intervalMs={30000} />
-      {SECTIONS.map((section) => {
-        const matching = orders.filter((o) => o.status === section.status);
-        return (
-          <section key={section.status}>
-            <h2 className="mb-4 text-xl font-bold">
-              {section.title} <span className="text-stone-400">({matching.length})</span>
-            </h2>
-            {matching.length === 0 ? (
-              <p className="text-sm text-stone-500">{section.empty}</p>
-            ) : (
-              <div className="space-y-4">
-                {matching.map((order) => (
-                  <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
+      <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
 
-async function getSiteUrl() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
-
-function whatsappLink(order, siteUrl) {
-  const text =
-    `Hello ${order.customer.name}, your Fruidry payment of ${formatPrice(order.total)} ` +
-    `for order ${order.reference} is confirmed. Your receipt: ${siteUrl}/order/${order.id}`;
-  return `https://wa.me/237${order.customer.phone}?text=${encodeURIComponent(text)}`;
-}
-
-function OrderCard({ order, siteUrl }) {
-  const canDecide = order.status !== ORDER_STATUS.confirmed;
-  return (
-    <article className="rounded-2xl bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="font-mono font-semibold">{order.reference}</p>
-          <p className="text-xs text-stone-500">{formatOrderDate(order.createdAt)}</p>
-        </div>
-        <p className="text-lg font-bold">{formatPrice(order.total)}</p>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat
+          label="Payments to check"
+          value={toCheck.length}
+          href="/admin/orders?status=payment_submitted"
+          highlight={toCheck.length > 0}
+        />
+        <Stat
+          label="Paid, to deliver"
+          value={toDeliver.length}
+          href="/admin/orders?status=confirmed"
+        />
+        <Stat
+          label="Sales this month"
+          value={formatPrice(sum(paidThisMonth))}
+          hint={`${packs(paidThisMonth)} packs · ${paidThisMonth.length} orders`}
+        />
+        <Stat
+          label="Total sales"
+          value={formatPrice(sum(paid))}
+          hint={`${packs(paid)} packs · ${paid.length} orders`}
+        />
       </div>
 
-      <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
-        <div>
-          <p className="font-semibold">{order.customer.name}</p>
-          <p>{order.customer.phone}</p>
-          <p className="text-stone-600">{order.customer.address}</p>
-          {order.customer.notes && (
-            <p className="mt-1 text-stone-500">Note: {order.customer.notes}</p>
-          )}
-        </div>
-        <ul className="text-stone-700">
-          {order.items.map((item) => (
-            <li key={item.slug}>
-              {item.name} × {item.quantity}
-            </li>
-          ))}
-        </ul>
-        <div>
-          {order.payment ? (
-            <>
-              <p className="text-stone-500">Transaction ID</p>
-              <p className="font-mono font-semibold">{order.payment.transactionId}</p>
-              <p className="text-stone-500">Paid from {order.payment.payerPhone}</p>
-            </>
-          ) : (
-            <p className="text-stone-500">No payment details yet.</p>
-          )}
-          {order.receipt && <p className="mt-1 text-stone-500">Receipt {order.receipt.number}</p>}
-          {order.rejection && (
-            <p className="mt-1 text-red-600">Rejected: {order.rejection.reason}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4">
-        {canDecide && (
-          <>
-            <form action={confirmPayment}>
-              <input type="hidden" name="orderId" value={order.id} />
-              <button
-                type="submit"
-                className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-              >
-                Confirm payment
-              </button>
-            </form>
-            <form action={rejectPayment} className="flex flex-wrap items-center gap-2">
-              <input type="hidden" name="orderId" value={order.id} />
-              <input
-                name="reason"
-                placeholder="Reason (optional)"
-                className="rounded-full border border-stone-300 px-3 py-1.5 text-sm"
-              />
-              <button
-                type="submit"
-                className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-              >
-                Reject
-              </button>
-            </form>
-          </>
+      <section>
+        <h2 className="mb-4 text-xl font-bold">
+          Payments to check <span className="text-stone-400">({toCheck.length})</span>
+        </h2>
+        {toCheck.length === 0 ? (
+          <p className="text-sm text-stone-500">Nothing to check right now.</p>
+        ) : (
+          <div className="space-y-4">
+            {toCheck.map((order) => (
+              <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
+            ))}
+          </div>
         )}
-        {order.status === ORDER_STATUS.confirmed && (
-          <a
-            href={whatsappLink(order, siteUrl)}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-          >
-            Send receipt on WhatsApp
-          </a>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-xl font-bold">
+          Paid, to deliver <span className="text-stone-400">({toDeliver.length})</span>
+        </h2>
+        {toDeliver.length === 0 ? (
+          <p className="text-sm text-stone-500">No deliveries waiting.</p>
+        ) : (
+          <div className="space-y-4">
+            {toDeliver.map((order) => (
+              <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
+            ))}
+          </div>
         )}
-        <Link
-          href={`/order/${order.id}`}
-          className="text-sm text-stone-600 underline hover:text-brand"
-        >
-          {order.status === ORDER_STATUS.confirmed ? "View receipt" : "View customer page"}
+      </section>
+
+      <p className="text-sm text-stone-600">
+        {awaiting.length} order{awaiting.length === 1 ? " is" : "s are"} waiting for the customer to
+        pay.{" "}
+        <Link href="/admin/orders" className="font-semibold text-brand hover:underline">
+          See all orders →
         </Link>
-      </div>
-    </article>
+      </p>
+    </div>
   );
 }

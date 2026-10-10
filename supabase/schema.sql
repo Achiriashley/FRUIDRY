@@ -11,3 +11,12 @@ create index if not exists orders_created_at_idx on public.orders (created_at de
 -- Lock the table down: the website talks to it with the service role key,
 -- which bypasses row level security. No public access.
 alter table public.orders enable row level security;
+
+-- Product details edited from the admin panel (/admin/products).
+create table if not exists public.products (
+  slug text primary key,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.products enable row level security;

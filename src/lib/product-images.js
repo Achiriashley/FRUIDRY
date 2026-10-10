@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { products } from "./products";
+import { defaultProducts as products } from "./products";
 
 const IMAGE_DIR = path.join(process.cwd(), "public", "products");
 const EXTENSIONS = [".webp", ".avif", ".jpg", ".jpeg", ".png"];

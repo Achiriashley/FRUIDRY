@@ -1,17 +1,26 @@
 import { randomBytes } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-
-// Orders are stored in Supabase when SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
-// are set, and otherwise in data/orders.json (fine for local development or a
-// single server, but not for hosts with a read-only filesystem such as Vercel).
+import { jsonFile, supabaseConfig, supabaseRequest } from "./storage";
 
 export const ORDER_STATUS = {
   awaitingPayment: "awaiting_payment",
   paymentSubmitted: "payment_submitted",
   confirmed: "confirmed",
+  delivered: "delivered",
   rejected: "rejected",
 };
+
+export const STATUS_LABELS = {
+  awaiting_payment: "Waiting for payment",
+  payment_submitted: "Payment to check",
+  confirmed: "Paid, to deliver",
+  delivered: "Delivered",
+  rejected: "Payment rejected",
+};
+
+// Orders whose payment you confirmed (whether or not they've been delivered yet).
+export function isPaid(order) {
+  return order.status === ORDER_STATUS.confirmed || order.status === ORDER_STATUS.delivered;
+}
 
 const REFERENCE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -33,34 +42,11 @@ export function newReceiptNumber() {
   return `RC-${randomCode(8)}`;
 }
 
-// ---------- Supabase backend ----------
-
-function supabaseConfig() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  return url && key ? { url: url.replace(/\/$/, ""), key } : null;
-}
-
-async function supabaseRequest(config, query, init = {}) {
-  const res = await fetch(`${config.url}/rest/v1/orders${query}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      apikey: config.key,
-      Authorization: `Bearer ${config.key}`,
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`Supabase request failed (${res.status}): ${await res.text()}`);
-  }
-  return res.status === 204 ? null : res.json();
-}
+const ordersFile = jsonFile("orders.json", []);
 
 const supabaseStore = {
   async create(config, order) {
-    await supabaseRequest(config, "", {
+    await supabaseRequest(config, "orders", "", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify({
@@ -72,15 +58,23 @@ const supabaseStore = {
     });
   },
   async get(config, id) {
-    const rows = await supabaseRequest(config, `?id=eq.${encodeURIComponent(id)}&select=data`);
+    const rows = await supabaseRequest(
+      config,
+      "orders",
+      `?id=eq.${encodeURIComponent(id)}&select=data`,
+    );
     return rows[0]?.data ?? null;
   },
   async list(config) {
-    const rows = await supabaseRequest(config, "?select=data&order=created_at.desc&limit=500");
+    const rows = await supabaseRequest(
+      config,
+      "orders",
+      "?select=data&order=created_at.desc&limit=1000",
+    );
     return rows.map((r) => r.data);
   },
   async save(config, order) {
-    await supabaseRequest(config, `?id=eq.${encodeURIComponent(order.id)}`, {
+    await supabaseRequest(config, "orders", `?id=eq.${encodeURIComponent(order.id)}`, {
       method: "PATCH",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify({ status: order.status, data: order }),
@@ -88,56 +82,22 @@ const supabaseStore = {
   },
 };
 
-// ---------- Local file backend ----------
-
-const DATA_FILE = path.join(process.cwd(), "data", "orders.json");
-let fileQueue = Promise.resolve();
-
-async function readFileOrders() {
-  try {
-    return JSON.parse(await fs.readFile(DATA_FILE, "utf8"));
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    throw error;
-  }
-}
-
-// Serialises read-modify-write cycles so concurrent requests don't overwrite each other.
-function withFileLock(fn) {
-  const run = fileQueue.then(fn, fn);
-  fileQueue = run.catch(() => {});
-  return run;
-}
-
-async function writeFileOrders(orders) {
-  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-  const tmp = `${DATA_FILE}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(orders, null, 2));
-  await fs.rename(tmp, DATA_FILE);
-}
-
 const fileStore = {
-  create: (order) =>
-    withFileLock(async () => {
-      const orders = await readFileOrders();
-      orders.push(order);
-      await writeFileOrders(orders);
-    }),
+  create: (order) => ordersFile.update((orders) => [...orders, order]),
   async get(id) {
-    const orders = await readFileOrders();
+    const orders = await ordersFile.read();
     return orders.find((o) => o.id === id) ?? null;
   },
   async list() {
-    const orders = await readFileOrders();
+    const orders = await ordersFile.read();
     return orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
   save: (order) =>
-    withFileLock(async () => {
-      const orders = await readFileOrders();
+    ordersFile.update((orders) => {
       const index = orders.findIndex((o) => o.id === order.id);
       if (index === -1) throw new Error(`Order ${order.id} not found`);
       orders[index] = order;
-      await writeFileOrders(orders);
+      return orders;
     }),
 };
 

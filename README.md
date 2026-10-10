@@ -8,9 +8,10 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Home page** with a hero section, brand values and featured products
 - **Shop** (`/shop`) showing every product, filterable by category
 - **Product pages** (`/shop/[slug]`), statically generated, with related products
+- **Add to cart** and **Buy now** buttons on every product (Buy now goes straight to checkout)
 - **Cart** (`/cart`) that persists in `localStorage`, with quantity controls
 - **Checkout with MTN Mobile Money** (`/checkout`, `/order/[id]`): see below
-- **Orders admin** (`/admin`) to confirm payments and send receipts
+- **Admin panel** (`/admin`): see below
 - **Our story** (`/about`) page
 - **Contact form** (`/contact`) that validates input in a Server Action
 
@@ -33,6 +34,18 @@ Open [http://localhost:3000](http://localhost:3000).
    and click **Confirm payment** (or **Reject** with a reason).
 5. The customer's order page turns into a receipt they can print or save as PDF.
    From `/admin` you can also send them the receipt link on WhatsApp.
+6. Once you've delivered the order, click **Mark as delivered**.
+
+## Admin panel
+
+Go to `/admin` and sign in with `ADMIN_PASSWORD`. There is no link to it on the
+public site, so bookmark it.
+
+- **Dashboard**: payments to check, orders to deliver, and sales this month and in total.
+- **Orders**: every order, filterable by status and searchable by order number,
+  customer name, phone or transaction ID.
+- **Product**: change the name, price, pack size, description and highlights, or
+  mark the pack as sold out. Changes show on the shop as soon as you save.
 
 The USSD code and provider name are in `src/lib/shop-config.js`.
 Prices are in FCFA (XAF) in `src/lib/products.js`.
@@ -42,12 +55,14 @@ Prices are in FCFA (XAF) in `src/lib/products.js`.
 Copy `.env.example` to `.env.local` and set:
 
 - `ADMIN_PASSWORD`: the password for `/admin`. Without it the admin page stays locked.
-- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (optional): store orders in
+- `SITE_URL` (optional): your site's address, e.g. `https://fruidry.cm`, used in
+  receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
   in its SQL editor, and copy the project URL and service role key from
   Project Settings → API. Keep the service role key secret.
 
-If Supabase isn't set, orders are saved in `data/orders.json` on the server. That
+If Supabase isn't set, orders and product edits are saved in `data/` on the server. That
 works locally and on your own server, but not on Vercel or other hosts whose
 filesystem is read-only, so set up Supabase before deploying there.
 
@@ -69,7 +84,7 @@ src/
   lib/products.js   Product catalogue data and helpers
 ```
 
-To add or edit products, change `src/lib/products.js`.
+Product details can be edited from the admin panel. The starting details live in `src/lib/products.js`.
 
 ## Product photos
 

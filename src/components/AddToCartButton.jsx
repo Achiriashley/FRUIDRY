@@ -1,12 +1,24 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "./CartProvider";
 
-export function AddToCartButton({ slug, withQuantity = false }) {
+export function AddToCartButton({ slug, inStock = true, withQuantity = false, size = "md" }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  const buttonSize = size === "sm" ? "px-4 py-2 text-sm" : "px-6 py-3";
+
+  if (!inStock) {
+    return (
+      <p className="inline-block rounded-full bg-stone-200 px-5 py-2 text-sm font-semibold text-stone-600">
+        Sold out
+      </p>
+    );
+  }
 
   function handleAdd() {
     addItem(slug, quantity);
@@ -14,10 +26,15 @@ export function AddToCartButton({ slug, withQuantity = false }) {
     setTimeout(() => setAdded(false), 1500);
   }
 
+  function handleBuyNow() {
+    addItem(slug, quantity);
+    router.push("/checkout");
+  }
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       {withQuantity && (
-        <div className="flex items-center rounded-full border border-stone-300">
+        <div className="flex items-center rounded-full border border-stone-300 bg-white">
           <button
             type="button"
             aria-label="Decrease quantity"
@@ -43,9 +60,16 @@ export function AddToCartButton({ slug, withQuantity = false }) {
       <button
         type="button"
         onClick={handleAdd}
-        className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark"
+        className={`rounded-full border-2 border-brand bg-white font-semibold text-brand transition hover:bg-orange-50 ${buttonSize}`}
       >
         {added ? "Added ✓" : "Add to cart"}
+      </button>
+      <button
+        type="button"
+        onClick={handleBuyNow}
+        className={`rounded-full border-2 border-brand bg-brand font-semibold text-white transition hover:border-brand-dark hover:bg-brand-dark ${buttonSize}`}
+      >
+        Buy now
       </button>
     </div>
   );
