@@ -21,12 +21,20 @@ export async function submitPayment(_prev, formData) {
   if (!payerPhone) errors.payerPhone = "Enter the number you paid from, e.g. 6XX XX XX XX.";
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
-  await saveOrder({
-    ...order,
-    status: ORDER_STATUS.paymentSubmitted,
-    payment: { transactionId, payerPhone, submittedAt: new Date().toISOString() },
-    rejection: null,
-  });
+  try {
+    await saveOrder({
+      ...order,
+      status: ORDER_STATUS.paymentSubmitted,
+      payment: { transactionId, payerPhone, submittedAt: new Date().toISOString() },
+      rejection: null,
+    });
+  } catch (error) {
+    console.error("Failed to save payment details", error);
+    return {
+      status: "error",
+      errors: { form: "Sorry, we couldn't save your payment details just now. Please try again." },
+    };
+  }
   refresh();
   return { status: "success" };
 }

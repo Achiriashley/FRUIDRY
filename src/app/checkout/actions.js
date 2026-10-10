@@ -59,7 +59,18 @@ export async function placeOrder(_prev, formData) {
     payment: null,
     receipt: null,
   };
-  await createOrder(order);
+  try {
+    await createOrder(order);
+  } catch (error) {
+    // The full reason goes to the server logs (Vercel → Logs); the customer sees a short message.
+    console.error("Failed to save order", error);
+    return {
+      status: "error",
+      errors: {
+        form: "Sorry, we couldn't save your order just now. Please try again in a moment.",
+      },
+    };
+  }
 
   return { status: "success", orderId: order.id };
 }

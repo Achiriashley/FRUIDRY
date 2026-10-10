@@ -57,6 +57,13 @@ export function jsonFile(name, fallback) {
   }
 
   async function write(value) {
+    if (process.env.VERCEL) {
+      throw new Error(
+        "Can't save data: Supabase isn't configured for this deployment, and Vercel can't " +
+          "save files. Set SUPABASE_URL and SUPABASE_SECRET_KEY for this environment " +
+          "(Production and Preview) in Vercel, then redeploy.",
+      );
+    }
     await fs.mkdir(DATA_DIR, { recursive: true });
     const tmp = `${file}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(value, null, 2));
