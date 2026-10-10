@@ -57,12 +57,13 @@ Copy `.env.example` to `.env.local` and set:
 - `ADMIN_PASSWORD`: the password for `/admin`. Without it the admin page stays locked.
 - `SITE_URL` (optional): your site's address, e.g. `https://fruidry.cm`, used in
   receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.
-- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (optional): store orders and product edits in
+- `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
   in its SQL editor, then copy from Project Settings:
   - the **Project URL** into `SUPABASE_URL`
   - a **secret key** (starts with `sb_secret_`, under API Keys), or on older projects
-    the legacy **service_role** key, into `SUPABASE_SERVICE_ROLE_KEY`.
+    the legacy **service_role** key, into `SUPABASE_SECRET_KEY`. (The older name
+    `SUPABASE_SERVICE_ROLE_KEY` also works.)
 
   Don't use the **publishable** key (`sb_publishable_...`, formerly "anon"): it can't
   read or write the orders. Keep the secret key private and never put it in code

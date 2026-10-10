@@ -2,16 +2,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 // Shared storage for orders and product details. Uses Supabase when
-// SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set, and otherwise JSON files
+// SUPABASE_URL and SUPABASE_SECRET_KEY are set, and otherwise JSON files
 // in data/ (fine for local development or a single server, but not for hosts
 // with a read-only filesystem such as Vercel).
 
 export function supabaseConfig() {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // SUPABASE_SERVICE_ROLE_KEY is the older name for the same setting.
+  const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (key?.startsWith("sb_publishable_")) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is set to a publishable key. Use the secret key " +
+      "SUPABASE_SECRET_KEY is set to a publishable key. Use the secret key " +
         "(sb_secret_...) or the legacy service_role key from Supabase → Project Settings → API Keys.",
     );
   }
