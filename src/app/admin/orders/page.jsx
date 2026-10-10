@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ORDER_STATUS, STATUS_LABELS, listOrders } from "@/lib/orders";
+import { ORDER_STATUS, STATUS_LABELS, isNew, listOrders } from "@/lib/orders";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "../AdminShell";
 import { OrderCard } from "../OrderCard";
@@ -10,9 +10,8 @@ export const metadata = { title: "Orders", robots: { index: false } };
 const FILTERS = [
   { id: "all", label: "All" },
   ...[
-    ORDER_STATUS.paymentSubmitted,
-    ORDER_STATUS.confirmed,
     ORDER_STATUS.awaitingPayment,
+    ORDER_STATUS.confirmed,
     ORDER_STATUS.delivered,
     ORDER_STATUS.rejected,
   ].map((id) => ({ id, label: STATUS_LABELS[id] })),
@@ -37,6 +36,12 @@ export default function OrdersPage({ searchParams }) {
   );
 }
 
+function matchesStatus(order, status) {
+  if (status === "all") return true;
+  if (status === ORDER_STATUS.awaitingPayment) return isNew(order);
+  return order.status === status;
+}
+
 function filterHref(status, q) {
   const params = new URLSearchParams();
   if (status !== "all") params.set("status", status);
@@ -51,14 +56,11 @@ function OrdersList({ params, orders, siteUrl }) {
   const needle = q.toLowerCase().replace(/\s/g, "");
 
   const counts = Object.fromEntries(
-    FILTERS.map((f) => [
-      f.id,
-      f.id === "all" ? orders.length : orders.filter((o) => o.status === f.id).length,
-    ]),
+    FILTERS.map((f) => [f.id, orders.filter((o) => matchesStatus(o, f.id)).length]),
   );
 
   const visible = orders.filter((o) => {
-    if (status !== "all" && o.status !== status) return false;
+    if (!matchesStatus(o, status)) return false;
     if (!needle) return true;
     return [o.reference, o.customer.name, o.customer.phone, o.payment?.transactionId]
       .filter(Boolean)

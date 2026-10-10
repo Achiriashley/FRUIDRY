@@ -2,7 +2,8 @@
 
 import { ORDER_STATUS, createOrder, newOrderId, newOrderReference } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
-import { normalizeCameroonPhone } from "@/lib/shop-config";
+import { normalizeCameroonPhone, shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
+import { orderMessage } from "@/lib/whatsapp-order";
 
 const MAX_QUANTITY = 50;
 
@@ -23,7 +24,13 @@ function parseItems(raw, products) {
     if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
       return null;
     }
-    items.push({ slug: product.slug, name: product.name, price: product.price, quantity });
+    items.push({
+      slug: product.slug,
+      sku: product.sku,
+      name: product.name,
+      price: product.price,
+      quantity,
+    });
   }
   return items;
 }
@@ -59,18 +66,29 @@ export async function placeOrder(_prev, formData) {
     payment: null,
     receipt: null,
   };
-  try {
-    await createOrder(order);
-  } catch (error) {
-    // The full reason goes to the server logs (Vercel → Logs); the customer sees a short message.
-    console.error("Failed to save order", error);
+  const shopNumber = shopWhatsAppNumber();
+  if (!shopNumber) {
+    console.error("WHATSAPP_NUMBER is not set, so orders can't be sent on WhatsApp.");
     return {
       status: "error",
-      errors: {
-        form: "Sorry, we couldn't save your order just now. Please try again in a moment.",
-      },
+      errors: { form: "Ordering on WhatsApp isn't set up yet. Please contact us directly." },
     };
   }
 
-  return { status: "success", orderId: order.id };
+  // Save the order for the admin panel, but never block the customer if that fails:
+  // the WhatsApp message carries everything needed to fulfil it.
+  let saved = true;
+  try {
+    await createOrder(order);
+  } catch (error) {
+    saved = false;
+    console.error("Failed to save order (sent on WhatsApp anyway)", error);
+  }
+
+  return {
+    status: "success",
+    orderId: saved ? order.id : null,
+    reference: order.reference,
+    whatsappUrl: whatsAppLink(shopNumber, orderMessage(order)),
+  };
 }

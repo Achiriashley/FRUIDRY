@@ -5,6 +5,8 @@ export const categories = [{ id: "mixes", label: "Mixes" }];
 export const defaultProducts = [
   {
     slug: "mixed-fruit-pack",
+    // Item code customers quote on WhatsApp.
+    sku: "FD-MIX-50",
     name: "Mixed Fruit Pack",
     category: "mixes",
     price: 2500,

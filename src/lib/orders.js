@@ -10,12 +10,20 @@ export const ORDER_STATUS = {
 };
 
 export const STATUS_LABELS = {
-  awaiting_payment: "Waiting for payment",
-  payment_submitted: "Payment to check",
+  awaiting_payment: "New order",
+  // Orders from the old Mobile Money checkout, where the customer sent a transaction ID.
+  payment_submitted: "New order",
   confirmed: "Paid, to deliver",
   delivered: "Delivered",
-  rejected: "Payment rejected",
+  rejected: "Cancelled",
 };
+
+// Orders waiting for you to arrange payment on WhatsApp.
+export function isNew(order) {
+  return (
+    order.status === ORDER_STATUS.awaitingPayment || order.status === ORDER_STATUS.paymentSubmitted
+  );
+}
 
 // Orders whose payment you confirmed (whether or not they've been delivered yet).
 export function isPaid(order) {

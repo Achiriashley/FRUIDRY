@@ -65,6 +65,11 @@ async function ProductDetails({ params }) {
             {formatPrice(product.price)}{" "}
             <span className="text-base font-normal text-stone-500">/ {product.weight}</span>
           </p>
+          {product.sku && (
+            <p className="mt-1 text-sm text-stone-500">
+              Item code <span className="font-mono">{product.sku}</span>
+            </p>
+          )}
           <p className="mt-6 text-stone-700">{product.description}</p>
           <ul className="mt-6 flex flex-wrap gap-2">
             {product.highlights.map((h) => (

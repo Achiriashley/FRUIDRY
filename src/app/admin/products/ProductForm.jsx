@@ -77,6 +77,14 @@ export function ProductForm({ product }) {
           />
         </Field>
       </div>
+      <Field id={id("sku")} label="Item code (shown in WhatsApp orders)" error={state.errors?.sku}>
+        <input
+          id={id("sku")}
+          name="sku"
+          defaultValue={product.sku}
+          className={`${inputClass} font-mono uppercase`}
+        />
+      </Field>
       <Field id={id("name")} label="Name" error={state.errors?.name}>
         <input id={id("name")} name="name" defaultValue={product.name} className={inputClass} />
       </Field>

@@ -10,7 +10,7 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Product pages** (`/shop/[slug]`), statically generated, with related products
 - **Add to cart** and **Buy now** buttons on every product (Buy now goes straight to checkout)
 - **Cart** (`/cart`) that persists in `localStorage`, with quantity controls
-- **Checkout with MTN Mobile Money** (`/checkout`, `/order/[id]`): see below
+- **Checkout on WhatsApp** (`/checkout`): see below
 - **Admin panel** (`/admin`): see below
 - **Our story** (`/about`) page
 - **Contact form** (`/contact`) that validates input in a Server Action
@@ -24,36 +24,44 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Orders and Mobile Money payments
+## Orders on WhatsApp
 
-1. The customer fills in their name, phone and delivery address at `/checkout`.
-2. On their order page they tap **Pay now**, which opens the phone dialer with
-   `*126*16*747434*<total>#` ready. They press call and enter their Mobile Money PIN.
-3. They type the transaction ID from their confirmation SMS on the order page.
-4. You open `/admin`, check the transaction ID against your Mobile Money messages,
-   and click **Confirm payment** (or **Reject** with a reason).
-5. The customer's order page turns into a receipt they can print or save as PDF.
-   From `/admin` you can also send them the receipt link on WhatsApp.
-6. Once you've delivered the order, click **Mark as delivered**.
+1. The customer fills in their name, phone and delivery address at `/checkout` and taps
+   **Order on WhatsApp**.
+2. WhatsApp opens with a message to your number, already filled in: the order number
+   (e.g. `FD-4NBXKR`), each item's code (e.g. `FD-MIX-50`), quantity and price, the total,
+   and their delivery details. They press send.
+3. You reply on WhatsApp to arrange payment and delivery.
+4. The order is also saved to the admin panel under **New orders**. Once they've paid,
+   click **Mark as paid**: their order page (`/order/...`) becomes a printable receipt,
+   and you can send them the receipt link on WhatsApp.
+5. After delivery, click **Mark as delivered**.
+
+If saving the order fails (for example if Supabase isn't set up), the customer is still
+sent to WhatsApp, so no order is lost. The failure is written to the server logs.
+
+Set your WhatsApp number in `WHATSAPP_NUMBER` (see Settings below). Item codes can be
+changed on the admin **Product** page.
 
 ## Admin panel
 
 Go to `/admin` and sign in with `ADMIN_PASSWORD`. There is no link to it on the
 public site, so bookmark it.
 
-- **Dashboard**: payments to check, orders to deliver, and sales this month and in total.
+- **Dashboard**: new orders, orders to deliver, and sales this month and in total.
 - **Orders**: every order, filterable by status and searchable by order number,
-  customer name, phone or transaction ID.
-- **Product**: change the name, price, pack size, description and highlights, or
+  customer name or phone.
+- **Product**: change the item code, name, price, pack size, description and highlights, or
   mark the pack as sold out. Changes show on the shop as soon as you save.
 
-The USSD code and provider name are in `src/lib/shop-config.js`.
-Prices are in FCFA (XAF) in `src/lib/products.js`.
+Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
 ### Settings
 
 Copy `.env.example` to `.env.local` and set:
 
+- `WHATSAPP_NUMBER`: your WhatsApp number with the country code, e.g. `2376XXXXXXXX`.
+  Customers' orders are sent here.
 - `ADMIN_PASSWORD`: the password for `/admin`. Without it the admin page stays locked.
 - `SITE_URL` (optional): your site's address, e.g. `https://fruidry.cm`, used in
   receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.

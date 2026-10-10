@@ -8,6 +8,7 @@ import { jsonFile, supabaseConfig, supabaseRequest } from "./storage";
 export const PRODUCTS_TAG = "products";
 
 export const EDITABLE_FIELDS = [
+  "sku",
   "name",
   "tagline",
   "description",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ORDER_STATUS, STATUS_LABELS, formatOrderDate, isPaid } from "@/lib/orders";
+import { whatsAppLink } from "@/lib/shop-config";
 import { formatPrice } from "@/lib/products";
 import { confirmPayment, markDelivered, rejectPayment } from "./actions";
 
@@ -19,11 +20,15 @@ export function StatusBadge({ status }) {
   );
 }
 
-function whatsappLink(order, siteUrl) {
-  const text =
+function receiptMessage(order, siteUrl) {
+  return (
     `Hello ${order.customer.name}, your Fruidry payment of ${formatPrice(order.total)} ` +
-    `for order ${order.reference} is confirmed. Your receipt: ${siteUrl}/order/${order.id}`;
-  return `https://wa.me/237${order.customer.phone}?text=${encodeURIComponent(text)}`;
+    `for order ${order.reference} is confirmed. Your receipt: ${siteUrl}/order/${order.id}`
+  );
+}
+
+function customerMessage(order) {
+  return `Hello ${order.customer.name}, this is Fruidry about your order ${order.reference}.`;
 }
 
 export function OrderCard({ order, siteUrl }) {
@@ -54,18 +59,18 @@ export function OrderCard({ order, siteUrl }) {
           {order.items.map((item) => (
             <li key={item.slug}>
               {item.name} × {item.quantity}
+              {item.sku && (
+                <span className="ml-2 font-mono text-xs text-stone-500">{item.sku}</span>
+              )}
             </li>
           ))}
         </ul>
         <div>
-          {order.payment ? (
+          {order.payment?.transactionId && (
             <>
               <p className="text-stone-500">Transaction ID</p>
               <p className="font-mono font-semibold break-all">{order.payment.transactionId}</p>
-              <p className="text-stone-500">Paid from {order.payment.payerPhone}</p>
             </>
-          ) : (
-            <p className="text-stone-500">No payment details yet.</p>
           )}
           {order.receipt && <p className="mt-1 text-stone-500">Receipt {order.receipt.number}</p>}
           {order.delivery && (
@@ -88,14 +93,14 @@ export function OrderCard({ order, siteUrl }) {
                 type="submit"
                 className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
               >
-                Confirm payment
+                Mark as paid
               </button>
             </form>
             <form action={rejectPayment} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="orderId" value={order.id} />
               <input
                 name="reason"
-                aria-label="Reason for rejecting"
+                aria-label="Reason for cancelling"
                 placeholder="Reason (optional)"
                 className="rounded-full border border-stone-300 px-3 py-1.5 text-sm"
               />
@@ -103,7 +108,7 @@ export function OrderCard({ order, siteUrl }) {
                 type="submit"
                 className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
               >
-                Reject
+                Cancel order
               </button>
             </form>
           </>
@@ -119,9 +124,17 @@ export function OrderCard({ order, siteUrl }) {
             </button>
           </form>
         )}
+        <a
+          href={whatsAppLink(`237${order.customer.phone}`, customerMessage(order))}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-full border border-[#25D366] px-4 py-2 text-sm font-semibold text-[#128C4B] hover:bg-green-50"
+        >
+          Message on WhatsApp
+        </a>
         {isPaid(order) && (
           <a
-            href={whatsappLink(order, siteUrl)}
+            href={whatsAppLink(`237${order.customer.phone}`, receiptMessage(order, siteUrl))}
             target="_blank"
             rel="noreferrer"
             className="rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"

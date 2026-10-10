@@ -1,19 +1,16 @@
-// Business settings for checkout. Edit these to match your shop.
-export const shopConfig = {
-  // Mobile Money payment. "{amount}" is replaced with the order total in FCFA.
-  momo: {
-    provider: "MTN Mobile Money",
-    ussdTemplate: "*126*16*747434*{amount}#",
-  },
-};
+// Business settings for checkout.
 
-export function ussdCode(amount) {
-  return shopConfig.momo.ussdTemplate.replace("{amount}", String(amount));
+// Your WhatsApp number in international format, e.g. 2376XXXXXXXX (237 is
+// Cameroon). Set WHATSAPP_NUMBER in .env.local and in your host's settings.
+export function shopWhatsAppNumber() {
+  return normalizeWhatsAppNumber(process.env.WHATSAPP_NUMBER);
 }
 
-// tel: links need "#" encoded, otherwise phones drop everything after it.
-export function ussdHref(amount) {
-  return `tel:${ussdCode(amount).replace(/#/g, "%23")}`;
+// Accepts +237 6XX XX XX XX, 2376XXXXXXXX or a local 6XXXXXXXX number.
+export function normalizeWhatsAppNumber(input) {
+  const digits = String(input ?? "").replace(/[^\d]/g, "");
+  if (/^6\d{8}$/.test(digits)) return `237${digits}`;
+  return /^\d{8,15}$/.test(digits) ? digits : null;
 }
 
 // Accepts 6XXXXXXXX with an optional +237 / 237 prefix and spaces.
@@ -22,4 +19,8 @@ export function normalizeCameroonPhone(input) {
     .replace(/[\s.-]/g, "")
     .replace(/^\+?237/, "");
   return /^6\d{8}$/.test(digits) ? digits : null;
+}
+
+export function whatsAppLink(number, text) {
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }

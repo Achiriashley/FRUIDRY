@@ -46,7 +46,7 @@ export async function rejectPayment(formData) {
     String(formData.get("reason") ?? "")
       .trim()
       .slice(0, 300) ||
-    "We could not find this payment. Please check the transaction ID and try again.";
+    "This order was cancelled. Message us on WhatsApp if you have any questions.";
   await updateOrder(formData, (order) =>
     isPaid(order)
       ? null
@@ -70,13 +70,14 @@ export async function markDelivered(formData) {
   );
 }
 
-const LIMITS = { name: 80, tagline: 120, description: 1000, weight: 30 };
+const LIMITS = { sku: 30, name: 80, tagline: 120, description: 1000, weight: 30 };
 
 export async function saveProduct(_prev, formData) {
   if (!(await isAdmin())) return { status: "error", errors: { form: "Please sign in again." } };
 
   const text = (field) => String(formData.get(field) ?? "").trim();
   const fields = {
+    sku: text("sku").toUpperCase(),
     name: text("name"),
     tagline: text("tagline"),
     description: text("description"),
@@ -94,6 +95,9 @@ export async function saveProduct(_prev, formData) {
   for (const [field, max] of Object.entries(LIMITS)) {
     if (!fields[field]) errors[field] = "This can't be empty.";
     else if (fields[field].length > max) errors[field] = `Keep this under ${max} characters.`;
+  }
+  if (!errors.sku && !/^[A-Z0-9-]+$/.test(fields.sku)) {
+    errors.sku = "Use only letters, numbers and dashes, e.g. FD-MIX-50.";
   }
   if (!Number.isInteger(fields.price) || fields.price < 1) {
     errors.price = "Enter a whole number of FCFA, e.g. 2500.";

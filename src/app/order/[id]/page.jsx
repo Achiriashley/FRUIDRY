@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { ORDER_STATUS, formatOrderDate, getOrder, isPaid } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
-import { shopConfig, ussdCode, ussdHref } from "@/lib/shop-config";
-import { AutoRefresh } from "@/components/AutoRefresh";
-import { PaymentForm } from "./PaymentForm";
+import { shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
+import { orderMessage } from "@/lib/whatsapp-order";
 import { Receipt } from "./Receipt";
 
 export const metadata = { title: "Your order", robots: { index: false } };
@@ -28,6 +28,9 @@ async function OrderDetails({ params }) {
     return <Receipt order={order} />;
   }
 
+  const cancelled = order.status === ORDER_STATUS.rejected;
+  const shopNumber = shopWhatsAppNumber();
+
   return (
     <div className="space-y-6">
       <div>
@@ -35,96 +38,52 @@ async function OrderDetails({ params }) {
           Order {order.reference}
         </p>
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight">
-          {order.status === ORDER_STATUS.paymentSubmitted
-            ? "We're checking your payment"
-            : "Pay for your order"}
+          {cancelled ? "This order was cancelled" : "We've got your order"}
         </h1>
         <p className="mt-1 text-sm text-stone-500">Placed {formatOrderDate(order.createdAt)}</p>
       </div>
 
-      <OrderSummary order={order} />
+      <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <ul className="space-y-2 text-sm">
+          {order.items.map((item) => (
+            <li key={item.slug} className="flex justify-between gap-2">
+              <span>
+                {item.name} × {item.quantity}
+                {item.sku && (
+                  <span className="ml-2 font-mono text-xs text-stone-500">{item.sku}</span>
+                )}
+              </span>
+              <span>{formatPrice(item.price * item.quantity)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex justify-between border-t border-stone-200 pt-3 text-lg font-bold">
+          <span>Total</span>
+          <span>{formatPrice(order.total)}</span>
+        </div>
+      </div>
 
-      {order.status === ORDER_STATUS.paymentSubmitted ? (
-        <div className="rounded-2xl bg-white p-6 shadow-sm" role="status">
-          <p className="text-4xl" aria-hidden>
-            ⏳
-          </p>
-          <p className="mt-3 font-semibold">Thanks! We received your payment details.</p>
-          <p className="mt-1 text-stone-600">
-            We&apos;ll confirm your payment shortly and your receipt will appear on this page. Keep
-            this page open or save the link to come back later.
-          </p>
-          <p className="mt-3 text-sm text-stone-500">
-            Transaction ID: <span className="font-mono">{order.payment.transactionId}</span>
-          </p>
-          <AutoRefresh />
+      {cancelled ? (
+        <div className="rounded-2xl bg-red-50 p-6 text-red-700" role="alert">
+          <p>{order.rejection?.reason}</p>
         </div>
       ) : (
-        <PaymentSteps order={order} />
-      )}
-    </div>
-  );
-}
-
-function OrderSummary({ order }) {
-  return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm">
-      <ul className="space-y-2 text-sm">
-        {order.items.map((item) => (
-          <li key={item.slug} className="flex justify-between gap-2">
-            <span>
-              {item.name} × {item.quantity}
-            </span>
-            <span>{formatPrice(item.price * item.quantity)}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-4 flex justify-between border-t border-stone-200 pt-3 text-lg font-bold">
-        <span>Total to pay</span>
-        <span>{formatPrice(order.total)}</span>
-      </div>
-    </div>
-  );
-}
-
-function PaymentSteps({ order }) {
-  const code = ussdCode(order.total);
-  return (
-    <div className="space-y-6 rounded-2xl bg-white p-6 shadow-sm">
-      {order.status === ORDER_STATUS.rejected && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700" role="alert">
-          <p className="font-semibold">We couldn&apos;t confirm your payment.</p>
-          <p className="mt-1">{order.rejection?.reason}</p>
+        <div className="rounded-2xl bg-white p-6 shadow-sm" role="status">
+          <p className="text-stone-700">
+            We&apos;ll reply on WhatsApp to arrange payment and delivery. Once your payment is
+            confirmed, your receipt will appear on this page.
+          </p>
+          {shopNumber && (
+            <a
+              href={whatsAppLink(shopNumber, orderMessage(order))}
+              className="mt-4 inline-block rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a]"
+            >
+              Send the order on WhatsApp again
+            </a>
+          )}
+          <AutoRefresh />
         </div>
       )}
-
-      <section>
-        <h2 className="font-bold">1. Pay with {shopConfig.momo.provider}</h2>
-        <p className="mt-1 text-sm text-stone-600">
-          Tap the button to open your phone&apos;s dialer with the payment code ready, then press
-          call and enter your Mobile Money PIN to confirm.
-        </p>
-        <a
-          href={ussdHref(order.total)}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-yellow-400 px-6 py-3 font-bold text-stone-900 hover:bg-yellow-300"
-        >
-          <span aria-hidden>📱</span> Pay {formatPrice(order.total)} now
-        </a>
-        <p className="mt-3 text-sm text-stone-600">
-          Not on your phone? Dial{" "}
-          <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono font-semibold">{code}</span>{" "}
-          from the phone you pay with.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="font-bold">2. Tell us your transaction ID</h2>
-        <p className="mt-1 text-sm text-stone-600">
-          After paying you&apos;ll get an SMS with a transaction ID. Enter it below so we can match
-          your payment.
-        </p>
-        <PaymentForm orderId={order.id} defaultPhone={order.customer.phone} />
-      </section>
     </div>
   );
 }

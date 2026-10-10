@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/products";
-import { shopConfig } from "@/lib/shop-config";
 import { placeOrder } from "./actions";
 import { submitKeepingInput } from "@/lib/use-keep-form";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200";
+
+const LAST_ORDER_KEY = "fruidry-last-order";
 
 function FieldError({ message }) {
   return message ? <p className="mt-1 text-sm text-red-600">{message}</p> : null;
@@ -18,18 +18,39 @@ function FieldError({ message }) {
 
 export function CheckoutForm() {
   const { items, subtotal, clear } = useCart();
-  const router = useRouter();
   const [state, formAction, pending] = useActionState(placeOrder, { status: "idle" });
+  const [lastOrder, setLastOrder] = useState(null);
+
+  // If the customer comes back from WhatsApp and the page reloads, show the order they sent.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.sessionStorage.getItem(LAST_ORDER_KEY) ?? "null");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved?.whatsappUrl) setLastOrder(saved);
+    } catch {
+      // Storage unavailable; nothing to restore.
+    }
+  }, []);
 
   useEffect(() => {
     if (state.status === "success") {
+      try {
+        window.sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(state));
+      } catch {
+        // Storage unavailable; the confirmation still shows until the page reloads.
+      }
       clear();
-      router.push(`/order/${state.orderId}`);
+      // Opens the WhatsApp app on phones, or WhatsApp Web on computers.
+      window.location.href = state.whatsappUrl;
     }
-  }, [state, clear, router]);
+  }, [state, clear]);
 
   if (state.status === "success") {
-    return <p className="text-stone-600">Placing your order…</p>;
+    return <OrderSent state={state} />;
+  }
+
+  if (items.length === 0 && lastOrder) {
+    return <OrderSent state={lastOrder} />;
   }
 
   if (items.length === 0) {
@@ -117,18 +138,53 @@ export function CheckoutForm() {
           <span>{formatPrice(subtotal)}</span>
         </div>
         <p className="mt-4 rounded-lg bg-orange-50 p-3 text-xs text-brand-dark">
-          Next you&apos;ll pay with {shopConfig.momo.provider}. We&apos;ll call you to arrange
-          delivery.
+          Your order opens in WhatsApp with everything filled in. Just press send, and we&apos;ll
+          reply to arrange payment and delivery.
         </p>
         <FieldError message={state.errors?.form} />
         <button
           type="submit"
           disabled={pending}
-          className="mt-6 w-full rounded-full bg-brand py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+          className="mt-6 w-full rounded-full bg-[#25D366] py-3 font-semibold text-white hover:bg-[#1ebe5a] disabled:opacity-60"
         >
-          {pending ? "Placing order…" : "Place order"}
+          {pending ? "Preparing your order…" : "Order on WhatsApp"}
         </button>
       </aside>
     </form>
+  );
+}
+
+function OrderSent({ state }) {
+  return (
+    <div className="rounded-2xl bg-white p-8 text-center shadow-sm" role="status">
+      <p className="text-5xl" aria-hidden>
+        💬
+      </p>
+      <h2 className="mt-4 text-2xl font-bold">Almost done!</h2>
+      <p className="mt-2 text-stone-600">
+        Your order <span className="font-mono font-semibold">{state.reference}</span> is ready in
+        WhatsApp. Press <strong>send</strong> there to place it, and we&apos;ll reply to arrange
+        payment and delivery.
+      </p>
+      <a
+        href={state.whatsappUrl}
+        className="mt-6 inline-block rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a]"
+      >
+        Open WhatsApp again
+      </a>
+      {state.orderId && (
+        <p className="mt-4 text-sm">
+          <Link
+            href={`/order/${state.orderId}`}
+            className="text-stone-600 underline hover:text-brand"
+          >
+            View your order
+          </Link>{" "}
+          <span className="text-stone-500">
+            (your receipt appears there once we confirm payment)
+          </span>
+        </p>
+      )}
+    </div>
   );
 }

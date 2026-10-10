@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ORDER_STATUS, isPaid, listOrders } from "@/lib/orders";
+import { ORDER_STATUS, isNew, isPaid, listOrders } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "./AdminShell";
@@ -55,9 +55,8 @@ function Dashboard({ orders, siteUrl }) {
   const packs = (list) =>
     list.reduce((total, o) => total + o.items.reduce((n, item) => n + item.quantity, 0), 0);
 
-  const toCheck = orders.filter((o) => o.status === ORDER_STATUS.paymentSubmitted);
+  const toCheck = orders.filter(isNew);
   const toDeliver = orders.filter((o) => o.status === ORDER_STATUS.confirmed);
-  const awaiting = orders.filter((o) => o.status === ORDER_STATUS.awaitingPayment);
 
   return (
     <div className="space-y-10">
@@ -65,9 +64,9 @@ function Dashboard({ orders, siteUrl }) {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat
-          label="Payments to check"
+          label="New orders"
           value={toCheck.length}
-          href="/admin/orders?status=payment_submitted"
+          href="/admin/orders?status=awaiting_payment"
           highlight={toCheck.length > 0}
         />
         <Stat
@@ -89,10 +88,10 @@ function Dashboard({ orders, siteUrl }) {
 
       <section>
         <h2 className="mb-4 text-xl font-bold">
-          Payments to check <span className="text-stone-400">({toCheck.length})</span>
+          New orders <span className="text-stone-400">({toCheck.length})</span>
         </h2>
         {toCheck.length === 0 ? (
-          <p className="text-sm text-stone-500">Nothing to check right now.</p>
+          <p className="text-sm text-stone-500">No new orders right now.</p>
         ) : (
           <div className="space-y-4">
             {toCheck.map((order) => (
@@ -118,8 +117,6 @@ function Dashboard({ orders, siteUrl }) {
       </section>
 
       <p className="text-sm text-stone-600">
-        {awaiting.length} order{awaiting.length === 1 ? " is" : "s are"} waiting for the customer to
-        pay.{" "}
         <Link href="/admin/orders" className="font-semibold text-brand hover:underline">
           See all orders →
         </Link>

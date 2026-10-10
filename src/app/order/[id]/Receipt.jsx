@@ -1,6 +1,5 @@
 import { formatOrderDate } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
-import { shopConfig } from "@/lib/shop-config";
 import { PrintButton } from "./PrintButton";
 
 export function Receipt({ order }) {
@@ -54,7 +53,12 @@ export function Receipt({ order }) {
           <tbody>
             {order.items.map((item) => (
               <tr key={item.slug} className="border-b border-stone-100">
-                <td className="py-2">{item.name}</td>
+                <td className="py-2">
+                  {item.name}
+                  {item.sku && (
+                    <span className="block font-mono text-xs text-stone-500">{item.sku}</span>
+                  )}
+                </td>
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-right">{formatPrice(item.price * item.quantity)}</td>
               </tr>
@@ -71,8 +75,13 @@ export function Receipt({ order }) {
         </table>
 
         <p className="mt-6 border-t border-dashed border-stone-300 pt-4 text-xs text-stone-500">
-          Paid with {shopConfig.momo.provider} · Transaction ID{" "}
-          <span className="font-mono">{order.payment?.transactionId ?? "—"}</span>
+          Payment confirmed by Fruidry
+          {order.payment?.transactionId && (
+            <>
+              {" "}
+              · Transaction ID <span className="font-mono">{order.payment.transactionId}</span>
+            </>
+          )}
         </p>
       </article>
 
