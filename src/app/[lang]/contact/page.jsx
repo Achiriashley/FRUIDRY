@@ -44,6 +44,7 @@ export default async function ContactPage() {
           </a>
         </div>
         <p className="mt-6 text-stone-700">📍 {t.contact.location}</p>
+        <p className="mt-1 text-stone-700">🚚 {t.contact.delivery}</p>
         <h2 className="mt-8 font-semibold">{t.contact.followUs}</h2>
         <ul className="mt-2 space-y-1 text-stone-700">
           {SOCIAL_LINKS.map((s) => (

@@ -48,7 +48,7 @@ const en = {
   meta: {
     siteTitle: "Fruidry | Freeze-dried fruit",
     siteDescription:
-      "Fruidry makes crunchy freeze-dried fruit snacks with no added sugar and no preservatives. Order on WhatsApp in Cameroon.",
+      "Crunchy freeze-dried fruit snacks with no added sugar and no preservatives. Order on WhatsApp, delivered across Cameroon.",
     ogLocale: "en_GB",
   },
   nav: {
@@ -65,7 +65,12 @@ const en = {
     explore: "Explore",
     shopAll: "Shop all",
     promise: "Promise",
-    promises: ["No added sugar", "No preservatives", "Freeze-dried, never fried"],
+    promises: [
+      "No added sugar",
+      "No preservatives",
+      "Freeze-dried, never fried",
+      "Delivery across Cameroon",
+    ],
     rights: "All rights reserved.",
     privacy: "Privacy policy",
   },
@@ -82,7 +87,7 @@ const en = {
     orderNow: "Order now",
     ourStory: "Our story",
     priceFrom: (price) => `From ${price}`,
-    orderHint: "Order in a few taps on WhatsApp.",
+    orderHint: "Order in a few taps on WhatsApp. We deliver across Cameroon.",
     values: [
       {
         icon: "❄️",
@@ -108,7 +113,8 @@ const en = {
   },
   shop: {
     title: "Shop",
-    description: "Browse every Fruidry freeze-dried fruit snack. Order on WhatsApp in Cameroon.",
+    description:
+      "Browse every Fruidry freeze-dried fruit snack. Order on WhatsApp, delivered across Cameroon.",
     intro: "Every pouch is just fruit, freeze-dried for crunch.",
     all: "All",
     filterLabel: "Filter by category",
@@ -177,6 +183,7 @@ const en = {
     call: "Call us",
     followUs: "Follow us",
     location: "Bonabéri, Douala, Cameroon",
+    delivery: "We deliver across Cameroon.",
     name: "Name",
     email: "Email",
     optional: "(optional)",
@@ -212,7 +219,7 @@ const en = {
     summary: "Order summary",
     total: "Total",
     howItWorks:
-      "At checkout your order opens in WhatsApp, and we'll reply to arrange payment and delivery.",
+      "At checkout your order opens in WhatsApp, and we'll reply to arrange payment and delivery. We deliver across Cameroon.",
     checkout: "Checkout",
   },
   checkout: {
@@ -225,7 +232,7 @@ const en = {
     notes: "Notes",
     optional: "(optional)",
     howItWorks:
-      "Your order opens in WhatsApp with everything filled in. Just press send, and we'll reply to arrange payment and delivery.",
+      "Your order opens in WhatsApp with everything filled in. Just press send, and we'll reply to arrange payment and delivery anywhere in Cameroon.",
     preparing: "Preparing your order…",
     orderOnWhatsApp: "Order on WhatsApp",
     consent: "By ordering, you agree that we use your details to prepare and deliver your order.",
@@ -373,7 +380,7 @@ const fr = {
   meta: {
     siteTitle: "Fruidry | Fruits lyophilisés",
     siteDescription:
-      "Fruidry fabrique des snacks de fruits lyophilisés croquants, sans sucre ajouté ni conservateurs. Commandez sur WhatsApp au Cameroun.",
+      "Des snacks de fruits lyophilisés croquants, sans sucre ajouté ni conservateurs. Commandez sur WhatsApp, livraison partout au Cameroun.",
     ogLocale: "fr_FR",
   },
   nav: {
@@ -390,7 +397,12 @@ const fr = {
     explore: "Explorer",
     shopAll: "Toute la boutique",
     promise: "Notre promesse",
-    promises: ["Sans sucre ajouté", "Sans conservateurs", "Lyophilisé, jamais frit"],
+    promises: [
+      "Sans sucre ajouté",
+      "Sans conservateurs",
+      "Lyophilisé, jamais frit",
+      "Livraison partout au Cameroun",
+    ],
     rights: "Tous droits réservés.",
     privacy: "Confidentialité",
   },
@@ -407,7 +419,7 @@ const fr = {
     orderNow: "Commander",
     ourStory: "Notre histoire",
     priceFrom: (price) => `À partir de ${price}`,
-    orderHint: "Commandez en quelques clics sur WhatsApp.",
+    orderHint: "Commandez en quelques clics sur WhatsApp. Livraison partout au Cameroun.",
     values: [
       {
         icon: "❄️",
@@ -434,7 +446,7 @@ const fr = {
   shop: {
     title: "Boutique",
     description:
-      "Découvrez tous les snacks de fruits lyophilisés Fruidry. Commandez sur WhatsApp au Cameroun.",
+      "Découvrez tous les snacks de fruits lyophilisés Fruidry. Commandez sur WhatsApp, livraison partout au Cameroun.",
     intro: "Chaque sachet, c'est juste du fruit, lyophilisé pour le croquant.",
     all: "Tout",
     filterLabel: "Filtrer par catégorie",
@@ -504,6 +516,7 @@ const fr = {
     call: "Appelez-nous",
     followUs: "Suivez-nous",
     location: "Bonabéri, Douala, Cameroun",
+    delivery: "Nous livrons partout au Cameroun.",
     name: "Nom",
     email: "E-mail",
     optional: "(facultatif)",
@@ -540,7 +553,7 @@ const fr = {
     summary: "Récapitulatif",
     total: "Total",
     howItWorks:
-      "Au moment de commander, votre commande s'ouvre dans WhatsApp et nous vous répondons pour organiser le paiement et la livraison.",
+      "Au moment de commander, votre commande s'ouvre dans WhatsApp et nous vous répondons pour organiser le paiement et la livraison. Nous livrons partout au Cameroun.",
     checkout: "Commander",
   },
   checkout: {
@@ -553,7 +566,7 @@ const fr = {
     notes: "Remarques",
     optional: "(facultatif)",
     howItWorks:
-      "Votre commande s'ouvre dans WhatsApp, déjà remplie. Appuyez simplement sur envoyer, et nous vous répondrons pour organiser le paiement et la livraison.",
+      "Votre commande s'ouvre dans WhatsApp, déjà remplie. Appuyez simplement sur envoyer, et nous vous répondrons pour organiser le paiement et la livraison, partout au Cameroun.",
     preparing: "Préparation de votre commande…",
     orderOnWhatsApp: "Commander sur WhatsApp",
     consent:
