@@ -39,6 +39,21 @@ data). `/sitemap.xml` lists every page in both languages and `/robots.txt` keeps
 cart, checkout and order pages out of search results. Set `SITE_URL` once you have your
 own domain; on Vercel the production address is used until then.
 
+## Privacy and visitor statistics
+
+- `/fr/privacy` and `/en/privacy` explain what the site collects (order details), why,
+  where it's stored (Supabase and Vercel), cookies, and how customers can ask for
+  their details to be changed or deleted. The texts are in `src/lib/i18n.js`
+  (`privacy`); update the date there when you change them. Checkout and the contact
+  form link to it.
+- The only cookies are the language choice and, for you, the admin sign-in. The cart
+  stays in the visitor's browser. There are no tracking or advertising cookies, so no
+  cookie banner is needed.
+- **Visitor statistics** use Vercel Web Analytics, which uses no cookies. It only runs on
+  Vercel and not on admin pages, and order links are reported as `/order/[id]` so
+  they stay private. To turn it on: Vercel → your project → **Analytics** → **Enable**,
+  then redeploy.
+
 ## Getting started
 
 ```bash

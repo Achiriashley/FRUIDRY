@@ -6,7 +6,14 @@ import { languageAlternates, siteOrigin } from "@/lib/seo";
 export default async function sitemap() {
   const origin = siteOrigin();
   const products = await getProducts();
-  const paths = ["/", "/shop", "/about", "/contact", ...products.map((p) => `/shop/${p.slug}`)];
+  const paths = [
+    "/",
+    "/shop",
+    "/about",
+    "/contact",
+    "/privacy",
+    ...products.map((p) => `/shop/${p.slug}`),
+  ];
   const absolute = (path) => `${origin}${path}`;
 
   return paths.flatMap((path) =>

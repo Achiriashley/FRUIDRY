@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/components/CartProvider";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { SiteAnalytics } from "@/components/SiteAnalytics";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { getProducts } from "@/lib/catalog";
 import { localizeProduct } from "@/lib/i18n";
@@ -17,7 +18,10 @@ const geistMono = Geist_Mono({
 });
 
 // The page shell shared by the shop (in each language) and the admin panel.
-export async function SiteFrame({ lang, languageSwitch = true, children }) {
+// Visitor statistics (Vercel Web Analytics) use no cookies and only run on Vercel.
+const analyticsEnabled = Boolean(process.env.VERCEL);
+
+export async function SiteFrame({ lang, languageSwitch = true, analytics = true, children }) {
   const products = (await getProducts()).map((p) => localizeProduct(p, lang));
   return (
     <html lang={lang} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
@@ -29,6 +33,7 @@ export async function SiteFrame({ lang, languageSwitch = true, children }) {
             <Footer lang={lang} />
           </CartProvider>
         </LocaleProvider>
+        {analytics && analyticsEnabled && <SiteAnalytics />}
       </body>
     </html>
   );

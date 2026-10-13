@@ -62,7 +62,10 @@ export function Footer({ lang }) {
         </div>
       </div>
       <p className="border-t border-white/10 py-4 text-center text-xs">
-        © 2026 Fruidry. {t.footer.rights}
+        © 2026 Fruidry. {t.footer.rights} ·{" "}
+        <Link href={localePath(lang, "/privacy")} className="underline hover:text-white">
+          {t.footer.privacy}
+        </Link>
       </p>
     </footer>
   );

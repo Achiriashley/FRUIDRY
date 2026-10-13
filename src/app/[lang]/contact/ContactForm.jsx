@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useId, useState } from "react";
 import { submitContact } from "./actions";
 import { useLocale } from "@/components/LocaleProvider";
@@ -20,7 +21,7 @@ export function ContactForm() {
 
 function ContactFormInner({ onNewMessage }) {
   const uid = useId();
-  const { lang, t } = useLocale();
+  const { lang, t, href } = useLocale();
   const [state, formAction, pending] = useActionState(submitContact, initialState);
   const [restored, setRestored] = useState(null);
 
@@ -121,6 +122,12 @@ function ContactFormInner({ onNewMessage }) {
       >
         {pending ? t.contact.sending : t.contact.send}
       </button>
+      <p className="text-xs text-stone-500">
+        {t.contact.consent}{" "}
+        <Link href={href("/privacy")} className="underline hover:text-brand">
+          {t.footer.privacy}
+        </Link>
+      </p>
     </form>
   );
 }

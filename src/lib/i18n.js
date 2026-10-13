@@ -57,6 +57,7 @@ const en = {
     promise: "Promise",
     promises: ["No added sugar", "No preservatives", "Freeze-dried, never fried"],
     rights: "All rights reserved.",
+    privacy: "Privacy policy",
   },
   categories: { mixes: "Mixes", fruits: "Fruits" },
   home: {
@@ -171,6 +172,7 @@ const en = {
     message: "Message",
     sending: "Preparing your message…",
     send: "Send on WhatsApp",
+    consent: "Your message opens in WhatsApp; nothing is stored on our website.",
     almostDone: "Almost done!",
     ready: "Your message is ready in WhatsApp. Press send there and we'll reply soon.",
     openAgain: "Open WhatsApp again",
@@ -214,6 +216,7 @@ const en = {
       "Your order opens in WhatsApp with everything filled in. Just press send, and we'll reply to arrange payment and delivery.",
     preparing: "Preparing your order…",
     orderOnWhatsApp: "Order on WhatsApp",
+    consent: "By ordering, you agree that we use your details to prepare and deliver your order.",
     almostDone: "Almost done!",
     readyBefore: "Your order ",
     readyMiddle: " is ready in WhatsApp. Press ",
@@ -278,6 +281,71 @@ const en = {
     transactionId: "Transaction ID",
     print: "Print or save as PDF",
   },
+  privacy: {
+    title: "Privacy policy",
+    description: "What information Fruidry collects, why, and how you stay in control of it.",
+    updated: "Last updated: 13 October 2026",
+    sections: [
+      {
+        heading: "Who we are",
+        paragraphs: [
+          "Fruidry sells freeze-dried fruit snacks from Bonabéri, Douala, Cameroon. You can reach us on WhatsApp or by phone at {phone}.",
+        ],
+      },
+      {
+        heading: "What we collect when you order",
+        items: [
+          "Your name, phone number and delivery address, and any notes you add.",
+          "What you ordered, the total and the language you used.",
+          "The date of your order and its status (for example paid or delivered).",
+        ],
+        paragraphs: [
+          "We use this only to prepare your order, contact you about it on WhatsApp or by phone, deliver it and give you your receipt.",
+        ],
+      },
+      {
+        heading: "Messages from the contact form",
+        paragraphs: [
+          "The contact form doesn't store anything on our website. It opens your message in WhatsApp, and you choose whether to send it. WhatsApp (Meta) handles it from there under its own privacy policy.",
+        ],
+      },
+      {
+        heading: "Where your information is kept",
+        paragraphs: [
+          "Orders are stored in our order database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
+          "We don't sell your information or share it with anyone else, except the person delivering your order.",
+        ],
+      },
+      {
+        heading: "How long we keep it",
+        paragraphs: [
+          "We keep order details for as long as we need them to deliver your order and keep our sales records. You can ask us to delete them at any time, unless we're required to keep them.",
+        ],
+      },
+      {
+        heading: "Your order link",
+        paragraphs: [
+          "After ordering, you get a private link to your order and receipt. Anyone who has this link can see your order, so only share it with people you trust.",
+        ],
+      },
+      {
+        heading: "Cookies and visit statistics",
+        intro: "We don't use advertising or tracking cookies. Here is everything the site stores:",
+        items: [
+          "A cookie that remembers whether you chose French or English (only if you switch language).",
+          "Your cart, saved in the browser on your own device so it's still there when you come back. It isn't sent to us until you order.",
+          "Anonymous visit statistics (Vercel Web Analytics), such as which pages are viewed and from which country. They use no cookies and can't identify you.",
+          "To protect the site from abuse, a scrambled code of your network address is kept for about a day to limit repeated attempts. Our hosting provider also keeps short-lived technical logs.",
+        ],
+      },
+      {
+        heading: "Your rights",
+        paragraphs: [
+          "You can ask us to see, correct or delete the personal information we hold about you. Contact us on WhatsApp or by phone and we'll help.",
+        ],
+      },
+    ],
+  },
   notFound: {
     title: "Page not found",
     text: "This page has dried up. Try the shop instead.",
@@ -308,6 +376,7 @@ const fr = {
     promise: "Notre promesse",
     promises: ["Sans sucre ajouté", "Sans conservateurs", "Lyophilisé, jamais frit"],
     rights: "Tous droits réservés.",
+    privacy: "Confidentialité",
   },
   categories: { mixes: "Mélanges", fruits: "Fruits" },
   home: {
@@ -424,6 +493,7 @@ const fr = {
     message: "Message",
     sending: "Préparation de votre message…",
     send: "Envoyer sur WhatsApp",
+    consent: "Votre message s'ouvre dans WhatsApp ; rien n'est enregistré sur notre site.",
     almostDone: "Presque fini !",
     ready: "Votre message est prêt dans WhatsApp. Appuyez sur envoyer et nous vous répondrons rapidement.",
     openAgain: "Rouvrir WhatsApp",
@@ -467,6 +537,8 @@ const fr = {
       "Votre commande s'ouvre dans WhatsApp, déjà remplie. Appuyez simplement sur envoyer, et nous vous répondrons pour organiser le paiement et la livraison.",
     preparing: "Préparation de votre commande…",
     orderOnWhatsApp: "Commander sur WhatsApp",
+    consent:
+      "En commandant, vous acceptez que nous utilisions vos coordonnées pour préparer et livrer votre commande.",
     almostDone: "Presque fini !",
     readyBefore: "Votre commande ",
     readyMiddle: " est prête dans WhatsApp. Appuyez sur ",
@@ -532,6 +604,73 @@ const fr = {
     confirmedBy: "Paiement confirmé par Fruidry",
     transactionId: "N° de transaction",
     print: "Imprimer ou enregistrer en PDF",
+  },
+  privacy: {
+    title: "Politique de confidentialité",
+    description:
+      "Quelles informations Fruidry collecte, pourquoi, et comment vous gardez le contrôle.",
+    updated: "Dernière mise à jour : 13 octobre 2026",
+    sections: [
+      {
+        heading: "Qui sommes-nous",
+        paragraphs: [
+          "Fruidry vend des snacks de fruits lyophilisés depuis Bonabéri, Douala, au Cameroun. Vous pouvez nous joindre sur WhatsApp ou par téléphone au {phone}.",
+        ],
+      },
+      {
+        heading: "Ce que nous collectons quand vous commandez",
+        items: [
+          "Votre nom, votre numéro de téléphone et votre adresse de livraison, ainsi que les remarques que vous ajoutez.",
+          "Ce que vous avez commandé, le total et la langue utilisée.",
+          "La date de votre commande et son statut (par exemple payée ou livrée).",
+        ],
+        paragraphs: [
+          "Nous utilisons ces informations uniquement pour préparer votre commande, vous contacter à son sujet sur WhatsApp ou par téléphone, la livrer et vous remettre votre reçu.",
+        ],
+      },
+      {
+        heading: "Messages du formulaire de contact",
+        paragraphs: [
+          "Le formulaire de contact n'enregistre rien sur notre site. Il ouvre votre message dans WhatsApp, et c'est vous qui choisissez de l'envoyer. WhatsApp (Meta) le traite ensuite selon sa propre politique de confidentialité.",
+        ],
+      },
+      {
+        heading: "Où sont conservées vos informations",
+        paragraphs: [
+          "Les commandes sont enregistrées dans notre base de données de commandes (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
+          "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
+        ],
+      },
+      {
+        heading: "Durée de conservation",
+        paragraphs: [
+          "Nous conservons les détails des commandes aussi longtemps que nécessaire pour livrer votre commande et tenir nos registres de ventes. Vous pouvez nous demander de les supprimer à tout moment, sauf si nous sommes tenus de les conserver.",
+        ],
+      },
+      {
+        heading: "Le lien de votre commande",
+        paragraphs: [
+          "Après votre commande, vous recevez un lien privé vers votre commande et votre reçu. Toute personne qui possède ce lien peut voir votre commande : ne le partagez qu'avec des personnes de confiance.",
+        ],
+      },
+      {
+        heading: "Cookies et statistiques de visite",
+        intro:
+          "Nous n'utilisons pas de cookies publicitaires ni de suivi. Voici tout ce que le site enregistre :",
+        items: [
+          "Un cookie qui retient si vous avez choisi le français ou l'anglais (seulement si vous changez de langue).",
+          "Votre panier, enregistré dans le navigateur de votre propre appareil pour le retrouver à votre retour. Il ne nous est envoyé que lorsque vous commandez.",
+          "Des statistiques de visite anonymes (Vercel Web Analytics), comme les pages consultées et le pays des visiteurs. Elles n'utilisent aucun cookie et ne permettent pas de vous identifier.",
+          "Pour protéger le site contre les abus, un code brouillé de votre adresse réseau est conservé environ une journée afin de limiter les tentatives répétées. Notre hébergeur conserve aussi des journaux techniques pendant une courte durée.",
+        ],
+      },
+      {
+        heading: "Vos droits",
+        paragraphs: [
+          "Vous pouvez nous demander de consulter, corriger ou supprimer les informations personnelles que nous détenons sur vous. Contactez-nous sur WhatsApp ou par téléphone et nous vous aiderons.",
+        ],
+      },
+    ],
   },
   notFound: {
     title: "Page introuvable",

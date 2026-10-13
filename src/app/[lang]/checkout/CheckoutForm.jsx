@@ -162,6 +162,12 @@ function CheckoutFormInner() {
         >
           {pending ? t.checkout.preparing : t.checkout.orderOnWhatsApp}
         </button>
+        <p className="mt-3 text-xs text-stone-500">
+          {t.checkout.consent}{" "}
+          <Link href={href("/privacy")} className="underline hover:text-brand">
+            {t.footer.privacy}
+          </Link>
+        </p>
       </aside>
     </form>
   );
