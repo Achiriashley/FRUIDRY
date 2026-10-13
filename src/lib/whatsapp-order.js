@@ -1,21 +1,24 @@
+import { getDictionary } from "./i18n";
 import { formatPrice } from "./products";
 
-// The message a customer sends to the shop on WhatsApp to place an order.
+// The message a customer sends to the shop on WhatsApp to place an order, in the
+// language they ordered in.
 export function orderMessage(order) {
+  const t = getDictionary(order.lang ?? "en").whatsapp;
   const lines = [
-    "Hello Fruidry! I'd like to order:",
+    t.greeting,
     "",
-    `*Order ${order.reference}*`,
+    `*${t.order} ${order.reference}*`,
     ...order.items.map(
       (item) =>
         `• ${item.sku ?? item.slug} · ${item.name} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}`,
     ),
-    `*Total: ${formatPrice(order.total)}*`,
+    `*${t.total}: ${formatPrice(order.total)}*`,
     "",
-    `Name: ${order.customer.name}`,
-    `Phone: ${order.customer.phone}`,
-    `Delivery: ${order.customer.address}`,
+    `${t.name}: ${order.customer.name}`,
+    `${t.phone}: ${order.customer.phone}`,
+    `${t.delivery}: ${order.customer.address}`,
   ];
-  if (order.customer.notes) lines.push(`Note: ${order.customer.notes}`);
+  if (order.customer.notes) lines.push(`${t.note}: ${order.customer.notes}`);
   return lines.join("\n");
 }

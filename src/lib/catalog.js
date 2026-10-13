@@ -19,6 +19,10 @@ export const EDITABLE_FIELDS = [
   "price",
   "weight",
   "highlights",
+  "nameFr",
+  "taglineFr",
+  "descriptionFr",
+  "highlightsFr",
   "inStock",
   "image",
 ];

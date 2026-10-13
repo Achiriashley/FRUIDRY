@@ -2,18 +2,23 @@
 
 import { useState } from "react";
 import { categories } from "@/lib/products";
+import { useLocale } from "./LocaleProvider";
 import { ProductCard } from "./ProductCard";
 
 export function ShopGrid({ products, images }) {
+  const { t } = useLocale();
   const [active, setActive] = useState("all");
   const visible = active === "all" ? products : products.filter((p) => p.category === active);
 
-  const filters = [{ id: "all", label: "All" }, ...categories];
+  const filters = [
+    { id: "all", label: t.shop.all },
+    ...categories.map((c) => ({ id: c.id, label: t.categories[c.id] ?? c.label })),
+  ];
 
   return (
     <div>
       {categories.length > 1 && (
-        <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+        <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label={t.shop.filterLabel}>
           {filters.map((f) => (
             <button
               key={f.id}
@@ -33,7 +38,7 @@ export function ShopGrid({ products, images }) {
       )}
       {visible.length === 0 && (
         <p className="rounded-2xl bg-white p-8 text-center text-stone-600 shadow-sm">
-          New products are coming soon.
+          {t.home.comingSoon}
         </p>
       )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

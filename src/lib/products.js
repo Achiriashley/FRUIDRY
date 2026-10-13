@@ -17,6 +17,12 @@ export const defaultProducts = [
     description:
       "Our signature pack: a colourful mix of freeze-dried fruit, frozen at peak ripeness and dried until light and crunchy. Eat it straight from the pouch, or sprinkle it on yoghurt, cereal or porridge.",
     highlights: ["100% fruit", "No added sugar", "No preservatives", "Light & crunchy"],
+    // French versions, shown on the French site (/fr).
+    nameFr: "Mélange de fruits",
+    taglineFr: "Un mélange croquant de fruits lyophilisés.",
+    descriptionFr:
+      "Notre sachet signature : un mélange coloré de fruits lyophilisés, congelés à pleine maturité puis séchés jusqu'à devenir légers et croquants. À croquer directement dans le sachet, ou à parsemer sur un yaourt, des céréales ou une bouillie.",
+    highlightsFr: ["100 % fruit", "Sans sucre ajouté", "Sans conservateurs", "Léger et croquant"],
     inStock: true,
   },
 ];

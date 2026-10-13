@@ -1,18 +1,20 @@
 import Link from "next/link";
+import { getDictionary, localePath } from "@/lib/i18n";
 import { CartLink } from "./CartLink";
+import { LanguageSwitch } from "./LanguageSwitch";
 
-const nav = [
-  { href: "/shop", label: "Shop" },
-  { href: "/about", label: "Our story" },
-  { href: "/contact", label: "Contact" },
-];
-
-export function Header() {
+export function Header({ lang, languageSwitch }) {
+  const t = getDictionary(lang);
+  const nav = [
+    { href: localePath(lang, "/shop"), label: t.nav.shop },
+    { href: localePath(lang, "/about"), label: t.nav.about },
+    { href: localePath(lang, "/contact"), label: t.nav.contact },
+  ];
   return (
     <header className="sticky top-0 z-20 print:hidden border-b border-stone-200 bg-cream/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link
-          href="/"
+          href={localePath(lang)}
           className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand"
         >
           <span aria-hidden>🍊</span> Fruidry
@@ -27,6 +29,7 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {languageSwitch && <LanguageSwitch />}
           <CartLink />
         </nav>
       </div>

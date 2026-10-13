@@ -5,6 +5,8 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 
 ## Features
 
+- **French and English**: every shop page exists at `/fr/...` and `/en/...`, with a
+  language button in the header (see below)
 - **Home page** with a hero section, brand values and featured products
 - **Shop** (`/shop`) showing every product, filterable by category
 - **Product pages** (`/shop/[slug]`), statically generated, with related products
@@ -14,6 +16,26 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Admin panel** (`/admin`): see below
 - **Our story** (`/about`) page
 - **Contact form** (`/contact`) that validates input in a Server Action
+
+## Languages and search engines
+
+The shop is in French and English. Each page has its own address in each language
+(`/fr/shop`, `/en/shop`, ...). Visiting an address without a language (like `/` or an
+older link such as `/shop`) sends visitors to the language they picked before, or their
+phone's language, or French. The admin panel stays in English.
+
+- Page texts live in `src/lib/i18n.js`.
+- Product names, taglines, descriptions and highlights have optional French versions,
+  edited in the admin panel under **French text**. Empty French fields show the English text.
+- Customers' WhatsApp order messages, their order page and receipt, and the messages
+  you send them from the admin panel use the language they ordered in.
+
+For search engines and link previews, each page has its own title and description in
+its language, links to its translation (`hreflang`), and a preview picture for WhatsApp
+and social media. Product pages also tell Google the price, currency and stock (structured
+data). `/sitemap.xml` lists every page in both languages and `/robots.txt` keeps the admin,
+cart, checkout and order pages out of search results. Set `SITE_URL` once you have your
+own domain; on Vercel the production address is used until then.
 
 ## Getting started
 
@@ -65,7 +87,9 @@ Copy `.env.example` to `.env.local` and set:
   Customers' orders are sent here.
 - `ADMIN_PASSWORD`: the password for `/admin`. Without it the admin page stays locked.
 - `SITE_URL` (optional): your site's address, e.g. `https://fruidry.cm`, used in
-  receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.
+  receipt links sent on WhatsApp and in the links search engines see. If it's not set,
+  receipt links use the address you're browsing on, and search engines get the Vercel
+  production address.
 - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
   in its SQL editor (it creates the tables, a public `product-images` folder for photos and
@@ -115,9 +139,12 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 ```
 src/
-  app/              Routes (home, shop, product, cart, about, contact)
+  app/[lang]/       Shop pages in each language (home, shop, product, cart, about, contact)
+  app/admin/        Admin panel
   components/       Header, footer, product card, cart provider, etc.
+  lib/i18n.js       French and English texts
   lib/products.js   Product catalogue data and helpers
+  proxy.js          Sends addresses without a language to /fr or /en
 ```
 
 Products are managed from the admin panel. The starting product (Mixed Fruit Pack) is

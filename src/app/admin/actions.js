@@ -59,19 +59,26 @@ export async function confirmPayment(formData) {
   );
 }
 
+// Shown to the customer when no reason is typed, in the language they ordered in.
+const DEFAULT_CANCEL_REASON = {
+  en: "This order was cancelled. Message us on WhatsApp if you have any questions.",
+  fr: "Cette commande a été annulée. Écrivez-nous sur WhatsApp si vous avez des questions.",
+};
+
 export async function rejectPayment(formData) {
-  const reason =
-    String(formData.get("reason") ?? "")
-      .trim()
-      .slice(0, 300) ||
-    "This order was cancelled. Message us on WhatsApp if you have any questions.";
+  const typed = String(formData.get("reason") ?? "")
+    .trim()
+    .slice(0, 300);
   await updateOrder(formData, (order) =>
     isPaid(order)
       ? null
       : {
           ...order,
           status: ORDER_STATUS.rejected,
-          rejection: { reason, rejectedAt: new Date().toISOString() },
+          rejection: {
+            reason: typed || DEFAULT_CANCEL_REASON[order.lang] || DEFAULT_CANCEL_REASON.en,
+            rejectedAt: new Date().toISOString(),
+          },
         },
   );
 }
@@ -89,6 +96,8 @@ export async function markDelivered(formData) {
 }
 
 const LIMITS = { sku: 30, name: 80, tagline: 120, description: 1000, weight: 30 };
+// French versions are optional; the French shop shows the English text where they're empty.
+const FRENCH_LIMITS = { nameFr: 80, taglineFr: 120, descriptionFr: 1000 };
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
 // Adds a product (no slug) or updates one (slug), with an optional new photo.
@@ -97,6 +106,12 @@ export async function saveProduct(_prev, formData) {
 
   const slug = String(formData.get("slug") ?? "").trim();
   const text = (field) => String(formData.get(field) ?? "").trim();
+  const lines = (field) =>
+    text(field)
+      .split("\n")
+      .map((line) => line.trim().slice(0, 60))
+      .filter(Boolean)
+      .slice(0, 8);
   const fields = {
     sku: text("sku").toUpperCase(),
     name: text("name"),
@@ -104,11 +119,11 @@ export async function saveProduct(_prev, formData) {
     description: text("description"),
     weight: text("weight"),
     price: Number(text("price")),
-    highlights: text("highlights")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .slice(0, 8),
+    highlights: lines("highlights"),
+    nameFr: text("nameFr"),
+    taglineFr: text("taglineFr"),
+    descriptionFr: text("descriptionFr"),
+    highlightsFr: lines("highlightsFr"),
     inStock: formData.get("inStock") === "on",
   };
 
@@ -116,6 +131,9 @@ export async function saveProduct(_prev, formData) {
   for (const [field, max] of Object.entries(LIMITS)) {
     if (!fields[field]) errors[field] = "This can't be empty.";
     else if (fields[field].length > max) errors[field] = `Keep this under ${max} characters.`;
+  }
+  for (const [field, max] of Object.entries(FRENCH_LIMITS)) {
+    if (fields[field].length > max) errors[field] = `Keep this under ${max} characters.`;
   }
   if (!errors.sku && !/^[A-Z0-9-]+$/.test(fields.sku)) {
     errors.sku = "Use only letters, numbers and dashes, e.g. FD-MIX-50.";

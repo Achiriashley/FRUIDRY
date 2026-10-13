@@ -20,15 +20,27 @@ export function StatusBadge({ status }) {
   );
 }
 
+// The customer's order page, in the language they ordered in.
+function orderPath(order) {
+  return order.lang ? `/${order.lang}/order/${order.id}` : `/order/${order.id}`;
+}
+
+// Messages to the customer are written in the language they ordered in.
 function receiptMessage(order, siteUrl) {
-  return (
-    `Hello ${order.customer.name}, your Fruidry payment of ${formatPrice(order.total)} ` +
-    `for order ${order.reference} is confirmed. Your receipt: ${siteUrl}/order/${order.id}`
-  );
+  const { name } = order.customer;
+  const link = `${siteUrl}${orderPath(order)}`;
+  return order.lang === "fr"
+    ? `Bonjour ${name}, votre paiement Fruidry de ${formatPrice(order.total)} pour la ` +
+        `commande ${order.reference} est confirmé. Votre reçu : ${link}`
+    : `Hello ${name}, your Fruidry payment of ${formatPrice(order.total)} ` +
+        `for order ${order.reference} is confirmed. Your receipt: ${link}`;
 }
 
 function customerMessage(order) {
-  return `Hello ${order.customer.name}, this is Fruidry about your order ${order.reference}.`;
+  const { name } = order.customer;
+  return order.lang === "fr"
+    ? `Bonjour ${name}, ici Fruidry au sujet de votre commande ${order.reference}.`
+    : `Hello ${name}, this is Fruidry about your order ${order.reference}.`;
 }
 
 export function OrderCard({ order, siteUrl }) {
@@ -143,7 +155,7 @@ export function OrderCard({ order, siteUrl }) {
           </a>
         )}
         <Link
-          href={`/order/${order.id}`}
+          href={orderPath(order)}
           className="text-sm text-stone-600 underline hover:text-brand"
         >
           {isPaid(order) ? "View receipt" : "View customer page"}

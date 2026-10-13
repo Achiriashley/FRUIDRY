@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { headers } from "next/headers";
+import { getDictionary } from "./i18n";
 import { supabaseConfig, supabaseRequest } from "./storage";
 
 // Simple fixed-window rate limiting for abuse-prone actions (admin sign-in,
@@ -78,7 +79,7 @@ export async function rateLimit(action) {
   return { allowed, retryAfterSeconds };
 }
 
-export function retryMessage(seconds) {
-  const minutes = Math.ceil(seconds / 60);
-  return minutes <= 1 ? "a minute" : `${minutes} minutes`;
+// "a minute" / "15 minutes" (or the French equivalent).
+export function retryMessage(seconds, lang = "en") {
+  return getDictionary(lang).wait(Math.ceil(seconds / 60));
 }

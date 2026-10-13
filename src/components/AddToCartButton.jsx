@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "./CartProvider";
+import { useLocale } from "./LocaleProvider";
 
 export function AddToCartButton({ slug, inStock = true, withQuantity = false, size = "md" }) {
   const { addItem } = useCart();
+  const { t, href } = useLocale();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -15,7 +17,7 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
   if (!inStock) {
     return (
       <p className="inline-block rounded-full bg-stone-200 px-5 py-2 text-sm font-semibold text-stone-600">
-        Sold out
+        {t.product.soldOut}
       </p>
     );
   }
@@ -28,7 +30,7 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
 
   function handleBuyNow() {
     addItem(slug, quantity);
-    router.push("/checkout");
+    router.push(href("/checkout"));
   }
 
   return (
@@ -37,7 +39,7 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
         <div className="flex items-center rounded-full border border-stone-300 bg-white">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label={t.product.decrease}
             className="px-3 py-2 text-lg disabled:opacity-40"
             disabled={quantity <= 1}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -49,7 +51,7 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
           </span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label={t.product.increase}
             className="px-3 py-2 text-lg"
             onClick={() => setQuantity((q) => q + 1)}
           >
@@ -62,14 +64,14 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
         onClick={handleAdd}
         className={`rounded-full border-2 border-brand bg-white font-semibold text-brand transition hover:bg-orange-50 ${buttonSize}`}
       >
-        {added ? "Added ✓" : "Add to cart"}
+        {added ? t.product.added : t.product.addToCart}
       </button>
       <button
         type="button"
         onClick={handleBuyNow}
         className={`rounded-full border-2 border-brand bg-brand font-semibold text-white transition hover:border-brand-dark hover:bg-brand-dark ${buttonSize}`}
       >
-        Buy now
+        {t.product.buyNow}
       </button>
     </div>
   );

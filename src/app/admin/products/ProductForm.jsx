@@ -45,6 +45,10 @@ const EMPTY_PRODUCT = {
   price: "",
   weight: "",
   highlights: [],
+  nameFr: "",
+  taglineFr: "",
+  descriptionFr: "",
+  highlightsFr: [],
   inStock: true,
   image: null,
 };
@@ -104,7 +108,7 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-bold">{product.name}</h2>
           <a
-            href={`/shop/${product.slug}`}
+            href={`/en/shop/${product.slug}`}
             className="text-sm text-stone-600 underline hover:text-brand"
           >
             View in shop
@@ -220,6 +224,55 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
           className={inputClass}
         />
       </Field>
+
+      <fieldset className="space-y-4 rounded-xl border border-stone-200 p-4">
+        <legend className="px-1 font-semibold">French text (optional)</legend>
+        <p className="text-sm text-stone-500">
+          Shown on the French site. Anything left empty shows the English text instead.
+        </p>
+        <Field id={id("nameFr")} label="Name in French" error={state.errors?.nameFr}>
+          <input
+            id={id("nameFr")}
+            name="nameFr"
+            lang="fr"
+            defaultValue={product.nameFr ?? ""}
+            className={inputClass}
+          />
+        </Field>
+        <Field id={id("taglineFr")} label="Short tagline in French" error={state.errors?.taglineFr}>
+          <input
+            id={id("taglineFr")}
+            name="taglineFr"
+            lang="fr"
+            defaultValue={product.taglineFr ?? ""}
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          id={id("descriptionFr")}
+          label="Description in French"
+          error={state.errors?.descriptionFr}
+        >
+          <textarea
+            id={id("descriptionFr")}
+            name="descriptionFr"
+            lang="fr"
+            rows={4}
+            defaultValue={product.descriptionFr ?? ""}
+            className={inputClass}
+          />
+        </Field>
+        <Field id={id("highlightsFr")} label="Highlights in French (one per line)">
+          <textarea
+            id={id("highlightsFr")}
+            name="highlightsFr"
+            lang="fr"
+            rows={4}
+            defaultValue={(product.highlightsFr ?? []).join("\n")}
+            className={inputClass}
+          />
+        </Field>
+      </fieldset>
 
       <div className="flex flex-wrap items-center gap-4">
         <button
