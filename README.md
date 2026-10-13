@@ -51,8 +51,9 @@ public site, so bookmark it.
 - **Dashboard**: new orders, orders to deliver, and sales this month and in total.
 - **Orders**: every order, filterable by status and searchable by order number,
   customer name or phone.
-- **Product**: change the item code, name, price, pack size, description and highlights, or
-  mark the pack as sold out. Changes show on the shop as soon as you save.
+- **Products**: add new products (with a photo), edit any product's item code, name,
+  price, pack size, description, highlights and photo, mark it sold out, or delete it.
+  Changes show on the shop as soon as you save. Photos are shrunk before uploading.
 
 Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
@@ -67,7 +68,8 @@ Copy `.env.example` to `.env.local` and set:
   receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.
 - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
-  in its SQL editor, then copy from Project Settings:
+  in its SQL editor (it creates the tables and a public `product-images` folder for photos),
+  then copy from Project Settings:
   - the **Project URL** into `SUPABASE_URL`
   - a **secret key** (starts with `sb_secret_`, under API Keys), or on older projects
     the legacy **service_role** key, into `SUPABASE_SECRET_KEY`. (The older name
@@ -99,7 +101,9 @@ src/
   lib/products.js   Product catalogue data and helpers
 ```
 
-Product details can be edited from the admin panel. The starting details live in `src/lib/products.js`.
+Products are managed from the admin panel. The starting product (Mixed Fruit Pack) is
+defined in `src/lib/products.js`; everything you add, change or delete in the panel is
+saved on top of that.
 
 ## Product photos
 

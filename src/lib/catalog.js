@@ -2,8 +2,12 @@ import { cacheTag } from "next/cache";
 import { defaultProducts } from "./products";
 import { jsonFile, supabaseConfig, supabaseRequest } from "./storage";
 
-// Product details shown in the shop: the defaults from products.js with any
-// edits made in the admin panel applied on top.
+// Products shown in the shop. The starting products come from products.js;
+// anything changed, added or deleted in the admin panel is stored (in Supabase
+// or data/products.json) and applied on top:
+//   - a stored row for a starting product holds its edited fields
+//   - a stored row for any other slug is a product added in the admin panel
+//   - a row with { deleted: true } hides that product
 
 export const PRODUCTS_TAG = "products";
 
@@ -16,44 +20,30 @@ export const EDITABLE_FIELDS = [
   "weight",
   "highlights",
   "inStock",
+  "image",
 ];
 
-const editsFile = jsonFile("products.json", {});
+// Look of products added in the admin panel (they have no hand-picked colours).
+const NEW_PRODUCT_DEFAULTS = {
+  category: "mixes",
+  emoji: "🍓",
+  color: "from-orange-100 to-amber-50",
+  tagline: "",
+  highlights: [],
+  inStock: true,
+};
 
-async function readEdits() {
+const STARTING = new Map(defaultProducts.map((p) => [p.slug, p]));
+const storedFile = jsonFile("products.json", {});
+
+async function readStored() {
   const config = supabaseConfig();
-  if (!config) return editsFile.read();
+  if (!config) return storedFile.read();
   const rows = await supabaseRequest(config, "products", "?select=slug,data");
   return Object.fromEntries(rows.map((row) => [row.slug, row.data]));
 }
 
-function pickEditable(edits) {
-  return Object.fromEntries(
-    EDITABLE_FIELDS.filter((field) => edits?.[field] !== undefined).map((field) => [
-      field,
-      edits[field],
-    ]),
-  );
-}
-
-export async function getProducts() {
-  "use cache";
-  cacheTag(PRODUCTS_TAG);
-  const edits = await readEdits();
-  return defaultProducts.map((product) => ({
-    ...product,
-    ...pickEditable(edits[product.slug]),
-  }));
-}
-
-export async function getProduct(slug) {
-  const products = await getProducts();
-  return products.find((p) => p.slug === slug);
-}
-
-export async function saveProductEdits(slug, fields) {
-  if (!defaultProducts.some((p) => p.slug === slug)) throw new Error(`Unknown product ${slug}`);
-  const data = pickEditable(fields);
+async function writeStored(slug, data) {
   const config = supabaseConfig();
   if (config) {
     await supabaseRequest(config, "products", "", {
@@ -62,6 +52,75 @@ export async function saveProductEdits(slug, fields) {
       body: JSON.stringify({ slug, data, updated_at: new Date().toISOString() }),
     });
   } else {
-    await editsFile.update((edits) => ({ ...edits, [slug]: data }));
+    await storedFile.update((stored) => ({ ...stored, [slug]: data }));
   }
+}
+
+function pickEditable(data) {
+  return Object.fromEntries(
+    EDITABLE_FIELDS.filter((field) => data?.[field] !== undefined).map((field) => [
+      field,
+      data[field],
+    ]),
+  );
+}
+
+export async function getProducts() {
+  "use cache";
+  cacheTag(PRODUCTS_TAG);
+  const stored = await readStored();
+
+  const starting = defaultProducts
+    .filter((p) => !stored[p.slug]?.deleted)
+    .map((p) => ({ ...p, ...pickEditable(stored[p.slug]) }));
+
+  const added = Object.entries(stored)
+    .filter(([slug, data]) => !STARTING.has(slug) && !data.deleted && data.name)
+    .sort(([, a], [, b]) => String(a.createdAt).localeCompare(String(b.createdAt)))
+    .map(([slug, data]) => ({ ...NEW_PRODUCT_DEFAULTS, ...pickEditable(data), slug }));
+
+  return [...starting, ...added];
+}
+
+export async function getProduct(slug) {
+  const products = await getProducts();
+  return products.find((p) => p.slug === slug);
+}
+
+function slugify(text) {
+  return (
+    String(text)
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "product"
+  );
+}
+
+// Adds a product and returns its slug (the part of its web address after /shop/).
+export async function createProduct(fields) {
+  const stored = await readStored();
+  const taken = (slug) => STARTING.has(slug) || stored[slug] !== undefined;
+  const base = slugify(fields.name);
+  let slug = base;
+  for (let n = 2; taken(slug); n++) slug = `${base}-${n}`;
+
+  await writeStored(slug, { ...pickEditable(fields), createdAt: new Date().toISOString() });
+  return slug;
+}
+
+export async function updateProduct(slug, fields) {
+  const stored = await readStored();
+  const existing = stored[slug];
+  if ((!STARTING.has(slug) && !existing) || existing?.deleted) {
+    throw new Error(`Unknown product ${slug}`);
+  }
+  await writeStored(slug, { ...existing, ...pickEditable(fields) });
+}
+
+// Hides the product from the shop. Past orders keep their own copy of its details.
+export async function deleteProduct(slug) {
+  await writeStored(slug, { deleted: true, deletedAt: new Date().toISOString() });
 }

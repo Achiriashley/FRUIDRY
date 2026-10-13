@@ -86,7 +86,11 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-20">
-        {products.length === 1 ? (
+        {products.length === 0 ? (
+          <p className="rounded-2xl bg-white p-8 text-center text-stone-600 shadow-sm">
+            New products are coming soon.
+          </p>
+        ) : products.length === 1 ? (
           <FeaturedProduct product={products[0]} image={images[products[0].slug]} />
         ) : (
           <>

@@ -1,9 +1,17 @@
 "use server";
 
 import { refresh, updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { endAdminSession, isAdmin, passwordMatches, startAdminSession } from "@/lib/admin-auth";
-import { PRODUCTS_TAG, saveProductEdits } from "@/lib/catalog";
+import {
+  PRODUCTS_TAG,
+  createProduct,
+  deleteProduct as removeProduct,
+  getProducts,
+  updateProduct,
+} from "@/lib/catalog";
 import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
+import { saveImage } from "@/lib/storage";
 
 export async function login(_prev, formData) {
   if (!passwordMatches(String(formData.get("password") ?? ""))) {
@@ -71,10 +79,13 @@ export async function markDelivered(formData) {
 }
 
 const LIMITS = { sku: 30, name: 80, tagline: 120, description: 1000, weight: 30 };
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
+// Adds a product (no slug) or updates one (slug), with an optional new photo.
 export async function saveProduct(_prev, formData) {
   if (!(await isAdmin())) return { status: "error", errors: { form: "Please sign in again." } };
 
+  const slug = String(formData.get("slug") ?? "").trim();
   const text = (field) => String(formData.get(field) ?? "").trim();
   const fields = {
     sku: text("sku").toUpperCase(),
@@ -99,12 +110,45 @@ export async function saveProduct(_prev, formData) {
   if (!errors.sku && !/^[A-Z0-9-]+$/.test(fields.sku)) {
     errors.sku = "Use only letters, numbers and dashes, e.g. FD-MIX-50.";
   }
+  if (!errors.sku) {
+    const products = await getProducts();
+    const clash = products.find((p) => p.sku === fields.sku && p.slug !== slug);
+    if (clash) errors.sku = `${clash.name} already uses this item code.`;
+  }
   if (!Number.isInteger(fields.price) || fields.price < 1) {
     errors.price = "Enter a whole number of FCFA, e.g. 2500.";
   }
+
+  const photo = formData.get("photo");
+  const hasPhoto = photo && typeof photo === "object" && photo.size > 0;
+  if (hasPhoto && photo.size > MAX_PHOTO_BYTES) errors.photo = "This photo is too big.";
+  if (hasPhoto && !["image/jpeg", "image/png", "image/webp"].includes(photo.type)) {
+    errors.photo = "Use a JPG, PNG or WebP photo.";
+  }
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
-  await saveProductEdits(text("slug"), fields);
+  try {
+    if (hasPhoto) fields.image = await saveImage(photo);
+    if (slug) {
+      await updateProduct(slug, fields);
+    } else {
+      await createProduct(fields);
+    }
+  } catch (error) {
+    console.error("Failed to save product", error);
+    return {
+      status: "error",
+      errors: { form: "Sorry, the product couldn't be saved. Please try again." },
+    };
+  }
   updateTag(PRODUCTS_TAG);
+  if (!slug) redirect("/admin/products?added=1");
   return { status: "success" };
+}
+
+export async function deleteProduct(formData) {
+  if (!(await isAdmin())) throw new Error("Not signed in");
+  await removeProduct(String(formData.get("slug") ?? ""));
+  updateTag(PRODUCTS_TAG);
+  redirect("/admin/products?deleted=1");
 }

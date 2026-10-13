@@ -85,3 +85,61 @@ export function jsonFile(name, fallback) {
 
   return { read, update };
 }
+
+// ---------- Uploaded images ----------
+
+export const IMAGE_BUCKET = "product-images";
+const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+
+const IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+// Saves an uploaded image and returns the URL to show it with.
+export async function saveImage(file) {
+  const extension = IMAGE_TYPES[file.type];
+  if (!extension) throw new Error(`Unsupported image type ${file.type}`);
+  const name = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+
+  const config = supabaseConfig();
+  if (config) {
+    const isLegacyJwt = config.key.startsWith("eyJ");
+    const res = await fetch(`${config.url}/storage/v1/object/${IMAGE_BUCKET}/${name}`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        apikey: config.key,
+        ...(isLegacyJwt ? { Authorization: `Bearer ${config.key}` } : {}),
+        "Content-Type": file.type,
+        "Cache-Control": "max-age=31536000",
+      },
+      body: bytes,
+    });
+    if (!res.ok) {
+      throw new Error(`Supabase image upload failed (${res.status}): ${await res.text()}`);
+    }
+    return `${config.url}/storage/v1/object/public/${IMAGE_BUCKET}/${name}`;
+  }
+
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Can't save images: Supabase isn't configured for this deployment, and Vercel can't " +
+        "save files. Set SUPABASE_URL and SUPABASE_SECRET_KEY, then redeploy.",
+    );
+  }
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await fs.writeFile(path.join(UPLOAD_DIR, name), bytes);
+  return `/uploads/${name}`;
+}
+
+// Reads an image saved by saveImage() without Supabase. Returns null if missing.
+export async function readLocalImage(name) {
+  if (!/^[a-z0-9-]+\.(jpg|png|webp)$/.test(name)) return null;
+  try {
+    const bytes = await fs.readFile(path.join(UPLOAD_DIR, name));
+    const type = Object.keys(IMAGE_TYPES).find((t) => name.endsWith(`.${IMAGE_TYPES[t]}`));
+    return { bytes, type };
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+}

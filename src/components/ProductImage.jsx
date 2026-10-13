@@ -8,13 +8,15 @@ export function ProductImage({
   className = "",
   preload = false,
 }) {
+  // A photo uploaded in the admin panel wins over a file in public/products.
+  const imageSrc = product.image || src;
   return (
     <div
       className={`relative flex items-center justify-center overflow-hidden bg-gradient-to-br ${product.color} ${className}`}
     >
-      {src ? (
+      {imageSrc ? (
         <Image
-          src={src}
+          src={imageSrc}
           alt={product.name}
           fill
           sizes={sizes}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useId, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/products";
 import { placeOrder } from "./actions";
@@ -16,7 +17,16 @@ function FieldError({ message }) {
   return message ? <p className="mt-1 text-sm text-red-600">{message}</p> : null;
 }
 
+// Next.js keeps recently visited pages alive in the background. Keying the form by
+// bfcacheId gives a fresh form on each new visit (e.g. a second order), while the
+// browser's back button still restores what was typed.
 export function CheckoutForm() {
+  const { bfcacheId } = useRouter();
+  return <CheckoutFormInner key={bfcacheId} />;
+}
+
+function CheckoutFormInner() {
+  const uid = useId();
   const { items, subtotal, clear } = useCart();
   const [state, formAction, pending] = useActionState(placeOrder, { status: "idle" });
   const [lastOrder, setLastOrder] = useState(null);
@@ -79,18 +89,18 @@ export function CheckoutForm() {
         <h2 className="text-lg font-bold">Your details</h2>
         <input type="hidden" name="items" value={cartLines} />
         <div>
-          <label htmlFor="name" className="text-sm font-medium">
+          <label htmlFor={`${uid}-name`} className="text-sm font-medium">
             Full name
           </label>
-          <input id="name" name="name" autoComplete="name" className={inputClass} />
+          <input id={`${uid}-name`} name="name" autoComplete="name" className={inputClass} />
           <FieldError message={state.errors?.name} />
         </div>
         <div>
-          <label htmlFor="phone" className="text-sm font-medium">
+          <label htmlFor={`${uid}-phone`} className="text-sm font-medium">
             Phone number
           </label>
           <input
-            id="phone"
+            id={`${uid}-phone`}
             name="phone"
             type="tel"
             inputMode="tel"
@@ -101,11 +111,11 @@ export function CheckoutForm() {
           <FieldError message={state.errors?.phone} />
         </div>
         <div>
-          <label htmlFor="address" className="text-sm font-medium">
+          <label htmlFor={`${uid}-address`} className="text-sm font-medium">
             Delivery address
           </label>
           <textarea
-            id="address"
+            id={`${uid}-address`}
             name="address"
             rows={2}
             placeholder="Town, neighbourhood and a landmark"
@@ -114,10 +124,10 @@ export function CheckoutForm() {
           <FieldError message={state.errors?.address} />
         </div>
         <div>
-          <label htmlFor="notes" className="text-sm font-medium">
+          <label htmlFor={`${uid}-notes`} className="text-sm font-medium">
             Notes <span className="font-normal text-stone-500">(optional)</span>
           </label>
-          <textarea id="notes" name="notes" rows={2} className={inputClass} />
+          <textarea id={`${uid}-notes`} name="notes" rows={2} className={inputClass} />
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import { LoginForm } from "./LoginForm";
 const NAV = [
   { href: "/admin", label: "Dashboard", id: "dashboard" },
   { href: "/admin/orders", label: "Orders", id: "orders" },
-  { href: "/admin/products", label: "Product", id: "products" },
+  { href: "/admin/products", label: "Products", id: "products" },
 ];
 
 // Wraps every admin page: checks the admin is signed in and draws the menu.

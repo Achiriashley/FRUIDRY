@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { login } from "./actions";
 
 export function LoginForm() {
+  const uid = useId();
   const [state, formAction, pending] = useActionState(login, { error: null });
   return (
     <form
@@ -12,11 +13,11 @@ export function LoginForm() {
     >
       <h1 className="text-2xl font-bold">Orders admin</h1>
       <div>
-        <label htmlFor="password" className="text-sm font-medium">
+        <label htmlFor={`${uid}-password`} className="text-sm font-medium">
           Password
         </label>
         <input
-          id="password"
+          id={`${uid}-password`}
           name="password"
           type="password"
           autoComplete="current-password"

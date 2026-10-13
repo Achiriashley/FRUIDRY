@@ -20,3 +20,8 @@ create table if not exists public.products (
 );
 
 alter table public.products enable row level security;
+
+-- Public folder for product photos uploaded from the admin panel.
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;

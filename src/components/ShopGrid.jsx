@@ -31,6 +31,11 @@ export function ShopGrid({ products, images }) {
           ))}
         </div>
       )}
+      {visible.length === 0 && (
+        <p className="rounded-2xl bg-white p-8 text-center text-stone-600 shadow-sm">
+          New products are coming soon.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((product) => (
           <ProductCard key={product.slug} product={product} image={images[product.slug]} />
