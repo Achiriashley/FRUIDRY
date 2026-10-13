@@ -24,6 +24,7 @@ export const EDITABLE_FIELDS = [
   "descriptionFr",
   "highlightsFr",
   "inStock",
+  "comingSoon",
   "image",
 ];
 
@@ -31,10 +32,11 @@ export const EDITABLE_FIELDS = [
 const NEW_PRODUCT_DEFAULTS = {
   category: "mixes",
   emoji: "🍓",
-  color: "from-orange-100 to-amber-50",
+  color: "from-sun-light to-brand-light",
   tagline: "",
   highlights: [],
   inStock: true,
+  comingSoon: false,
 };
 
 const STARTING = new Map(defaultProducts.map((p) => [p.slug, p]));

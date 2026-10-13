@@ -19,12 +19,19 @@ export function ProductCard({ product, image }) {
           <ProductLink slug={product.slug}>
             <h3 className="font-semibold text-stone-900 hover:text-brand">{product.name}</h3>
           </ProductLink>
-          <span className="font-semibold text-brand">{formatPrice(product.price)}</span>
+          {!product.comingSoon && (
+            <span className="font-semibold text-brand">{formatPrice(product.price)}</span>
+          )}
         </div>
         <p className="text-sm text-stone-600">{product.tagline}</p>
         <p className="text-xs text-stone-500">{product.weight}</p>
         <div className="mt-auto pt-2">
-          <AddToCartButton slug={product.slug} inStock={product.inStock} size="sm" />
+          <AddToCartButton
+            slug={product.slug}
+            inStock={product.inStock}
+            comingSoon={product.comingSoon}
+            size="sm"
+          />
         </div>
       </div>
     </article>

@@ -1,9 +1,14 @@
 @import "tailwindcss";
 
+/* Colours taken from the Fruidry packaging: deep green, cream and sunny yellow. */
 @theme {
-  --color-brand: #e8590c;
-  --color-brand-dark: #c2410c;
-  --color-cream: #fffaf3;
+  --color-brand: #0f4a2a;
+  --color-brand-dark: #0a3520;
+  --color-brand-deep: #072a19;
+  --color-brand-light: #e9f1e4;
+  --color-sun: #f6c518;
+  --color-sun-light: #fdf1c7;
+  --color-cream: #fbf7ee;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }

@@ -125,6 +125,7 @@ export async function saveProduct(_prev, formData) {
     descriptionFr: text("descriptionFr"),
     highlightsFr: lines("highlightsFr"),
     inStock: formData.get("inStock") === "on",
+    comingSoon: formData.get("comingSoon") === "on",
   };
 
   const errors = {};

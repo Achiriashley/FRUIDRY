@@ -21,7 +21,7 @@ export function ProductImage({
           fill
           sizes={sizes}
           preload={preload}
-          className="object-cover"
+          className="object-contain p-[7%] drop-shadow-xl"
         />
       ) : (
         <span className={emojiClassName} aria-hidden>

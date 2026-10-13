@@ -10,7 +10,7 @@ import { placeOrder } from "./actions";
 import { submitKeepingInput } from "@/lib/use-keep-form";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200";
+  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 const LAST_ORDER_KEY = "fruidry-last-order";
 
@@ -151,7 +151,7 @@ function CheckoutFormInner() {
           <span>{t.cart.total}</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        <p className="mt-4 rounded-lg bg-orange-50 p-3 text-xs text-brand-dark">
+        <p className="mt-4 rounded-lg bg-brand-light p-3 text-xs text-brand-dark">
           {t.checkout.howItWorks}
         </p>
         <FieldError message={state.errors?.form} />

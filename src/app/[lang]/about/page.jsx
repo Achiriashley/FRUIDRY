@@ -32,7 +32,7 @@ export default async function AboutPage() {
         ))}
       </ol>
 
-      <div className="mt-14 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 p-8 text-center">
+      <div className="mt-14 rounded-2xl bg-gradient-to-br from-sun-light to-brand-light p-8 text-center">
         <h2 className="text-2xl font-bold">{t.about.tasteTheDifference}</h2>
         <Link
           href={localePath(lang, "/shop")}

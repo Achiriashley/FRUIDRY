@@ -7,7 +7,7 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 
 - **French and English**: every shop page exists at `/fr/...` and `/en/...`, with a
   language button in the header (see below)
-- **Home page** with a hero section, brand values and featured products
+- **Home page** with a hero section, brand values, featured products and upcoming flavours
 - **Shop** (`/shop`) showing every product, filterable by category
 - **Product pages** (`/shop/[slug]`), statically generated, with related products
 - **Add to cart** and **Buy now** buttons on every product (Buy now goes straight to checkout)
@@ -74,8 +74,14 @@ public site, so bookmark it.
 - **Orders**: every order, filterable by status and searchable by order number,
   customer name or phone.
 - **Products**: add new products (with a photo), edit any product's item code, name,
-  price, pack size, description, highlights and photo, mark it sold out, or delete it.
-  Changes show on the shop as soon as you save. Photos are shrunk before uploading.
+  price, pack size, description, highlights and photo, mark it sold out or
+  **coming soon**, or delete it. Changes show on the shop as soon as you save. Photos
+  are shrunk before uploading; PNG photos keep their transparent background.
+
+**Coming soon** products (Mango, Strawberries, Pineapple and Apple to start with) are
+shown in a "Coming soon" section with their photo but no price, and can't be ordered.
+When one is ready to sell, open it in the admin panel, check its price, untick
+**Coming soon** and save: it moves into the shop straight away.
 
 Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
@@ -153,16 +159,18 @@ saved on top of that.
 
 ## Product photos
 
-Put a photo for each product in `public/products/`, named after the product's
-`slug` in `src/lib/products.js`:
+The starting products' photos are in `public/products/`, named after each product's
+`slug` in `src/lib/products.js` (e.g. `public/products/mixed-fruit-pack.png`). They are
+cut-outs of the pack designs with a transparent background, so they sit on the
+coloured tiles. A photo uploaded in the admin panel replaces the file for that product.
 
-```
-public/products/mixed-fruit-pack.jpg
-```
+Supported formats are `.jpg`, `.jpeg`, `.png`, `.webp` and `.avif`. Photos are shown
+whole (not cropped), so pack shots and square photos both work. Products without a
+photo show their emoji tile instead.
 
-Supported formats are `.jpg`, `.jpeg`, `.png`, `.webp` and `.avif`. Square images of
-about 800×800 px or larger look best, because they are cropped to a square. Products
-without a photo show their emoji tile instead.
+The logo files are in `public/brand/`, and the browser-tab icons are
+`src/app/icon.png`, `src/app/apple-icon.png` and `src/app/favicon.ico`. The colours
+(taken from the packaging) are set at the top of `src/app/globals.css`.
 
 `npm run dev` picks up new photos when you reload the page. For production, run
 `npm run build` again after adding photos.

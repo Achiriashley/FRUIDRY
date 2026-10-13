@@ -32,8 +32,12 @@ export async function AdminShell({ active, autoRefresh = false, children }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-stone-900 px-5 py-3 text-white">
-        <p className="font-bold">🍊 Fruidry admin</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-deep px-5 py-3 text-white">
+        <p className="flex items-center gap-2 font-bold">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/emblem-cream.png" alt="" className="h-7 w-auto" />
+          Fruidry admin
+        </p>
         <nav className="flex flex-wrap items-center gap-1 text-sm">
           {NAV.map((item) => (
             <Link

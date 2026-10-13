@@ -2,6 +2,7 @@
 
 import { ORDER_STATUS, createOrder, newOrderId, newOrderReference } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
+import { isOrderable } from "@/lib/products";
 import { DEFAULT_LOCALE, getDictionary, hasLocale, localizeProduct } from "@/lib/i18n";
 import { rateLimit, retryMessage } from "@/lib/rate-limit";
 import { normalizeCameroonPhone, shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
@@ -50,7 +51,9 @@ export async function placeOrder(_prev, formData) {
     .slice(0, 500);
   const products = await getProducts();
   const items = parseItems(formData.get("items"), products, lang);
-  const soldOut = items?.find((item) => !products.find((p) => p.slug === item.slug)?.inStock);
+  const unavailable = items
+    ?.map((item) => ({ item, product: products.find((p) => p.slug === item.slug) }))
+    .find(({ product }) => !isOrderable(product));
 
   const errors = {};
   if (!name) errors.name = t.errors.name;
@@ -59,7 +62,10 @@ export async function placeOrder(_prev, formData) {
   if (!address) errors.address = t.errors.address;
   else if (address.length > 300) errors.address = t.errors.addressTooLong;
   if (!items) errors.form = t.errors.cart;
-  else if (soldOut) errors.form = t.errors.soldOut(soldOut.name);
+  else if (unavailable)
+    errors.form = unavailable.product?.comingSoon
+      ? t.errors.notAvailable(unavailable.item.name)
+      : t.errors.soldOut(unavailable.item.name);
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
   // Stops bots from flooding the shop with fake orders; generous for real customers.

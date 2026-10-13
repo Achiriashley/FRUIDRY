@@ -1,13 +1,20 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getDictionary, localePath } from "@/lib/i18n";
 
 export function Footer({ lang }) {
   const t = getDictionary(lang);
   return (
-    <footer className="mt-auto print:hidden border-t border-stone-200 bg-stone-900 text-stone-300">
+    <footer className="mt-auto print:hidden bg-brand-deep text-stone-300">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
         <div>
-          <p className="text-lg font-bold text-white">🍊 Fruidry</p>
+          <Image
+            src="/brand/logo-lockup-cream.png"
+            alt="Fruidry"
+            width={1107}
+            height={360}
+            className="h-12 w-auto"
+          />
           <p className="mt-2 text-sm">{t.footer.tagline}</p>
         </div>
         <div>
@@ -39,7 +46,7 @@ export function Footer({ lang }) {
           </ul>
         </div>
       </div>
-      <p className="border-t border-stone-800 py-4 text-center text-xs">
+      <p className="border-t border-white/10 py-4 text-center text-xs">
         © 2026 Fruidry. {t.footer.rights}
       </p>
     </footer>

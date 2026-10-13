@@ -5,7 +5,7 @@ import { startTransition, useActionState, useEffect, useId, useState } from "rea
 import { saveProduct } from "../actions";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200";
+  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 function Field({ id, label, error, children }) {
   return (
@@ -20,7 +20,10 @@ function Field({ id, label, error, children }) {
 }
 
 // Shrinks a photo in the browser before upload, so phone photos upload quickly.
+// PNG and WebP images stay PNG so a transparent background (like a pack cut-out)
+// is kept; everything else becomes JPEG.
 async function resizePhoto(file, maxSize = 1200) {
+  const type = /^image\/(png|webp)$/.test(file.type) ? "image/png" : "image/jpeg";
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
@@ -30,7 +33,7 @@ async function resizePhoto(file, maxSize = 1200) {
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("resize failed"))),
-      "image/jpeg",
+      type,
       0.85,
     ),
   );
@@ -50,6 +53,7 @@ const EMPTY_PRODUCT = {
   descriptionFr: "",
   highlightsFr: [],
   inStock: true,
+  comingSoon: false,
   image: null,
 };
 
@@ -93,7 +97,7 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
   function handleSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    if (photo) formData.set("photo", photo, "photo.jpg");
+    if (photo) formData.set("photo", photo, photo.type === "image/png" ? "photo.png" : "photo.jpg");
     startTransition(() => formAction(formData));
   }
 
@@ -157,6 +161,22 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
           <span className="font-medium">In stock</span>
           <span className="block text-sm text-stone-500">
             Untick to show &ldquo;Sold out&rdquo; and stop new orders.
+          </span>
+        </span>
+      </label>
+
+      <label className="flex items-center gap-3 rounded-lg bg-stone-50 p-3">
+        <input
+          type="checkbox"
+          name="comingSoon"
+          defaultChecked={product.comingSoon}
+          className="h-5 w-5 accent-brand"
+        />
+        <span>
+          <span className="font-medium">Coming soon</span>
+          <span className="block text-sm text-stone-500">
+            Shows the product with a &ldquo;Coming soon&rdquo; label and no price, and doesn&apos;t
+            take orders. Untick when it&apos;s ready to sell (check the price first).
           </span>
         </span>
       </label>

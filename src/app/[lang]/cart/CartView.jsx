@@ -87,7 +87,7 @@ export function CartView({ images }) {
           <span>{t.cart.total}</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        <p className="mt-4 rounded-lg bg-orange-50 p-3 text-xs text-brand-dark">
+        <p className="mt-4 rounded-lg bg-brand-light p-3 text-xs text-brand-dark">
           {t.cart.howItWorks}
         </p>
         <Link

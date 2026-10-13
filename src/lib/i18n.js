@@ -48,7 +48,7 @@ const en = {
       "Fruidry makes crunchy freeze-dried fruit snacks with no added sugar and no preservatives. Order on WhatsApp in Cameroon.",
     ogLocale: "en_GB",
   },
-  nav: { shop: "Shop", about: "Our story", contact: "Contact", cart: "Cart" },
+  nav: { shop: "Shop", about: "Our story", contact: "Contact", cart: "Cart", home: "Fruidry home" },
   language: { switchTo: "Français", switchLabel: "Voir le site en français" },
   footer: {
     tagline: "Freeze-dried fruit snacks with nothing added and nothing hidden.",
@@ -58,7 +58,7 @@ const en = {
     promises: ["No added sugar", "No preservatives", "Freeze-dried, never fried"],
     rights: "All rights reserved.",
   },
-  categories: { mixes: "Mixes" },
+  categories: { mixes: "Mixes", fruits: "Fruits" },
   home: {
     badge: "100% fruit · 0% fuss",
     titleBefore: "Freeze-dried fruit, ",
@@ -66,8 +66,12 @@ const en = {
     titleAfter: " delicious.",
     intro:
       "Fruidry freeze-dries ripe fruit so you get real flavour and a satisfying crunch, with nothing added.",
+    eyebrow: "Founded in Cameroon",
     shopNow: "Shop now",
+    orderNow: "Order now",
     ourStory: "Our story",
+    priceFrom: (price) => `From ${price}`,
+    orderHint: "Order in a few taps on WhatsApp.",
     values: [
       {
         icon: "❄️",
@@ -97,6 +101,12 @@ const en = {
     intro: "Every pouch is just fruit, freeze-dried for crunch.",
     all: "All",
     filterLabel: "Filter by category",
+  },
+  comingSoon: {
+    badge: "Coming soon",
+    heading: "More flavours on the way",
+    intro: "New Fruidry flavours, arriving soon.",
+    notYet: "This flavour isn't available to order yet. Check back soon!",
   },
   product: {
     notFound: "Product not found",
@@ -208,6 +218,8 @@ const en = {
       addressTooLong: "Please keep the address under 300 characters.",
       cart: "Your cart is empty or out of date. Please refresh the page.",
       soldOut: (name) => `Sorry, ${name} is sold out. Remove it from your cart to continue.`,
+      notAvailable: (name) =>
+        `Sorry, ${name} isn't available to order yet. Remove it from your cart to continue.`,
       rateLimited: (wait) =>
         `You've placed a lot of orders just now. Please try again in ${wait}, or message us on WhatsApp.`,
       notSetUp: "Ordering on WhatsApp isn't set up yet. Please contact us directly.",
@@ -268,7 +280,13 @@ const fr = {
       "Fruidry fabrique des snacks de fruits lyophilisés croquants, sans sucre ajouté ni conservateurs. Commandez sur WhatsApp au Cameroun.",
     ogLocale: "fr_FR",
   },
-  nav: { shop: "Boutique", about: "Notre histoire", contact: "Contact", cart: "Panier" },
+  nav: {
+    shop: "Boutique",
+    about: "Notre histoire",
+    contact: "Contact",
+    cart: "Panier",
+    home: "Accueil Fruidry",
+  },
   language: { switchTo: "English", switchLabel: "View the site in English" },
   footer: {
     tagline: "Des snacks de fruits lyophilisés, sans rien d'ajouté ni de caché.",
@@ -278,7 +296,7 @@ const fr = {
     promises: ["Sans sucre ajouté", "Sans conservateurs", "Lyophilisé, jamais frit"],
     rights: "Tous droits réservés.",
   },
-  categories: { mixes: "Mélanges" },
+  categories: { mixes: "Mélanges", fruits: "Fruits" },
   home: {
     badge: "100 % fruit · rien d'autre",
     titleBefore: "Des fruits lyophilisés, ",
@@ -286,8 +304,12 @@ const fr = {
     titleAfter: " délicieux.",
     intro:
       "Fruidry lyophilise des fruits mûrs pour vous offrir leur vraie saveur et un croquant irrésistible, sans rien d'ajouté.",
+    eyebrow: "Fondé au Cameroun",
     shopNow: "Acheter",
+    orderNow: "Commander",
     ourStory: "Notre histoire",
+    priceFrom: (price) => `À partir de ${price}`,
+    orderHint: "Commandez en quelques clics sur WhatsApp.",
     values: [
       {
         icon: "❄️",
@@ -318,6 +340,12 @@ const fr = {
     intro: "Chaque sachet, c'est juste du fruit, lyophilisé pour le croquant.",
     all: "Tout",
     filterLabel: "Filtrer par catégorie",
+  },
+  comingSoon: {
+    badge: "Bientôt disponible",
+    heading: "D'autres saveurs arrivent",
+    intro: "De nouvelles saveurs Fruidry, bientôt disponibles.",
+    notYet: "Cette saveur n'est pas encore disponible à la commande. Revenez bientôt !",
   },
   product: {
     notFound: "Produit introuvable",
@@ -429,6 +457,8 @@ const fr = {
       addressTooLong: "L'adresse doit faire moins de 300 caractères.",
       cart: "Votre panier est vide ou n'est plus à jour. Veuillez actualiser la page.",
       soldOut: (name) => `Désolé, ${name} est épuisé. Retirez-le de votre panier pour continuer.`,
+      notAvailable: (name) =>
+        `Désolé, ${name} n'est pas encore disponible. Retirez-le de votre panier pour continuer.`,
       rateLimited: (wait) =>
         `Vous avez passé beaucoup de commandes à l'instant. Réessayez dans ${wait} ou écrivez-nous sur WhatsApp.`,
       notSetUp:

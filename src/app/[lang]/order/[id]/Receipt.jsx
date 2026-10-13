@@ -21,7 +21,8 @@ export function Receipt({ order, lang }) {
       <article className="rounded-2xl border border-stone-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none">
         <header className="flex items-start justify-between gap-4 border-b border-dashed border-stone-300 pb-4">
           <div>
-            <p className="text-xl font-extrabold text-brand">🍊 Fruidry</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/logo-lockup.png" alt="Fruidry" className="h-10 w-auto" />
             <p className="text-xs text-stone-500">{t.brandLine}</p>
           </div>
           <div className="text-right">

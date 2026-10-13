@@ -10,14 +10,16 @@ export function ShopGrid({ products, images }) {
   const [active, setActive] = useState("all");
   const visible = active === "all" ? products : products.filter((p) => p.category === active);
 
+  // Only offer filters for categories that have products in them.
+  const present = categories.filter((c) => products.some((p) => p.category === c.id));
   const filters = [
     { id: "all", label: t.shop.all },
-    ...categories.map((c) => ({ id: c.id, label: t.categories[c.id] ?? c.label })),
+    ...present.map((c) => ({ id: c.id, label: t.categories[c.id] ?? c.label })),
   ];
 
   return (
     <div>
-      {categories.length > 1 && (
+      {present.length > 1 && (
         <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label={t.shop.filterLabel}>
           {filters.map((f) => (
             <button

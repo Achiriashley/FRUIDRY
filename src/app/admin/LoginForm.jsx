@@ -21,7 +21,7 @@ export function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-orange-200"
+          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
         />
       </div>
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

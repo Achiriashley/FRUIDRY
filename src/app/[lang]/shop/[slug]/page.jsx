@@ -23,9 +23,12 @@ export async function generateMetadata({ params }) {
   const found = await getProduct(slug);
   if (!found) return { title: t.product.notFound };
   const product = localizeProduct(found, lang);
+  const detail = product.comingSoon
+    ? `${t.comingSoon.badge}.`
+    : `${formatPrice(product.price)} / ${product.weight}.`;
   return pageMetadata(lang, `/shop/${slug}`, {
     title: product.name,
-    description: `${product.tagline} ${formatPrice(product.price)} / ${product.weight}.`.trim(),
+    description: `${product.tagline} ${detail}`.trim(),
   });
 }
 
@@ -51,8 +54,14 @@ async function ProductDetails({ params }) {
   const origin = siteOrigin();
   const pageUrl = `${origin}${localePath(lang, `/shop/${product.slug}`)}`;
   const photo = product.image || images[product.slug];
+  // Same-category products first, then the rest; products on sale before coming-soon ones.
   const related = products
-    .filter((p) => p.category === product.category && p.slug !== product.slug)
+    .filter((p) => p.slug !== product.slug)
+    .sort(
+      (a, b) =>
+        (b.category === product.category) - (a.category === product.category) ||
+        Boolean(a.comingSoon) - Boolean(b.comingSoon),
+    )
     .slice(0, 3);
 
   return (
@@ -68,16 +77,21 @@ async function ProductDetails({ params }) {
             ? new URL(photo, origin).href
             : `${pageUrl}/opengraph-image`,
           brand: { "@type": "Brand", name: "Fruidry" },
-          offers: {
-            "@type": "Offer",
-            url: pageUrl,
-            price: product.price,
-            priceCurrency: "XAF",
-            itemCondition: "https://schema.org/NewCondition",
-            availability: product.inStock
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-          },
+          // No price is published for products that aren't on sale yet.
+          ...(product.comingSoon
+            ? {}
+            : {
+                offers: {
+                  "@type": "Offer",
+                  url: pageUrl,
+                  price: product.price,
+                  priceCurrency: "XAF",
+                  itemCondition: "https://schema.org/NewCondition",
+                  availability: product.inStock
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/OutOfStock",
+                },
+              }),
         }}
       />
       <Link
@@ -102,10 +116,14 @@ async function ProductDetails({ params }) {
           </p>
           <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-lg text-stone-600">{product.tagline}</p>
-          <p className="mt-4 text-3xl font-bold">
-            {formatPrice(product.price)}{" "}
-            <span className="text-base font-normal text-stone-500">/ {product.weight}</span>
-          </p>
+          {product.comingSoon ? (
+            <p className="mt-4 text-lg text-stone-500">{product.weight}</p>
+          ) : (
+            <p className="mt-4 text-3xl font-bold">
+              {formatPrice(product.price)}{" "}
+              <span className="text-base font-normal text-stone-500">/ {product.weight}</span>
+            </p>
+          )}
           {product.sku && (
             <p className="mt-1 text-sm text-stone-500">
               {t.product.itemCode} <span className="font-mono">{product.sku}</span>
@@ -123,7 +141,13 @@ async function ProductDetails({ params }) {
             ))}
           </ul>
           <div className="mt-8">
-            <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
+            <AddToCartButton
+              slug={product.slug}
+              inStock={product.inStock}
+              comingSoon={product.comingSoon}
+              withQuantity
+            />
+            {product.comingSoon && <p className="mt-3 text-stone-600">{t.comingSoon.notYet}</p>}
           </div>
         </div>
       </div>

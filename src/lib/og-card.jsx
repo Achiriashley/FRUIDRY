@@ -1,24 +1,40 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
 // The picture shown when a Fruidry link is shared (WhatsApp, Facebook, ...).
-// Plain shapes and text only, so it renders without downloading anything.
+// Built from local files only, so it renders without downloading anything.
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-const FRUIT_COLOURS = ["#f43f5e", "#f59e0b", "#6366f1", "#ef4444", "#facc15", "#fb923c"];
+const MIME = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png" };
+
+// A file from public/ as a data URL the image renderer can use (JPEG/PNG only).
+export async function publicImage(publicPath) {
+  const type = publicPath && MIME[path.extname(publicPath).toLowerCase()];
+  if (!type) return null;
+  try {
+    const bytes = await fs.readFile(path.join(process.cwd(), "public", publicPath));
+    return `data:${type};base64,${bytes.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
 
 // The default font lacks the narrow spaces used in "2 500 FCFA".
-const plain = (text) => text?.replace(/[\u00a0\u202f]/g, " ");
+const plain = (text) => text?.replace(/[  ]/g, " ");
 
-export function OgCard({ title, subtitle, footer, photo }) {
+export async function OgCard({ title, subtitle, footer, photo }) {
   [title, subtitle, footer] = [plain(title), plain(subtitle), plain(footer)];
+  const logo = await publicImage("/brand/logo-lockup.png");
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
         display: "flex",
-        background: "linear-gradient(135deg, #ffedd5 0%, #fffbeb 55%, #fffaf3 100%)",
+        background: "linear-gradient(135deg, #fdf1c7 0%, #fbf7ee 55%, #e9f1e4 100%)",
         fontFamily: "sans-serif",
-        color: "#1c1917",
+        color: "#072a19",
       }}
     >
       <div
@@ -26,17 +42,18 @@ export function OgCard({ title, subtitle, footer, photo }) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 72px",
-          width: photo ? 660 : 1200,
+          padding: "0 64px",
+          width: photo ? 760 : 1200,
         }}
       >
-        <div style={{ display: "flex", fontSize: 44, fontWeight: 800, color: "#e8590c" }}>
-          Fruidry
-        </div>
+        {logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt="" width={246} height={80} />
+        )}
         <div
           style={{
             display: "flex",
-            marginTop: 24,
+            marginTop: 32,
             fontSize: photo ? 60 : 72,
             fontWeight: 800,
             lineHeight: 1.1,
@@ -45,36 +62,33 @@ export function OgCard({ title, subtitle, footer, photo }) {
           {title}
         </div>
         {subtitle && (
-          <div style={{ display: "flex", marginTop: 24, fontSize: 34, color: "#57534e" }}>
+          <div style={{ display: "flex", marginTop: 20, fontSize: 32, color: "#44403c" }}>
             {subtitle}
           </div>
         )}
-        <div style={{ display: "flex", marginTop: 40, gap: 16, alignItems: "center" }}>
-          {!photo &&
-            FRUIT_COLOURS.map((colour) => (
-              <div
-                key={colour}
-                style={{ width: 44, height: 44, borderRadius: 22, background: colour }}
-              />
-            ))}
-          {footer && (
+        {footer && (
+          <div style={{ display: "flex", marginTop: 36 }}>
             <div
               style={{
                 display: "flex",
-                marginLeft: photo ? 0 : 16,
+                padding: "10px 24px",
+                borderRadius: 999,
+                background: "#0f4a2a",
+                color: "#fbf7ee",
                 fontSize: 30,
                 fontWeight: 700,
-                color: "#c2410c",
               }}
             >
               {footer}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       {photo && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo} alt="" width={540} height={630} style={{ objectFit: "cover" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 440 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photo} alt="" height={560} style={{ objectFit: "contain" }} />
+        </div>
       )}
     </div>
   );

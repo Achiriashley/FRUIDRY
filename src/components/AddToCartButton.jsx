@@ -5,7 +5,13 @@ import { useState } from "react";
 import { useCart } from "./CartProvider";
 import { useLocale } from "./LocaleProvider";
 
-export function AddToCartButton({ slug, inStock = true, withQuantity = false, size = "md" }) {
+export function AddToCartButton({
+  slug,
+  inStock = true,
+  comingSoon = false,
+  withQuantity = false,
+  size = "md",
+}) {
   const { addItem } = useCart();
   const { t, href } = useLocale();
   const router = useRouter();
@@ -13,6 +19,14 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
   const [added, setAdded] = useState(false);
 
   const buttonSize = size === "sm" ? "px-4 py-2 text-sm" : "px-6 py-3";
+
+  if (comingSoon) {
+    return (
+      <p className="inline-block rounded-full bg-sun-light px-5 py-2 text-sm font-semibold text-brand-dark">
+        {t.comingSoon.badge}
+      </p>
+    );
+  }
 
   if (!inStock) {
     return (
@@ -62,7 +76,7 @@ export function AddToCartButton({ slug, inStock = true, withQuantity = false, si
       <button
         type="button"
         onClick={handleAdd}
-        className={`rounded-full border-2 border-brand bg-white font-semibold text-brand transition hover:bg-orange-50 ${buttonSize}`}
+        className={`rounded-full border-2 border-brand bg-white font-semibold text-brand transition hover:bg-brand-light ${buttonSize}`}
       >
         {added ? t.product.added : t.product.addToCart}
       </button>

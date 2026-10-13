@@ -75,9 +75,15 @@ function ProductList({ products, params }) {
                 <div className="text-right">
                   <p className="font-bold">{formatPrice(product.price)}</p>
                   <p
-                    className={`text-xs font-semibold ${product.inStock ? "text-green-700" : "text-red-600"}`}
+                    className={`text-xs font-semibold ${
+                      product.comingSoon
+                        ? "text-amber-700"
+                        : product.inStock
+                          ? "text-green-700"
+                          : "text-red-600"
+                    }`}
                   >
-                    {product.inStock ? "In stock" : "Sold out"}
+                    {product.comingSoon ? "Coming soon" : product.inStock ? "In stock" : "Sold out"}
                   </p>
                 </div>
                 <span className="text-stone-400" aria-hidden>

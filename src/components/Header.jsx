@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getDictionary, localePath } from "@/lib/i18n";
 import { CartLink } from "./CartLink";
@@ -13,11 +14,15 @@ export function Header({ lang, languageSwitch }) {
   return (
     <header className="sticky top-0 z-20 print:hidden border-b border-stone-200 bg-cream/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link
-          href={localePath(lang)}
-          className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand"
-        >
-          <span aria-hidden>🍊</span> Fruidry
+        <Link href={localePath(lang)} className="shrink-0">
+          <Image
+            src="/brand/logo-lockup.png"
+            alt="Fruidry"
+            width={1107}
+            height={360}
+            preload
+            className="h-10 w-auto sm:h-11"
+          />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-4">
           {nav.map((item) => (
