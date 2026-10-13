@@ -120,9 +120,33 @@ export const defaultProducts = [
   },
 ];
 
+// Stock counting is optional: set "Packs in stock" in the admin panel to turn it on.
+// Marking an order as paid takes its packs off the count, and the product shows
+// as sold out when it reaches 0.
+export const DEFAULT_LOW_STOCK_AT = 10;
+
+// Packs left, or null when stock isn't counted for this product.
+export function stockLeft(product) {
+  return Number.isInteger(product?.stock) ? product.stock : null;
+}
+
+// "In stock" is ticked and, if stock is counted, there are packs left.
+export function isInStock(product) {
+  const left = stockLeft(product);
+  return Boolean(product?.inStock) && (left === null || left > 0);
+}
+
 // Whether customers can order this product right now.
 export function isOrderable(product) {
-  return Boolean(product?.inStock && !product.comingSoon);
+  return isInStock(product) && !product.comingSoon;
+}
+
+// Counted stock at or below the product's warning level (sold out included).
+export function isLowStock(product) {
+  const left = stockLeft(product);
+  return (
+    left !== null && !product.comingSoon && left <= (product.lowStockAt ?? DEFAULT_LOW_STOCK_AT)
+  );
 }
 
 export function formatPrice(value) {

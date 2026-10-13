@@ -95,6 +95,14 @@ public site, so bookmark it.
   **coming soon**, or delete it. Changes show on the shop as soon as you save. Photos
   are shrunk before uploading; PNG photos keep their transparent background.
 
+**Stock counting** (optional, per product): enter **Packs in stock** on a product's page.
+When you press **Mark as paid** on an order, its packs are taken off the count; at 0
+the product shows "Sold out" by itself, and checkout won't accept more packs than are
+left. The dashboard lists products at or below their **Warn me when stock falls to**
+level (10 by default) under **Running low**. Leave **Packs in stock** empty to manage
+stock yourself with the **In stock** box, as before. When a delivery arrives, type the
+new total into **Packs in stock**.
+
 **Coming soon** products (Mango, Strawberries, Pineapple and Apple to start with) are
 shown in a "Coming soon" section with their photo but no price, and can't be ordered.
 When one is ready to sell, open it in the admin panel, check its price, untick

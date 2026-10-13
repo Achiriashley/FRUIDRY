@@ -24,6 +24,8 @@ export const EDITABLE_FIELDS = [
   "descriptionFr",
   "highlightsFr",
   "inStock",
+  "stock",
+  "lowStockAt",
   "comingSoon",
   "image",
 ];
@@ -124,6 +126,21 @@ export async function updateProduct(slug, fields) {
     throw new Error(`Unknown product ${slug}`);
   }
   await writeStored(slug, { ...existing, ...pickEditable(fields) });
+}
+
+// Takes sold packs off the stock of products whose stock is counted (never below 0).
+// Returns the slugs whose stock changed.
+export async function subtractStock(items) {
+  const stored = await readStored();
+  const changed = [];
+  for (const { slug, quantity } of items) {
+    const current = { ...STARTING.get(slug), ...pickEditable(stored[slug]) };
+    if (stored[slug]?.deleted || !Number.isInteger(current.stock)) continue;
+    const stock = Math.max(0, current.stock - quantity);
+    await writeStored(slug, { ...stored[slug], stock });
+    changed.push(slug);
+  }
+  return changed;
 }
 
 // Hides the product from the shop. Past orders keep their own copy of its details.

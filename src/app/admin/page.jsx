@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ORDER_STATUS, isNew, isPaid, listOrders } from "@/lib/orders";
-import { formatPrice } from "@/lib/products";
+import { getProducts } from "@/lib/catalog";
+import { formatPrice, isLowStock, stockLeft } from "@/lib/products";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "./AdminShell";
 import { OrderCard } from "./OrderCard";
@@ -14,8 +15,14 @@ export default function DashboardPage() {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="dashboard" autoRefresh>
           {async () => {
-            const [orders, siteUrl] = await Promise.all([listOrders(), getSiteUrl()]);
-            return <Dashboard orders={orders} siteUrl={siteUrl} />;
+            const [orders, siteUrl, products] = await Promise.all([
+              listOrders(),
+              getSiteUrl(),
+              getProducts(),
+            ]);
+            return (
+              <Dashboard orders={orders} siteUrl={siteUrl} lowStock={products.filter(isLowStock)} />
+            );
           }}
         </AdminShell>
       </Suspense>
@@ -47,7 +54,7 @@ function Stat({ label, value, hint, href, highlight = false }) {
   return href ? <Link href={href}>{body}</Link> : body;
 }
 
-function Dashboard({ orders, siteUrl }) {
+function Dashboard({ orders, siteUrl, lowStock }) {
   const paid = orders.filter(isPaid);
   const thisMonth = monthKey(new Date().toISOString());
   const paidThisMonth = paid.filter((o) => monthKey(o.receipt.confirmedAt) === thisMonth);
@@ -85,6 +92,30 @@ function Dashboard({ orders, siteUrl }) {
           hint={`${packs(paid)} packs · ${paid.length} orders`}
         />
       </div>
+
+      {lowStock.length > 0 && (
+        <section className="rounded-2xl bg-yellow-100 p-5 shadow-sm">
+          <h2 className="text-xl font-bold">Running low</h2>
+          <p className="mt-1 text-sm text-stone-700">
+            Time to reorder. Update the count on the product page when new stock arrives.
+          </p>
+          <ul className="mt-3 space-y-1">
+            {lowStock.map((product) => (
+              <li key={product.slug}>
+                <Link
+                  href={`/admin/products/${product.slug}`}
+                  className="font-semibold text-brand hover:underline"
+                >
+                  {product.name}
+                </Link>{" "}
+                <span className={stockLeft(product) === 0 ? "font-semibold text-red-700" : ""}>
+                  {stockLeft(product) === 0 ? "sold out" : `${stockLeft(product)} left`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-4 text-xl font-bold">

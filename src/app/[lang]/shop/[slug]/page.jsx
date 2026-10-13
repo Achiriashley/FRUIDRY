@@ -8,7 +8,7 @@ import { getProductImages } from "@/lib/product-images";
 import { getProduct, getProducts } from "@/lib/catalog";
 import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
-import { formatPrice, isOrderable } from "@/lib/products";
+import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
 
 export async function generateStaticParams() {
@@ -83,7 +83,7 @@ async function ProductDetails({ params }) {
               price: product.price,
               priceCurrency: "XAF",
               itemCondition: "https://schema.org/NewCondition",
-              availability: product.inStock
+              availability: isInStock(product)
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
             },
@@ -145,7 +145,7 @@ async function ProductDetails({ params }) {
             {product.comingSoon ? (
               <p className="text-pretty text-stone-600">{t.comingSoon.notYet}</p>
             ) : (
-              <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
+              <AddToCartButton slug={product.slug} inStock={isInStock(product)} withQuantity />
             )}
           </div>
         </div>

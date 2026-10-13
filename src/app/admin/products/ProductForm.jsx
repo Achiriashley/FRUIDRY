@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useId, useState } from "react";
+import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
 import { saveProduct } from "../actions";
 
 const inputClass =
@@ -77,6 +78,8 @@ const EMPTY_PRODUCT = {
   descriptionFr: "",
   highlightsFr: [],
   inStock: true,
+  stock: null,
+  lowStockAt: null,
   comingSoon: false,
   image: null,
 };
@@ -192,6 +195,45 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
           </span>
         </span>
       </label>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id={id("stock")} label="Packs in stock" error={state.errors?.stock}>
+          <input
+            id={id("stock")}
+            name="stock"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            placeholder="Not counted"
+            defaultValue={product.stock ?? ""}
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-stone-500">
+            Marking an order as paid takes its packs off this count, and the product shows
+            &ldquo;Sold out&rdquo; at 0. Leave empty to not count stock.
+          </p>
+        </Field>
+        <Field
+          id={id("lowStockAt")}
+          label="Warn me when stock falls to"
+          error={state.errors?.lowStockAt}
+        >
+          <input
+            id={id("lowStockAt")}
+            name="lowStockAt"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            defaultValue={product.lowStockAt ?? DEFAULT_LOW_STOCK_AT}
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-stone-500">
+            Shown under &ldquo;Running low&rdquo; on the dashboard.
+          </p>
+        </Field>
+      </div>
 
       <label className="flex items-center gap-3 rounded-lg bg-stone-50 p-3">
         <input

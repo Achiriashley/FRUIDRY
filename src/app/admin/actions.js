@@ -8,9 +8,11 @@ import {
   createProduct,
   deleteProduct as removeProduct,
   getProducts,
+  subtractStock,
   updateProduct,
 } from "@/lib/catalog";
 import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
+import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
 import { rateLimit, retryMessage } from "@/lib/rate-limit";
 import { detectImageType, saveImage } from "@/lib/storage";
 
@@ -37,6 +39,8 @@ export async function logout() {
   refresh();
 }
 
+// Applies change() to the order and saves it. Returns the saved order, or null if
+// change() made no change.
 async function updateOrder(formData, change) {
   if (!(await isAdmin())) throw new Error("Not signed in");
   const order = await getOrder(String(formData.get("orderId") ?? ""));
@@ -44,10 +48,11 @@ async function updateOrder(formData, change) {
   const updated = change(order);
   if (updated) await saveOrder(updated);
   refresh();
+  return updated;
 }
 
 export async function confirmPayment(formData) {
-  await updateOrder(formData, (order) =>
+  const confirmed = await updateOrder(formData, (order) =>
     isPaid(order)
       ? null
       : {
@@ -57,6 +62,14 @@ export async function confirmPayment(formData) {
           rejection: null,
         },
   );
+  // A paid order takes its packs off the stock count.
+  if (confirmed) {
+    try {
+      if ((await subtractStock(confirmed.items)).length > 0) updateTag(PRODUCTS_TAG);
+    } catch (error) {
+      console.error("Payment confirmed, but the stock count couldn't be updated", error);
+    }
+  }
 }
 
 // Shown to the customer when no reason is typed, in the language they ordered in.
@@ -100,6 +113,15 @@ const LIMITS = { sku: 30, name: 80, tagline: 120, description: 1000, weight: 30 
 const FRENCH_LIMITS = { nameFr: 80, taglineFr: 120, descriptionFr: 1000 };
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
+// A whole number from a form field: null when the field is empty, undefined when it
+// isn't a whole number between min and max.
+function wholeNumber(raw, min, max) {
+  const text = String(raw ?? "").trim();
+  if (text === "") return null;
+  const value = Number(text);
+  return Number.isInteger(value) && value >= min && value <= max ? value : undefined;
+}
+
 // Adds a product (no slug) or updates one (slug), with an optional new photo.
 export async function saveProduct(_prev, formData) {
   if (!(await isAdmin())) return { status: "error", errors: { form: "Please sign in again." } };
@@ -125,6 +147,9 @@ export async function saveProduct(_prev, formData) {
     descriptionFr: text("descriptionFr"),
     highlightsFr: lines("highlightsFr"),
     inStock: formData.get("inStock") === "on",
+    // Empty means "don't count stock for this product".
+    stock: wholeNumber(formData.get("stock"), 0, 1_000_000),
+    lowStockAt: wholeNumber(formData.get("lowStockAt") || DEFAULT_LOW_STOCK_AT, 0, 1_000_000),
     comingSoon: formData.get("comingSoon") === "on",
   };
 
@@ -144,6 +169,10 @@ export async function saveProduct(_prev, formData) {
     const clash = products.find((p) => p.sku === fields.sku && p.slug !== slug);
     if (clash) errors.sku = `${clash.name} already uses this item code.`;
   }
+  if (fields.stock === undefined)
+    errors.stock = "Enter a whole number of packs, e.g. 40, or leave it empty.";
+  if (fields.lowStockAt === undefined)
+    errors.lowStockAt = "Enter a whole number of packs, e.g. 10.";
   if (!Number.isInteger(fields.price) || fields.price < 1) {
     errors.price = "Enter a whole number of FCFA, e.g. 2500.";
   }

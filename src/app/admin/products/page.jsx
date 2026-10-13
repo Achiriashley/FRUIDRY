@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ProductImage } from "@/components/ProductImage";
 import { getProducts } from "@/lib/catalog";
 import { getProductImages } from "@/lib/product-images";
-import { formatPrice } from "@/lib/products";
+import { formatPrice, isInStock, isLowStock, stockLeft } from "@/lib/products";
 import { AdminPage, AdminShell } from "../AdminShell";
 
 export const metadata = { title: "Products", robots: { index: false } };
@@ -74,17 +74,7 @@ function ProductList({ products, params }) {
                 </div>
                 <div className="text-right">
                   <p className="font-bold">{formatPrice(product.price)}</p>
-                  <p
-                    className={`text-xs font-semibold ${
-                      product.comingSoon
-                        ? "text-amber-700"
-                        : product.inStock
-                          ? "text-green-700"
-                          : "text-red-600"
-                    }`}
-                  >
-                    {product.comingSoon ? "Coming soon" : product.inStock ? "In stock" : "Sold out"}
-                  </p>
+                  <StockStatus product={product} />
                 </div>
                 <span className="text-stone-400" aria-hidden>
                   ›
@@ -95,5 +85,24 @@ function ProductList({ products, params }) {
         </ul>
       )}
     </div>
+  );
+}
+
+// "In stock · 12 left", "Running low · 4 left", "Sold out", "Coming soon"...
+function StockStatus({ product }) {
+  const left = stockLeft(product);
+  const count = left === null ? "" : ` · ${left} left`;
+  const [label, colour] = product.comingSoon
+    ? ["Coming soon", "text-amber-700"]
+    : !isInStock(product)
+      ? ["Sold out", "text-red-600"]
+      : isLowStock(product)
+        ? ["Running low", "text-amber-700"]
+        : ["In stock", "text-green-700"];
+  return (
+    <p className={`text-xs font-semibold ${colour}`}>
+      {label}
+      {product.comingSoon ? "" : count}
+    </p>
   );
 }

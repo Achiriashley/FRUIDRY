@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/products";
+import { formatPrice, isInStock } from "@/lib/products";
 import { AddToCartButton } from "./AddToCartButton";
 import { ProductLink } from "./ProductLink";
 import { ProductImage } from "./ProductImage";
@@ -28,7 +28,7 @@ export function ProductCard({ product, image }) {
         <div className="mt-auto pt-2">
           <AddToCartButton
             slug={product.slug}
-            inStock={product.inStock}
+            inStock={isInStock(product)}
             comingSoon={product.comingSoon}
             size="sm"
           />

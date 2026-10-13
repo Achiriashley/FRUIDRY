@@ -8,7 +8,7 @@ import { getProductImages } from "@/lib/product-images";
 import { getProducts } from "@/lib/catalog";
 import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
-import { formatPrice, isOrderable } from "@/lib/products";
+import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
 import { CONTACT, SOCIAL_LINKS } from "@/lib/shop-config";
 
@@ -230,7 +230,7 @@ function FeaturedProduct({ product, image, lang, t }) {
           ))}
         </ul>
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
+          <AddToCartButton slug={product.slug} inStock={isInStock(product)} withQuantity />
           <Link
             href={localePath(lang, `/shop/${product.slug}`)}
             className="text-sm font-semibold text-brand hover:underline"

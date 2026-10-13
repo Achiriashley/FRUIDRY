@@ -238,6 +238,8 @@ const en = {
       soldOut: (name) => `Sorry, "${name}" is sold out. Remove it from your cart to continue.`,
       notAvailable: (name) =>
         `Sorry, "${name}" isn't available to order yet. Remove it from your cart to continue.`,
+      onlyLeft: (name, left) =>
+        `Sorry, only ${left} ${left === 1 ? "pack" : "packs"} of "${name}" ${left === 1 ? "is" : "are"} left. Please lower the quantity in your cart.`,
       rateLimited: (wait) =>
         `You've placed a lot of orders just now. Please try again in ${wait}, or message us on WhatsApp.`,
       notSetUp: "Ordering on WhatsApp isn't set up yet. Please contact us directly.",
@@ -564,6 +566,8 @@ const fr = {
         `Désolé, le produit « ${name} » est épuisé. Retirez-le de votre panier pour continuer.`,
       notAvailable: (name) =>
         `Désolé, le produit « ${name} » n'est pas encore disponible. Retirez-le de votre panier pour continuer.`,
+      onlyLeft: (name, left) =>
+        `Désolé, il ne reste que ${left} ${left === 1 ? "sachet" : "sachets"} de « ${name} ». Veuillez réduire la quantité dans votre panier.`,
       rateLimited: (wait) =>
         `Vous avez passé beaucoup de commandes à l'instant. Réessayez dans ${wait} ou écrivez-nous sur WhatsApp.`,
       notSetUp:

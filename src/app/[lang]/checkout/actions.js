@@ -2,7 +2,7 @@
 
 import { ORDER_STATUS, createOrder, newOrderId, newOrderReference } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
-import { isOrderable } from "@/lib/products";
+import { isOrderable, stockLeft } from "@/lib/products";
 import { DEFAULT_LOCALE, getDictionary, hasLocale, localizeProduct } from "@/lib/i18n";
 import { rateLimit, retryMessage } from "@/lib/rate-limit";
 import { normalizeCameroonPhone, shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
@@ -66,6 +66,17 @@ export async function placeOrder(_prev, formData) {
     errors.form = unavailable.product?.comingSoon
       ? t.errors.notAvailable(unavailable.item.name)
       : t.errors.soldOut(unavailable.item.name);
+  else {
+    // Not more packs than are left, for products whose stock is counted.
+    const short = items.find((item) => {
+      const left = stockLeft(products.find((p) => p.slug === item.slug));
+      return left !== null && item.quantity > left;
+    });
+    if (short) {
+      const left = stockLeft(products.find((p) => p.slug === short.slug));
+      errors.form = t.errors.onlyLeft(short.name, left);
+    }
+  }
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
   // Stops bots from flooding the shop with fake orders; generous for real customers.
