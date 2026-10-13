@@ -11,10 +11,20 @@ import {
   updateProduct,
 } from "@/lib/catalog";
 import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
-import { saveImage } from "@/lib/storage";
+import { rateLimit, retryMessage } from "@/lib/rate-limit";
+import { detectImageType, saveImage } from "@/lib/storage";
 
 export async function login(_prev, formData) {
-  if (!passwordMatches(String(formData.get("password") ?? ""))) {
+  // Every attempt counts, so password guessing is capped at a few tries per 15 minutes.
+  const limit = await rateLimit("adminLogin");
+  if (!limit.allowed) {
+    return {
+      error: `Too many sign-in attempts. Try again in ${retryMessage(limit.retryAfterSeconds)}.`,
+    };
+  }
+  if (!passwordMatches(String(formData.get("password") ?? "").slice(0, 1000))) {
+    // A short pause makes automated guessing slower still.
+    await new Promise((resolve) => setTimeout(resolve, 600));
     return { error: "Wrong password." };
   }
   await startAdminSession();
@@ -122,7 +132,11 @@ export async function saveProduct(_prev, formData) {
   const photo = formData.get("photo");
   const hasPhoto = photo && typeof photo === "object" && photo.size > 0;
   if (hasPhoto && photo.size > MAX_PHOTO_BYTES) errors.photo = "This photo is too big.";
-  if (hasPhoto && !["image/jpeg", "image/png", "image/webp"].includes(photo.type)) {
+  if (
+    hasPhoto &&
+    !errors.photo &&
+    !detectImageType(Buffer.from(await photo.slice(0, 16).arrayBuffer()))
+  ) {
     errors.photo = "Use a JPG, PNG or WebP photo.";
   }
   if (Object.keys(errors).length > 0) return { status: "error", errors };

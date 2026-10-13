@@ -2,6 +2,7 @@
 
 import { ORDER_STATUS, createOrder, newOrderId, newOrderReference } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
+import { rateLimit, retryMessage } from "@/lib/rate-limit";
 import { normalizeCameroonPhone, shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
 import { orderMessage } from "@/lib/whatsapp-order";
 
@@ -48,12 +49,25 @@ export async function placeOrder(_prev, formData) {
 
   const errors = {};
   if (!name) errors.name = "Please enter your name.";
+  else if (name.length > 100) errors.name = "Please keep your name under 100 characters.";
   if (!phone) errors.phone = "Enter a Cameroon mobile number, e.g. 6XX XX XX XX.";
   if (!address) errors.address = "Tell us where to deliver your order.";
+  else if (address.length > 300) errors.address = "Please keep the address under 300 characters.";
   if (!items) errors.form = "Your cart is empty or out of date. Please refresh the page.";
   else if (soldOut)
     errors.form = `Sorry, ${soldOut.name} is sold out. Remove it from your cart to continue.`;
   if (Object.keys(errors).length > 0) return { status: "error", errors };
+
+  // Stops bots from flooding the shop with fake orders; generous for real customers.
+  const limit = await rateLimit("placeOrder");
+  if (!limit.allowed) {
+    return {
+      status: "error",
+      errors: {
+        form: `You've placed a lot of orders just now. Please try again in ${retryMessage(limit.retryAfterSeconds)}, or message us on WhatsApp.`,
+      },
+    };
+  }
 
   const order = {
     id: newOrderId(),

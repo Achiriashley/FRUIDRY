@@ -1,42 +1,65 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "fruidry_admin";
+
+// Sessions last 7 days. The expiry is inside the signed token and checked on
+// the server, so an old or copied cookie stops working on its own.
+const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 export function adminPasswordConfigured() {
   return Boolean(process.env.ADMIN_PASSWORD);
 }
 
-// The cookie holds an HMAC of the password, so changing ADMIN_PASSWORD logs everyone out.
-function sessionToken() {
+// Signing key derived from the password: changing ADMIN_PASSWORD signs everyone out.
+function signingKey() {
   return createHmac("sha256", process.env.ADMIN_PASSWORD)
-    .update("fruidry-admin-session")
-    .digest("hex");
+    .update("fruidry-admin-session-v2")
+    .digest();
 }
 
-function safeEqual(a, b) {
-  const left = Buffer.from(String(a));
-  const right = Buffer.from(String(b));
-  return left.length === right.length && timingSafeEqual(left, right);
+function sign(payload) {
+  return createHmac("sha256", signingKey()).update(payload).digest("base64url");
+}
+
+// Compares fixed-length digests so the time taken doesn't reveal the password's length.
+function digestEqual(a, b) {
+  const left = createHash("sha256").update(String(a)).digest();
+  const right = createHash("sha256").update(String(b)).digest();
+  return timingSafeEqual(left, right);
 }
 
 export function passwordMatches(candidate) {
-  return adminPasswordConfigured() && safeEqual(candidate, process.env.ADMIN_PASSWORD);
+  return adminPasswordConfigured() && digestEqual(candidate, process.env.ADMIN_PASSWORD);
+}
+
+function newSessionToken() {
+  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+  const payload = `v2.${expiresAt}`;
+  return `${payload}.${sign(payload)}`;
+}
+
+function sessionTokenValid(token) {
+  const parts = String(token ?? "").split(".");
+  if (parts.length !== 3 || parts[0] !== "v2") return false;
+  const [version, expiresAt, signature] = parts;
+  const payload = `${version}.${expiresAt}`;
+  if (!digestEqual(signature, sign(payload))) return false;
+  return Number(expiresAt) > Math.floor(Date.now() / 1000);
 }
 
 export async function isAdmin() {
   if (!adminPasswordConfigured()) return false;
-  const value = (await cookies()).get(ADMIN_COOKIE)?.value;
-  return Boolean(value) && safeEqual(value, sessionToken());
+  return sessionTokenValid((await cookies()).get(ADMIN_COOKIE)?.value);
 }
 
 export async function startAdminSession() {
-  (await cookies()).set(ADMIN_COOKIE, sessionToken(), {
+  (await cookies()).set(ADMIN_COOKIE, newSessionToken(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: SESSION_SECONDS,
   });
 }
 

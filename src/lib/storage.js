@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -93,12 +94,35 @@ const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
 
 const IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
+// Works out the real image type from the file's first bytes, ignoring the type the
+// browser claimed. Returns null for anything that isn't a JPEG, PNG or WebP.
+export function detectImageType(bytes) {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    bytes.length >= 8 &&
+    bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  ) {
+    return "image/png";
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+    bytes.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  return null;
+}
+
 // Saves an uploaded image and returns the URL to show it with.
 export async function saveImage(file) {
-  const extension = IMAGE_TYPES[file.type];
-  if (!extension) throw new Error(`Unsupported image type ${file.type}`);
-  const name = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
   const bytes = Buffer.from(await file.arrayBuffer());
+  const type = detectImageType(bytes);
+  if (!type) throw new Error("Uploaded file is not a JPEG, PNG or WebP image");
+  const extension = IMAGE_TYPES[type];
+  const name = `${Date.now().toString(36)}-${randomBytes(6).toString("hex")}.${extension}`;
 
   const config = supabaseConfig();
   if (config) {
@@ -109,7 +133,7 @@ export async function saveImage(file) {
       headers: {
         apikey: config.key,
         ...(isLegacyJwt ? { Authorization: `Bearer ${config.key}` } : {}),
-        "Content-Type": file.type,
+        "Content-Type": type,
         "Cache-Control": "max-age=31536000",
       },
       body: bytes,

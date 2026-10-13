@@ -59,6 +59,7 @@ export function ContactForm() {
           <p className="mt-1 text-sm text-red-600">{state.errors.message}</p>
         )}
       </div>
+      {state.errors?.form && <p className="text-sm text-red-600">{state.errors.form}</p>}
       <button
         type="submit"
         disabled={pending}

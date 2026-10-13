@@ -25,3 +25,34 @@ alter table public.products enable row level security;
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)
 on conflict (id) do nothing;
+
+-- Rate limiting for admin sign-in, orders and the contact form.
+-- Keys are hashed visitor addresses; rows expire on their own.
+create table if not exists public.rate_limits (
+  key text primary key,
+  count integer not null,
+  reset_at timestamptz not null
+);
+
+alter table public.rate_limits enable row level security;
+
+-- Atomically counts one attempt and returns the current count for the window.
+create or replace function public.hit_rate_limit(p_key text, p_window_seconds integer)
+returns table (count integer, reset_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.rate_limits where reset_at < now() - interval '1 day';
+  insert into public.rate_limits as r (key, count, reset_at)
+  values (p_key, 1, now() + make_interval(secs => p_window_seconds))
+  on conflict (key) do update set
+    count = case when r.reset_at <= now() then 1 else r.count + 1 end,
+    reset_at = case when r.reset_at <= now()
+      then now() + make_interval(secs => p_window_seconds) else r.reset_at end
+  returning r.count, r.reset_at;
+$$;
+
+-- Only the website's server (secret key) may call it; not the public/anon key.
+revoke execute on function public.hit_rate_limit(text, integer) from public, anon, authenticated;
+grant execute on function public.hit_rate_limit(text, integer) to service_role;

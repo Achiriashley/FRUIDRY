@@ -68,7 +68,8 @@ Copy `.env.example` to `.env.local` and set:
   receipt links sent on WhatsApp. If it's not set, the address you're browsing on is used.
 - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
-  in its SQL editor (it creates the tables and a public `product-images` folder for photos),
+  in its SQL editor (it creates the tables, a public `product-images` folder for photos and
+  the rate-limit counter used to block password guessing and spam),
   then copy from Project Settings:
   - the **Project URL** into `SUPABASE_URL`
   - a **secret key** (starts with `sb_secret_`, under API Keys), or on older projects
@@ -82,6 +83,24 @@ Copy `.env.example` to `.env.local` and set:
 If Supabase isn't set, orders and product edits are saved in `data/` on the server. That
 works locally and on your own server, but not on Vercel or other hosts whose
 filesystem is read-only, so set up Supabase before deploying there.
+
+## Security
+
+- **Admin sign-in**: 5 attempts per 15 minutes per network, then blocked for the rest of
+  that window. Sessions are signed, expire after 7 days, and end for everyone when
+  `ADMIN_PASSWORD` changes. Use a long, random password (16+ characters).
+- **Spam limits**: 10 orders per hour and 5 contact messages per hour per network. Counts
+  are kept in Supabase (`rate_limits`) so they hold across servers; without Supabase they
+  are kept in memory.
+- **Orders**: prices and totals are always recalculated on the server from the product
+  list; quantities are limited to 1–50 and sold-out products can't be ordered.
+- **Uploads**: admin-only; photos are checked by their actual contents (JPEG, PNG or
+  WebP only) and given random names.
+- **Headers**: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
+  Referrer-Policy and Permissions-Policy on every page, plus HSTS on Vercel
+  (`next.config.mjs`).
+- **Data**: Supabase tables have row-level security on and no policies, so only the
+  server's secret key can read them. Don't add "public read" policies to `orders`.
 
 ## Scripts
 
