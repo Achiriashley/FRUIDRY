@@ -6,7 +6,9 @@ export default function robots() {
       userAgent: "*",
       allow: "/",
       // Private or per-visitor pages that shouldn't appear in search results.
-      disallow: ["/admin", "/fr/cart", "/en/cart", "/fr/checkout", "/en/checkout", "/fr/order/", "/en/order/"],
+      // Cart and checkout aren't listed: they carry "noindex", which crawlers can only
+      // see if they're allowed to fetch the page.
+      disallow: ["/admin", "/fr/order/", "/en/order/"],
     },
     sitemap: `${siteOrigin()}/sitemap.xml`,
   };

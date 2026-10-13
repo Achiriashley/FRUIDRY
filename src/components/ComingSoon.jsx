@@ -18,7 +18,9 @@ export function ComingSoon({ products, images, t }) {
               className="group block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md"
             >
               <div className="relative">
+                {/* The product name is right below, so the photo needs no alt text. */}
                 <ProductImage
+                  alt=""
                   product={product}
                   src={images[product.slug]}
                   sizes="(min-width: 640px) 25vw, 50vw"

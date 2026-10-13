@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition } from "react";
+import { startTransition, useEffect, useRef } from "react";
 
 // React resets a form's fields after a form action runs, which would wipe what
 // the visitor typed whenever we show a validation error. Submitting through
@@ -11,4 +11,23 @@ export function submitKeepingInput(formAction) {
     const formData = new FormData(event.currentTarget);
     startTransition(() => formAction(formData));
   };
+}
+
+// Links each field to its error message (for screen readers) and, after a failed
+// submit, moves the cursor to the first field with an error. Only once per result:
+// Next.js re-runs effects when a kept-alive page is shown again.
+export function useFieldErrors(state, uid, fields) {
+  const formRef = useRef(null);
+  const handled = useRef(null);
+  useEffect(() => {
+    if (state.status !== "error" || handled.current === state) return;
+    handled.current = state;
+    const first = fields.find((field) => state.errors?.[field]);
+    if (first) formRef.current?.elements.namedItem(first)?.focus();
+  }, [state, fields]);
+
+  const errorId = (field) => `${uid}-${field}-error`;
+  const fieldProps = (field) =>
+    state.errors?.[field] ? { "aria-invalid": true, "aria-describedby": errorId(field) } : {};
+  return { formRef, errorId, fieldProps };
 }

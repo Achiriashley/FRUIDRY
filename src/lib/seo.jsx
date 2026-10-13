@@ -19,7 +19,9 @@ export function languageAlternates(path) {
 }
 
 // Title, description, canonical address and link-preview details for a shop page.
-export function pageMetadata(lang, path, { title, description }) {
+// Pages with their own opengraph-image file pass ownOgImage; the others get the
+// site's preview card (setting openGraph here would otherwise leave them without one).
+export function pageMetadata(lang, path, { title, description, ownOgImage = false }) {
   const t = getDictionary(lang);
   return {
     // Left out when not given, so the home page keeps the site's default title.
@@ -34,6 +36,19 @@ export function pageMetadata(lang, path, { title, description }) {
       url: localePath(lang, path),
       locale: t.meta.ogLocale,
       alternateLocale: LOCALES.filter((l) => l !== lang).map((l) => getDictionary(l).meta.ogLocale),
+      ...(ownOgImage
+        ? {}
+        : {
+            images: [
+              {
+                url: `/${lang}/opengraph-image`,
+                width: 1200,
+                height: 630,
+                type: "image/jpeg",
+                alt: "Fruidry",
+              },
+            ],
+          }),
     },
   };
 }

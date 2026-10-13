@@ -48,7 +48,7 @@ async function OrderDetails({ params }) {
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight">
           {cancelled ? t.order.cancelled : t.order.received}
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           {t.order.placed} {formatDate(order.createdAt, lang)}
         </p>
       </div>
@@ -79,9 +79,7 @@ async function OrderDetails({ params }) {
         </div>
       ) : (
         <div className="rounded-2xl bg-white p-6 shadow-sm" role="status">
-          <p className="text-stone-700">
-            {t.order.nextSteps}
-          </p>
+          <p className="text-stone-700">{t.order.nextSteps}</p>
           {shopNumber && (
             <a
               href={whatsAppLink(shopNumber, orderMessage(order))}

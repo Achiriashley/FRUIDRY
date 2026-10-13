@@ -4,6 +4,7 @@ export function ProductImage({
   product,
   src,
   sizes,
+  alt = product.name,
   emojiClassName = "text-7xl",
   className = "",
   preload = false,
@@ -17,7 +18,7 @@ export function ProductImage({
       {imageSrc ? (
         <Image
           src={imageSrc}
-          alt={product.name}
+          alt={alt}
           fill
           sizes={sizes}
           preload={preload}

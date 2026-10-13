@@ -7,15 +7,21 @@ import { useCart } from "@/components/CartProvider";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatPrice } from "@/lib/products";
 import { placeOrder } from "./actions";
-import { submitKeepingInput } from "@/lib/use-keep-form";
+import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+  "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none placeholder:text-stone-500 focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 const LAST_ORDER_KEY = "fruidry-last-order";
 
-function FieldError({ message }) {
-  return message ? <p className="mt-1 text-sm text-red-600">{message}</p> : null;
+const FIELDS = ["name", "phone", "address"];
+
+function FieldError({ id, message, alert = false }) {
+  return message ? (
+    <p id={id} role={alert ? "alert" : undefined} className="mt-1 text-sm text-red-600">
+      {message}
+    </p>
+  ) : null;
 }
 
 // Next.js keeps recently visited pages alive in the background. Keying the form by
@@ -33,6 +39,7 @@ function CheckoutFormInner() {
   const [state, formAction, pending] = useActionState(placeOrder, { status: "idle" });
   const [lastOrder, setLastOrder] = useState(null);
   const openedUrl = useRef(null);
+  const { formRef, errorId, fieldProps } = useFieldErrors(state, uid, FIELDS);
 
   // If the customer comes back from WhatsApp and the page reloads, show the order they sent.
   useEffect(() => {
@@ -86,6 +93,7 @@ function CheckoutFormInner() {
 
   return (
     <form
+      ref={formRef}
       onSubmit={submitKeepingInput(formAction)}
       noValidate
       className="grid items-start gap-8 md:grid-cols-[1fr_18rem]"
@@ -98,8 +106,14 @@ function CheckoutFormInner() {
           <label htmlFor={`${uid}-name`} className="text-sm font-medium">
             {t.checkout.fullName}
           </label>
-          <input id={`${uid}-name`} name="name" autoComplete="name" className={inputClass} />
-          <FieldError message={state.errors?.name} />
+          <input
+            id={`${uid}-name`}
+            name="name"
+            autoComplete="name"
+            className={inputClass}
+            {...fieldProps("name")}
+          />
+          <FieldError id={errorId("name")} message={state.errors?.name} />
         </div>
         <div>
           <label htmlFor={`${uid}-phone`} className="text-sm font-medium">
@@ -113,8 +127,9 @@ function CheckoutFormInner() {
             autoComplete="tel"
             placeholder="6XX XX XX XX"
             className={inputClass}
+            {...fieldProps("phone")}
           />
-          <FieldError message={state.errors?.phone} />
+          <FieldError id={errorId("phone")} message={state.errors?.phone} />
         </div>
         <div>
           <label htmlFor={`${uid}-address`} className="text-sm font-medium">
@@ -126,8 +141,9 @@ function CheckoutFormInner() {
             rows={2}
             placeholder={t.checkout.addressPlaceholder}
             className={inputClass}
+            {...fieldProps("address")}
           />
-          <FieldError message={state.errors?.address} />
+          <FieldError id={errorId("address")} message={state.errors?.address} />
         </div>
         <div>
           <label htmlFor={`${uid}-notes`} className="text-sm font-medium">
@@ -157,7 +173,7 @@ function CheckoutFormInner() {
         <p className="mt-4 rounded-lg bg-brand-light p-3 text-xs text-brand-dark">
           {t.checkout.howItWorks}
         </p>
-        <FieldError message={state.errors?.form} />
+        <FieldError message={state.errors?.form} alert />
         <button
           type="submit"
           disabled={pending}

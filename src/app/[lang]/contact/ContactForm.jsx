@@ -5,11 +5,20 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { submitContact } from "./actions";
 import { useLocale } from "@/components/LocaleProvider";
-import { submitKeepingInput } from "@/lib/use-keep-form";
+import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
 
 const initialState = { status: "idle" };
 
 const LAST_MESSAGE_KEY = "fruidry-last-message";
+const FIELDS = ["name", "email", "message"];
+
+function FieldError({ id, message }) {
+  return message ? (
+    <p id={id} className="mt-1 text-sm text-red-600">
+      {message}
+    </p>
+  ) : null;
+}
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
@@ -35,6 +44,7 @@ function ContactFormInner({ onNewMessage }) {
   const [state, formAction, pending] = useActionState(submitContact, initialState);
   const [restored, setRestored] = useState(null);
   const openedUrl = useRef(null);
+  const { formRef, errorId, fieldProps } = useFieldErrors(state, uid, FIELDS);
 
   // If the visitor pressed Back to return from WhatsApp and the page reloaded, remind
   // them (once) to press send there instead of showing an empty form.
@@ -93,6 +103,7 @@ function ContactFormInner({ onNewMessage }) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={submitKeepingInput(formAction)}
       className="space-y-4 rounded-2xl bg-white p-6 shadow-sm"
       noValidate
@@ -102,8 +113,14 @@ function ContactFormInner({ onNewMessage }) {
         <label htmlFor={`${uid}-name`} className="text-sm font-medium">
           {t.contact.name}
         </label>
-        <input id={`${uid}-name`} name="name" className={inputClass} autoComplete="name" />
-        {state.errors?.name && <p className="mt-1 text-sm text-red-600">{state.errors.name}</p>}
+        <input
+          id={`${uid}-name`}
+          name="name"
+          className={inputClass}
+          autoComplete="name"
+          {...fieldProps("name")}
+        />
+        <FieldError id={errorId("name")} message={state.errors?.name} />
       </div>
       <div>
         <label htmlFor={`${uid}-email`} className="text-sm font-medium">
@@ -115,19 +132,28 @@ function ContactFormInner({ onNewMessage }) {
           type="email"
           className={inputClass}
           autoComplete="email"
+          {...fieldProps("email")}
         />
-        {state.errors?.email && <p className="mt-1 text-sm text-red-600">{state.errors.email}</p>}
+        <FieldError id={errorId("email")} message={state.errors?.email} />
       </div>
       <div>
         <label htmlFor={`${uid}-message`} className="text-sm font-medium">
           {t.contact.message}
         </label>
-        <textarea id={`${uid}-message`} name="message" rows={5} className={inputClass} />
-        {state.errors?.message && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.message}</p>
-        )}
+        <textarea
+          id={`${uid}-message`}
+          name="message"
+          rows={5}
+          className={inputClass}
+          {...fieldProps("message")}
+        />
+        <FieldError id={errorId("message")} message={state.errors?.message} />
       </div>
-      {state.errors?.form && <p className="text-sm text-red-600">{state.errors.form}</p>}
+      {state.errors?.form && (
+        <p role="alert" className="text-sm text-red-600">
+          {state.errors.form}
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending}

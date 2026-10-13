@@ -12,9 +12,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Only used for order numbers and item codes, so it isn't preloaded.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 // The page shell shared by the shop (in each language) and the admin panel.

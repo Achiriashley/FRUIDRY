@@ -29,7 +29,7 @@ export function LanguageSwitch() {
       hrefLang={target}
       lang={target}
       onClick={handleClick}
-      aria-label={t.language.switchLabel}
+      aria-label={`${target.toUpperCase()} – ${t.language.switchLabel}`}
       className="rounded-md px-2 py-1 text-sm font-semibold text-stone-700 hover:text-brand"
     >
       {target.toUpperCase()}

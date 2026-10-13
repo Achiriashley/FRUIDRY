@@ -22,6 +22,26 @@
   }
 }
 
+/* A clear focus outline for keyboard users, and room above focused elements for the
+   sticky header (taller on phones, where it has two rows). */
+@layer base {
+  :where(a, button):focus-visible {
+    outline: 2px solid var(--color-brand-deep);
+    outline-offset: 2px;
+  }
+  footer :where(a, button):focus-visible {
+    outline-color: var(--color-sun);
+  }
+  html {
+    scroll-padding-top: 7rem;
+  }
+  @media (min-width: 40rem) {
+    html {
+      scroll-padding-top: 5rem;
+    }
+  }
+}
+
 body {
   background: var(--color-cream);
   color: #1c1917;

@@ -33,7 +33,7 @@ export default async function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-4xl font-extrabold tracking-tight">{t.privacy.title}</h1>
-      <p className="mt-2 text-sm text-stone-500">{t.privacy.updated}</p>
+      <p className="mt-2 text-sm text-stone-600">{t.privacy.updated}</p>
       <div className="mt-8 space-y-8">
         {t.privacy.sections.map((section) => (
           <section key={section.heading}>

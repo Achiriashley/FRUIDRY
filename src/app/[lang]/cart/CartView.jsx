@@ -50,6 +50,7 @@ export function CartView({ images }) {
               <button
                 type="button"
                 onClick={() => removeItem(product.slug)}
+                aria-label={t.cart.removeItem(product.name)}
                 className="mt-1 text-xs text-stone-500 underline hover:text-red-600"
               >
                 {t.cart.remove}
@@ -64,7 +65,9 @@ export function CartView({ images }) {
               >
                 −
               </button>
-              <span className="w-6 text-center text-sm font-semibold">{quantity}</span>
+              <span className="w-6 text-center text-sm font-semibold" aria-live="polite">
+                {quantity}
+              </span>
               <button
                 type="button"
                 aria-label={t.cart.increase(product.name)}

@@ -15,7 +15,7 @@ import { CONTACT, SOCIAL_LINKS } from "@/lib/shop-config";
 export async function generateMetadata() {
   const lang = await getLocale();
   const t = getDictionary(lang);
-  return pageMetadata(lang, "/", { description: t.meta.siteDescription });
+  return pageMetadata(lang, "/", { description: t.meta.siteDescription, ownOgImage: true });
 }
 
 export default async function Home() {

@@ -154,10 +154,7 @@ export function OrderCard({ order, siteUrl }) {
             Send receipt on WhatsApp
           </a>
         )}
-        <Link
-          href={orderPath(order)}
-          className="text-sm text-stone-600 underline hover:text-brand"
-        >
+        <Link href={orderPath(order)} className="text-sm text-stone-600 underline hover:text-brand">
           {isPaid(order) ? "View receipt" : "View customer page"}
         </Link>
       </div>

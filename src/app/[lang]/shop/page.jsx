@@ -21,6 +21,7 @@ export default async function ShopPage() {
     <div className="mx-auto max-w-6xl px-4 py-12">
       <h1 className="text-4xl font-extrabold tracking-tight">{t.shop.title}</h1>
       <p className="mt-2 mb-8 text-stone-600">{t.shop.intro}</p>
+      <h2 className="sr-only">{t.home.ourRange}</h2>
       <ShopGrid products={products.filter((p) => !p.comingSoon)} images={images} />
       <div className="mt-16">
         <ComingSoon products={products.filter((p) => p.comingSoon)} images={images} t={t} />

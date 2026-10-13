@@ -27,6 +27,7 @@ export async function generateMetadata({ params }) {
     ? `${t.comingSoon.badge}.`
     : `${formatPrice(product.price)} / ${product.weight}.`;
   return pageMetadata(lang, `/shop/${slug}`, {
+    ownOgImage: true,
     title: product.name,
     description: `${product.tagline} ${detail}`.trim(),
   });
@@ -117,16 +118,16 @@ async function ProductDetails({ params }) {
               <span className="rounded-full bg-sun px-3 py-1 text-sm font-bold text-brand-deep">
                 {t.comingSoon.badge}
               </span>
-              <span className="text-lg text-stone-500">{product.weight}</span>
+              <span className="text-lg text-stone-600">{product.weight}</span>
             </p>
           ) : (
             <p className="mt-4 text-3xl font-bold">
               {formatPrice(product.price)}{" "}
-              <span className="text-base font-normal text-stone-500">/ {product.weight}</span>
+              <span className="text-base font-normal text-stone-600">/ {product.weight}</span>
             </p>
           )}
           {product.sku && (
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-stone-600">
               {t.product.itemCode} <span className="font-mono">{product.sku}</span>
             </p>
           )}

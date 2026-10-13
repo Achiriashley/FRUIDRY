@@ -87,6 +87,9 @@ export function AddToCartButton({
       >
         {t.product.buyNow}
       </button>
+      <span role="status" className="sr-only">
+        {added ? t.product.addedStatus : ""}
+      </span>
     </div>
   );
 }

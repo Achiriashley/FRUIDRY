@@ -14,6 +14,7 @@ export function Footer({ lang }) {
             alt="Fruidry"
             width={1107}
             height={360}
+            sizes="148px"
             className="h-12 w-auto"
           />
           <p className="mt-2 text-sm">{t.footer.tagline}</p>
