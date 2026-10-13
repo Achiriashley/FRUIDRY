@@ -8,7 +8,7 @@ import { getProductImages } from "@/lib/product-images";
 import { getProduct, getProducts } from "@/lib/catalog";
 import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
-import { formatPrice } from "@/lib/products";
+import { formatPrice, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
 
 export async function generateStaticParams() {
@@ -54,46 +54,42 @@ async function ProductDetails({ params }) {
   const origin = siteOrigin();
   const pageUrl = `${origin}${localePath(lang, `/shop/${product.slug}`)}`;
   const photo = product.image || images[product.slug];
-  // Same-category products first, then the rest; products on sale before coming-soon ones.
+  // Products customers can order first, then same-category ones.
   const related = products
     .filter((p) => p.slug !== product.slug)
     .sort(
       (a, b) =>
-        (b.category === product.category) - (a.category === product.category) ||
-        Boolean(a.comingSoon) - Boolean(b.comingSoon),
+        isOrderable(b) - isOrderable(a) ||
+        (b.category === product.category) - (a.category === product.category),
     )
     .slice(0, 3);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.name,
-          description: product.description,
-          sku: product.sku,
-          image: photo
-            ? new URL(photo, origin).href
-            : `${pageUrl}/opengraph-image`,
-          brand: { "@type": "Brand", name: "Fruidry" },
-          // No price is published for products that aren't on sale yet.
-          ...(product.comingSoon
-            ? {}
-            : {
-                offers: {
-                  "@type": "Offer",
-                  url: pageUrl,
-                  price: product.price,
-                  priceCurrency: "XAF",
-                  itemCondition: "https://schema.org/NewCondition",
-                  availability: product.inStock
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/OutOfStock",
-                },
-              }),
-        }}
-      />
+      {/* Products that aren't on sale yet have no price, so no product data for Google. */}
+      {!product.comingSoon && (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: product.description,
+            sku: product.sku,
+            image: photo ? new URL(photo, origin).href : `${pageUrl}/opengraph-image`,
+            brand: { "@type": "Brand", name: "Fruidry" },
+            offers: {
+              "@type": "Offer",
+              url: pageUrl,
+              price: product.price,
+              priceCurrency: "XAF",
+              itemCondition: "https://schema.org/NewCondition",
+              availability: product.inStock
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            },
+          }}
+        />
+      )}
       <Link
         href={localePath(lang, "/shop")}
         className="text-sm font-medium text-stone-600 hover:text-brand"
@@ -117,7 +113,12 @@ async function ProductDetails({ params }) {
           <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-lg text-stone-600">{product.tagline}</p>
           {product.comingSoon ? (
-            <p className="mt-4 text-lg text-stone-500">{product.weight}</p>
+            <p className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-sun px-3 py-1 text-sm font-bold text-brand-deep">
+                {t.comingSoon.badge}
+              </span>
+              <span className="text-lg text-stone-500">{product.weight}</span>
+            </p>
           ) : (
             <p className="mt-4 text-3xl font-bold">
               {formatPrice(product.price)}{" "}
@@ -141,13 +142,11 @@ async function ProductDetails({ params }) {
             ))}
           </ul>
           <div className="mt-8">
-            <AddToCartButton
-              slug={product.slug}
-              inStock={product.inStock}
-              comingSoon={product.comingSoon}
-              withQuantity
-            />
-            {product.comingSoon && <p className="mt-3 text-stone-600">{t.comingSoon.notYet}</p>}
+            {product.comingSoon ? (
+              <p className="text-pretty text-stone-600">{t.comingSoon.notYet}</p>
+            ) : (
+              <AddToCartButton slug={product.slug} inStock={product.inStock} withQuantity />
+            )}
           </div>
         </div>
       </div>

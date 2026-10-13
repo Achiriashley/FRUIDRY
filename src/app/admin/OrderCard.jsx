@@ -140,7 +140,7 @@ export function OrderCard({ order, siteUrl }) {
           href={whatsAppLink(`237${order.customer.phone}`, customerMessage(order))}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-[#25D366] px-4 py-2 text-sm font-semibold text-[#128C4B] hover:bg-green-50"
+          className="rounded-full border border-[#25D366] px-4 py-2 text-sm font-semibold text-brand hover:bg-green-50"
         >
           Message on WhatsApp
         </a>
@@ -149,7 +149,7 @@ export function OrderCard({ order, siteUrl }) {
             href={whatsAppLink(`237${order.customer.phone}`, receiptMessage(order, siteUrl))}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="btn-whatsapp rounded-full px-4 py-2 text-sm font-semibold"
           >
             Send receipt on WhatsApp
           </a>

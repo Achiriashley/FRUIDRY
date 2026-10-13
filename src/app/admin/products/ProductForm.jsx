@@ -19,17 +19,28 @@ function Field({ id, label, error, children }) {
   );
 }
 
-// Shrinks a photo in the browser before upload, so phone photos upload quickly.
-// PNG and WebP images stay PNG so a transparent background (like a pack cut-out)
-// is kept; everything else becomes JPEG.
-async function resizePhoto(file, maxSize = 1200) {
-  const type = /^image\/(png|webp)$/.test(file.type) ? "image/png" : "image/jpeg";
-  const bitmap = await createImageBitmap(file);
+// Photos are shrunk in the browser before upload, so phone photos upload quickly and
+// stay under the 4 MB upload limit. Photos with a transparent background (like a pack
+// cut-out) stay PNG; everything else becomes JPEG, which is much smaller.
+const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
+
+function drawScaled(bitmap, maxSize) {
   const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+function hasTransparency(bitmap) {
+  const canvas = drawScaled(bitmap, 200);
+  const { data } = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 250) return true;
+  return false;
+}
+
+function encode(canvas, type) {
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("resize failed"))),
@@ -37,6 +48,19 @@ async function resizePhoto(file, maxSize = 1200) {
       0.85,
     ),
   );
+}
+
+class PhotoTooBigError extends Error {}
+
+async function resizePhoto(file) {
+  const bitmap = await createImageBitmap(file);
+  const type =
+    /^image\/(png|webp)$/.test(file.type) && hasTransparency(bitmap) ? "image/png" : "image/jpeg";
+  for (const maxSize of [1200, 900, 700]) {
+    const blob = await encode(drawScaled(bitmap, maxSize), type);
+    if (blob.size <= MAX_UPLOAD_BYTES) return blob;
+  }
+  throw new PhotoTooBigError();
 }
 
 const EMPTY_PRODUCT = {
@@ -87,9 +111,13 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
       const resized = await resizePhoto(file);
       setPhoto(resized);
       setPreview(URL.createObjectURL(resized));
-    } catch {
+    } catch (error) {
       setPhoto(null);
-      setPhotoError("This photo couldn't be read. Try a JPG or PNG.");
+      setPhotoError(
+        error instanceof PhotoTooBigError
+          ? "This photo is too big, even after shrinking it. Try a smaller one."
+          : "This photo couldn't be read. Try a JPG or PNG.",
+      );
     }
   }
 

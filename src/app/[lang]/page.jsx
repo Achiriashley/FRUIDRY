@@ -64,12 +64,7 @@ export default async function Home() {
             {t.home.comingSoon}
           </p>
         ) : forSale.length === 1 ? (
-          <FeaturedProduct
-            product={forSale[0]}
-            image={images[forSale[0].slug]}
-            lang={lang}
-            t={t}
-          />
+          <FeaturedProduct product={forSale[0]} image={images[forSale[0].slug]} lang={lang} t={t} />
         ) : (
           <>
             <div className="mb-8 flex items-end justify-between gap-4">
@@ -101,10 +96,14 @@ export default async function Home() {
 
 // The first thing visitors see: what Fruidry is, the price, and a way to order.
 function Hero({ products, images, lang, t }) {
-  const featured = products.find(isOrderable) ?? products[0];
-  const single = products.length === 1;
-  const photo = featured && (featured.image || images[featured.slug]);
-  const lowestPrice = Math.min(...products.map((p) => p.price));
+  // Price and "Order now" only for products that can be ordered right now; the photo
+  // still shows when everything is sold out.
+  const orderable = products.filter(isOrderable);
+  const featured = orderable[0];
+  const single = orderable.length === 1;
+  const pictured = featured ?? products[0];
+  const photo = pictured && (pictured.image || images[pictured.slug]);
+  const lowestPrice = Math.min(...orderable.map((p) => p.price));
   const orderHref = localePath(lang, single ? `/shop/${featured.slug}` : "/shop");
 
   return (
@@ -179,7 +178,7 @@ function Hero({ products, images, lang, t }) {
           {photo ? (
             <Image
               src={photo}
-              alt={featured.name}
+              alt={pictured.name}
               width={557}
               height={900}
               preload

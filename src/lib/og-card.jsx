@@ -1,12 +1,17 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 
 // The picture shown when a Fruidry link is shared (WhatsApp, Facebook, ...).
 // Built from local files only, so it renders without downloading anything.
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-const MIME = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png" };
+const MIME = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+};
 
 // A file from public/ as a data URL the image renderer can use (JPEG/PNG only).
 export async function publicImage(publicPath) {
@@ -18,6 +23,19 @@ export async function publicImage(publicPath) {
   } catch {
     return null;
   }
+}
+
+// Link previews are re-encoded as JPEG: WhatsApp skips preview images much over
+// 300 KB, and a PNG with the pack photo is about twice that.
+export const OG_CONTENT_TYPE = "image/jpeg";
+
+export async function asJpeg(imageResponse) {
+  const png = Buffer.from(await imageResponse.arrayBuffer());
+  const jpeg = await sharp(png).jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+  const headers = new Headers(imageResponse.headers);
+  headers.set("Content-Type", OG_CONTENT_TYPE);
+  headers.delete("Content-Length");
+  return new Response(jpeg, { status: imageResponse.status, headers });
 }
 
 // The default font lacks the narrow spaces used in "2 500 FCFA".
@@ -62,7 +80,14 @@ export async function OgCard({ title, subtitle, footer, photo }) {
           {title}
         </div>
         {subtitle && (
-          <div style={{ display: "flex", marginTop: 20, fontSize: 32, color: "#44403c" }}>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 20,
+              fontSize: 32,
+              color: "#44403c",
+            }}
+          >
             {subtitle}
           </div>
         )}
@@ -85,7 +110,14 @@ export async function OgCard({ title, subtitle, footer, photo }) {
         )}
       </div>
       {photo && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 440 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 440,
+          }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={photo} alt="" height={560} style={{ objectFit: "contain" }} />
         </div>

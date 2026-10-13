@@ -21,7 +21,7 @@ export function Header({ lang, languageSwitch }) {
             width={1107}
             height={360}
             preload
-            className="h-10 w-auto sm:h-11"
+            className="h-8 w-auto min-[360px]:h-10 sm:h-11"
           />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-4">

@@ -85,7 +85,7 @@ async function OrderDetails({ params }) {
           {shopNumber && (
             <a
               href={whatsAppLink(shopNumber, orderMessage(order))}
-              className="mt-4 inline-block rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a]"
+              className="mt-4 inline-block rounded-full btn-whatsapp px-6 py-3 font-semibold"
             >
               {t.order.sendAgain}
             </a>

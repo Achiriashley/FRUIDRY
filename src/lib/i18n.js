@@ -28,7 +28,9 @@ export function localizeProduct(product, lang) {
   const localized = { ...product };
   for (const field of TRANSLATED_FIELDS) {
     const french = product[`${field}Fr`];
-    if (Array.isArray(french) ? french.length > 0 : french) localized[field] = french;
+    if (Array.isArray(french) ? french.length > 0 : french) {
+      localized[field] = mapTexts(french, frenchSpacing);
+    }
   }
   return localized;
 }
@@ -42,6 +44,7 @@ export function formatDate(iso, lang) {
 }
 
 const en = {
+  colon: ":",
   meta: {
     siteTitle: "Fruidry | Freeze-dried fruit",
     siteDescription:
@@ -232,16 +235,15 @@ const en = {
       address: "Tell us where to deliver your order.",
       addressTooLong: "Please keep the address under 300 characters.",
       cart: "Your cart is empty or out of date. Please refresh the page.",
-      soldOut: (name) => `Sorry, ${name} is sold out. Remove it from your cart to continue.`,
+      soldOut: (name) => `Sorry, "${name}" is sold out. Remove it from your cart to continue.`,
       notAvailable: (name) =>
-        `Sorry, ${name} isn't available to order yet. Remove it from your cart to continue.`,
+        `Sorry, "${name}" isn't available to order yet. Remove it from your cart to continue.`,
       rateLimited: (wait) =>
         `You've placed a lot of orders just now. Please try again in ${wait}, or message us on WhatsApp.`,
       notSetUp: "Ordering on WhatsApp isn't set up yet. Please contact us directly.",
     },
   },
   whatsapp: {
-    colon: ":",
     greeting: "Hello Fruidry! I'd like to order:",
     order: "Order",
     total: "Total",
@@ -355,6 +357,8 @@ const en = {
 };
 
 const fr = {
+  // French puts a space before ":".
+  colon: " :",
   meta: {
     siteTitle: "Fruidry | Fruits lyophilisés",
     siteDescription:
@@ -446,7 +450,7 @@ const fr = {
     description:
       "Comment Fruidry est né, d'où viennent nos fruits et comment fonctionne la lyophilisation.",
     paragraphs: [
-      "Fruidry a été fondé au Cameroun avec une idée simple : rendre les snacks aux fruits sains et savoureux faciles à apprécier au quotidien. Sans sucre ajouté, sans conservateurs, juste du fruit.",
+      "Fruidry a été fondé au Cameroun avec une idée simple : proposer des snacks aux fruits, sains et savoureux, à déguster au quotidien. Sans sucre ajouté, sans conservateurs, juste du fruit.",
       "Pour l'instant, nos fruits sont lyophilisés par un producteur partenaire en Chine, puis importés au Cameroun par nos soins.",
       "Notre objectif : lyophiliser des fruits cultivés au Cameroun, ici même, dès que nous aurons notre propre machine de lyophilisation.",
     ],
@@ -454,23 +458,23 @@ const fr = {
     steps: [
       {
         n: "01",
-        title: "Cueilli à maturité",
+        title: "Cueillis à maturité",
         text: "Les fruits sont choisis à pleine maturité, quand ils sont les plus sucrés.",
       },
       {
         n: "02",
-        title: "Congelé rapidement",
+        title: "Congelés rapidement",
         text: "Ils sont lavés, tranchés puis congelés rapidement pour préserver leur saveur et leur couleur.",
       },
       {
         n: "03",
-        title: "Séché sous vide",
-        text: "Le vide transforme la glace directement en vapeur, sans forte chaleur : le fruit garde son goût et ses nutriments, et devient léger et croquant.",
+        title: "Séchés sous vide",
+        text: "Le vide transforme la glace directement en vapeur, sans forte chaleur : les fruits gardent leur goût et leurs nutriments, et deviennent légers et croquants.",
       },
       {
         n: "04",
-        title: "Scellé hermétiquement",
-        text: "Il est scellé dans des sachets hermétiques et refermables qui gardent chaque morceau croustillant.",
+        title: "Scellés hermétiquement",
+        text: "Ils sont scellés dans des sachets hermétiques et refermables qui gardent chaque morceau croustillant.",
       },
     ],
     tasteTheDifference: "Goûtez la différence",
@@ -481,7 +485,7 @@ const fr = {
     description: "Contactez Fruidry sur WhatsApp, par téléphone ou sur les réseaux sociaux.",
     heading: "Écrivez-nous",
     intro:
-      "Une question sur une commande, la vente en gros ou nos fruits ? Écrivez-nous sur WhatsApp, appelez-nous, ou laissez votre message ci-dessous.",
+      "Une question sur une commande, la vente en gros ou nos fruits ? Discutez avec nous sur WhatsApp, appelez-nous ou laissez votre message ci-dessous.",
     chatOnWhatsApp: "Discuter sur WhatsApp",
     chatGreeting: "Bonjour Fruidry ! J'ai une question.",
     call: "Appelez-nous",
@@ -495,11 +499,12 @@ const fr = {
     send: "Envoyer sur WhatsApp",
     consent: "Votre message s'ouvre dans WhatsApp ; rien n'est enregistré sur notre site.",
     almostDone: "Presque fini !",
-    ready: "Votre message est prêt dans WhatsApp. Appuyez sur envoyer et nous vous répondrons rapidement.",
+    ready:
+      "Votre message est prêt dans WhatsApp. Appuyez sur envoyer et nous vous répondrons rapidement.",
     openAgain: "Rouvrir WhatsApp",
     newMessage: "Écrire un autre message",
     whatsappGreeting: "Bonjour Fruidry !",
-    whatsappFrom: "De la part de :",
+    whatsappFrom: "De la part de",
     errors: {
       name: "Veuillez indiquer votre nom.",
       nameTooLong: "Votre nom doit faire moins de 100 caractères.",
@@ -543,7 +548,8 @@ const fr = {
     readyBefore: "Votre commande ",
     readyMiddle: " est prête dans WhatsApp. Appuyez sur ",
     readySend: "envoyer",
-    readyAfter: " pour la passer, et nous vous répondrons pour organiser le paiement et la livraison.",
+    readyAfter:
+      " pour la passer, et nous vous répondrons pour organiser le paiement et la livraison.",
     openAgain: "Rouvrir WhatsApp",
     viewOrder: "Voir votre commande",
     receiptHint: "(votre reçu y apparaîtra dès que nous aurons confirmé le paiement)",
@@ -554,9 +560,10 @@ const fr = {
       address: "Indiquez-nous où livrer votre commande.",
       addressTooLong: "L'adresse doit faire moins de 300 caractères.",
       cart: "Votre panier est vide ou n'est plus à jour. Veuillez actualiser la page.",
-      soldOut: (name) => `Désolé, ${name} est épuisé. Retirez-le de votre panier pour continuer.`,
+      soldOut: (name) =>
+        `Désolé, le produit « ${name} » est épuisé. Retirez-le de votre panier pour continuer.`,
       notAvailable: (name) =>
-        `Désolé, ${name} n'est pas encore disponible. Retirez-le de votre panier pour continuer.`,
+        `Désolé, le produit « ${name} » n'est pas encore disponible. Retirez-le de votre panier pour continuer.`,
       rateLimited: (wait) =>
         `Vous avez passé beaucoup de commandes à l'instant. Réessayez dans ${wait} ou écrivez-nous sur WhatsApp.`,
       notSetUp:
@@ -564,8 +571,6 @@ const fr = {
     },
   },
   whatsapp: {
-    // French puts a space before ":".
-    colon: " :",
     greeting: "Bonjour Fruidry ! Je voudrais commander :",
     order: "Commande",
     total: "Total",
@@ -680,7 +685,28 @@ const fr = {
   wait: (minutes) => (minutes <= 1 ? "une minute" : `${minutes} minutes`),
 };
 
-const dictionaries = { en, fr };
+// French puts a non-breaking space before : ; ! ? and inside « », so the mark
+// never ends up alone at the start of a line.
+export function frenchSpacing(text) {
+  return text
+    .replace(/ ([!?;])/g, "\u202f$1")
+    .replace(/ :/g, "\u00a0:")
+    .replace(/« /g, "«\u00a0")
+    .replace(/ »/g, "\u00a0»");
+}
+
+// Applies fn to every text in a dictionary, including texts built by functions.
+function mapTexts(value, fn) {
+  if (typeof value === "string") return fn(value);
+  if (typeof value === "function") return (...args) => fn(value(...args));
+  if (Array.isArray(value)) return value.map((v) => mapTexts(v, fn));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, mapTexts(v, fn)]));
+  }
+  return value;
+}
+
+const dictionaries = { en, fr: mapTexts(fr, frenchSpacing) };
 
 export function getDictionary(lang) {
   return dictionaries[hasLocale(lang) ? lang : DEFAULT_LOCALE];

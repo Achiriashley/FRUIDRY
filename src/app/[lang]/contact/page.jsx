@@ -31,7 +31,7 @@ export default async function ContactPage() {
           {whatsApp && (
             <a
               href={whatsAppLink(whatsApp, t.contact.chatGreeting)}
-              className="rounded-full bg-[#25D366] px-5 py-2.5 font-semibold text-white hover:bg-[#1ebe5a]"
+              className="rounded-full btn-whatsapp px-5 py-2.5 font-semibold"
             >
               {t.contact.chatOnWhatsApp}
             </a>
@@ -48,7 +48,8 @@ export default async function ContactPage() {
         <ul className="mt-2 space-y-1 text-stone-700">
           {SOCIAL_LINKS.map((s) => (
             <li key={s.name}>
-              {s.name}:{" "}
+              {s.name}
+              {t.colon}{" "}
               {s.url ? (
                 <a href={s.url} rel="noopener" className="font-medium text-brand hover:underline">
                   {s.handle}

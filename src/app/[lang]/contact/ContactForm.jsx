@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useId, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { submitContact } from "./actions";
 import { useLocale } from "@/components/LocaleProvider";
 import { submitKeepingInput } from "@/lib/use-keep-form";
@@ -13,10 +14,19 @@ const LAST_MESSAGE_KEY = "fruidry-last-message";
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
-// Starting over with a fresh form (e.g. "Write another message") remounts it.
+// A fresh form on each new visit (see CheckoutForm) and after "Write another message".
 export function ContactForm() {
+  const { bfcacheId } = useRouter();
   const [round, setRound] = useState(0);
-  return <ContactFormInner key={round} onNewMessage={() => setRound((r) => r + 1)} />;
+  function startOver() {
+    try {
+      window.sessionStorage.removeItem(LAST_MESSAGE_KEY);
+    } catch {
+      // Storage unavailable; nothing to clear.
+    }
+    setRound((r) => r + 1);
+  }
+  return <ContactFormInner key={`${bfcacheId}-${round}`} onNewMessage={startOver} />;
 }
 
 function ContactFormInner({ onNewMessage }) {
@@ -24,23 +34,27 @@ function ContactFormInner({ onNewMessage }) {
   const { lang, t, href } = useLocale();
   const [state, formAction, pending] = useActionState(submitContact, initialState);
   const [restored, setRestored] = useState(null);
+  const openedUrl = useRef(null);
 
-  // If the visitor comes back from WhatsApp and the page reloads, remind them to
-  // press send there (once) instead of showing an empty form.
+  // If the visitor pressed Back to return from WhatsApp and the page reloaded, remind
+  // them (once) to press send there instead of showing an empty form.
   useEffect(() => {
     try {
       const saved = window.sessionStorage.getItem(LAST_MESSAGE_KEY);
       window.sessionStorage.removeItem(LAST_MESSAGE_KEY);
+      const cameBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (saved?.startsWith("https://wa.me/")) setRestored(saved);
+      if (cameBack && saved?.startsWith("https://wa.me/")) setRestored(saved);
     } catch {
       // Storage unavailable; show the form.
     }
   }, []);
 
-  // Opens the WhatsApp app on phones, or WhatsApp Web on computers.
+  // Opens the WhatsApp app on phones, or WhatsApp Web on computers. Only once per
+  // message: Next.js re-runs effects when a kept-alive page is shown again.
   useEffect(() => {
-    if (state.status !== "success") return;
+    if (state.status !== "success" || openedUrl.current === state.whatsappUrl) return;
+    openedUrl.current = state.whatsappUrl;
     try {
       window.sessionStorage.setItem(LAST_MESSAGE_KEY, state.whatsappUrl);
     } catch {
@@ -60,7 +74,7 @@ function ContactFormInner({ onNewMessage }) {
         <p className="mt-2 text-stone-600">{t.contact.ready}</p>
         <a
           href={sentUrl}
-          className="mt-6 inline-block rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a]"
+          className="mt-6 inline-block rounded-full btn-whatsapp px-6 py-3 font-semibold"
         >
           {t.contact.openAgain}
         </a>
@@ -93,8 +107,7 @@ function ContactFormInner({ onNewMessage }) {
       </div>
       <div>
         <label htmlFor={`${uid}-email`} className="text-sm font-medium">
-          {t.contact.email}{" "}
-          <span className="font-normal text-stone-500">{t.contact.optional}</span>
+          {t.contact.email} <span className="font-normal text-stone-500">{t.contact.optional}</span>
         </label>
         <input
           id={`${uid}-email`}
@@ -118,7 +131,7 @@ function ContactFormInner({ onNewMessage }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-[#25D366] py-3 font-semibold text-white hover:bg-[#1ebe5a] disabled:opacity-60"
+        className="w-full rounded-full btn-whatsapp py-3 font-semibold disabled:opacity-60"
       >
         {pending ? t.contact.sending : t.contact.send}
       </button>

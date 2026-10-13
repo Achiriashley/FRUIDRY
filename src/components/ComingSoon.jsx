@@ -24,7 +24,7 @@ export function ComingSoon({ products, images, t }) {
                   sizes="(min-width: 640px) 25vw, 50vw"
                   className="aspect-[4/5] transition group-hover:scale-[1.02]"
                 />
-                <span className="absolute left-2 top-2 rounded-full bg-sun px-2.5 py-1 text-xs font-bold text-brand-deep shadow-sm">
+                <span className="absolute top-2 left-2 rounded-full bg-sun px-2 py-1 text-[11px] font-bold whitespace-nowrap text-brand-deep shadow-sm min-[340px]:px-2.5 min-[340px]:text-xs">
                   {t.comingSoon.badge}
                 </span>
               </div>

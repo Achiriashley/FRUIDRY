@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatPrice } from "@/lib/products";
@@ -32,6 +32,7 @@ function CheckoutFormInner() {
   const { lang, t, href } = useLocale();
   const [state, formAction, pending] = useActionState(placeOrder, { status: "idle" });
   const [lastOrder, setLastOrder] = useState(null);
+  const openedUrl = useRef(null);
 
   // If the customer comes back from WhatsApp and the page reloads, show the order they sent.
   useEffect(() => {
@@ -44,8 +45,10 @@ function CheckoutFormInner() {
     }
   }, []);
 
+  // Only once per order: Next.js re-runs effects when a kept-alive page is shown again.
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.status === "success" && openedUrl.current !== state.whatsappUrl) {
+      openedUrl.current = state.whatsappUrl;
       try {
         window.sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(state));
       } catch {
@@ -158,7 +161,7 @@ function CheckoutFormInner() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-6 w-full rounded-full bg-[#25D366] py-3 font-semibold text-white hover:bg-[#1ebe5a] disabled:opacity-60"
+          className="mt-6 w-full rounded-full btn-whatsapp py-3 font-semibold disabled:opacity-60"
         >
           {pending ? t.checkout.preparing : t.checkout.orderOnWhatsApp}
         </button>
@@ -190,7 +193,7 @@ function OrderSent({ state }) {
       </p>
       <a
         href={state.whatsappUrl}
-        className="mt-6 inline-block rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a]"
+        className="mt-6 inline-block rounded-full btn-whatsapp px-6 py-3 font-semibold"
       >
         {t.checkout.openAgain}
       </a>
@@ -202,9 +205,7 @@ function OrderSent({ state }) {
           >
             {t.checkout.viewOrder}
           </Link>{" "}
-          <span className="text-stone-500">
-            {t.checkout.receiptHint}
-          </span>
+          <span className="text-stone-500">{t.checkout.receiptHint}</span>
         </p>
       )}
     </div>

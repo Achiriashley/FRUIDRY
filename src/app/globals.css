@@ -13,6 +13,15 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/* WhatsApp-green buttons. Dark text keeps the label easy to read on the bright green. */
+@utility btn-whatsapp {
+  background-color: #25d366;
+  color: var(--color-brand-deep);
+  &:hover {
+    background-color: #1ebe5a;
+  }
+}
+
 body {
   background: var(--color-cream);
   color: #1c1917;
