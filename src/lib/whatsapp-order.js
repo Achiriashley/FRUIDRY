@@ -13,12 +13,12 @@ export function orderMessage(order) {
       (item) =>
         `• ${item.sku ?? item.slug} · ${item.name} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}`,
     ),
-    `*${t.total}: ${formatPrice(order.total)}*`,
+    `*${t.total}${t.colon} ${formatPrice(order.total)}*`,
     "",
-    `${t.name}: ${order.customer.name}`,
-    `${t.phone}: ${order.customer.phone}`,
-    `${t.delivery}: ${order.customer.address}`,
+    `${t.name}${t.colon} ${order.customer.name}`,
+    `${t.phone}${t.colon} ${order.customer.phone}`,
+    `${t.delivery}${t.colon} ${order.customer.address}`,
   ];
-  if (order.customer.notes) lines.push(`${t.note}: ${order.customer.notes}`);
+  if (order.customer.notes) lines.push(`${t.note}${t.colon} ${order.customer.notes}`);
   return lines.join("\n");
 }

@@ -10,6 +10,7 @@ import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
+import { CONTACT, SOCIAL_LINKS } from "@/lib/shop-config";
 
 export async function generateMetadata() {
   const lang = await getLocale();
@@ -37,6 +38,8 @@ export default async function Home() {
           logo: `${origin}/brand/logo-lockup.png`,
           description: t.meta.siteDescription,
           areaServed: { "@type": "Country", name: "Cameroon" },
+          telephone: CONTACT.phone,
+          sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
         }}
       />
       <Hero products={forSale} images={images} lang={lang} t={t} />

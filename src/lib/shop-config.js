@@ -24,3 +24,31 @@ export function normalizeCameroonPhone(input) {
 export function whatsAppLink(number, text) {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
+
+// Contact details shown on the site (from the packaging). Change them here.
+export const CONTACT = {
+  phone: "+237 671 820 032",
+  instagram: "fruidry.cm",
+  facebook: "Fruidry Cmr",
+  tiktok: "fruidry",
+};
+
+export const SOCIAL_LINKS = [
+  {
+    name: "Instagram",
+    handle: `@${CONTACT.instagram}`,
+    url: `https://www.instagram.com/${CONTACT.instagram}`,
+  },
+  {
+    name: "TikTok",
+    handle: `@${CONTACT.tiktok}`,
+    url: `https://www.tiktok.com/@${CONTACT.tiktok}`,
+  },
+  // No link yet: add the page's address as url once you have it.
+  { name: "Facebook", handle: CONTACT.facebook, url: null },
+];
+
+// "+237 671 820 032" -> "tel:+237671820032"
+export function phoneLink(phone) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}

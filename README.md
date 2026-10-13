@@ -15,7 +15,9 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Checkout on WhatsApp** (`/checkout`): see below
 - **Admin panel** (`/admin`): see below
 - **Our story** (`/about`) page
-- **Contact form** (`/contact`) that validates input in a Server Action
+- **Contact page** (`/contact`) with your phone number, WhatsApp and social accounts
+  (set in `src/lib/shop-config.js`), and a form that sends the message to your
+  WhatsApp, like orders
 
 ## Languages and search engines
 

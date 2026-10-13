@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getDictionary, localePath } from "@/lib/i18n";
+import { CONTACT, SOCIAL_LINKS, phoneLink } from "@/lib/shop-config";
 
 export function Footer({ lang }) {
   const t = getDictionary(lang);
@@ -16,6 +17,20 @@ export function Footer({ lang }) {
             className="h-12 w-auto"
           />
           <p className="mt-2 text-sm">{t.footer.tagline}</p>
+          <ul className="mt-4 space-y-1 text-sm">
+            <li>
+              <a href={phoneLink(CONTACT.phone)} className="hover:text-white">
+                {CONTACT.phone}
+              </a>
+            </li>
+            {SOCIAL_LINKS.filter((s) => s.url).map((s) => (
+              <li key={s.name}>
+                <a href={s.url} rel="noopener" className="hover:text-white">
+                  {s.name} {s.handle}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
         <div>
           <p className="font-semibold text-white">{t.footer.explore}</p>
