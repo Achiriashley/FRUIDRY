@@ -2,7 +2,12 @@
 
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { endAdminSession, isAdmin, passwordMatches, startAdminSession } from "@/lib/admin-auth";
+import {
+  endAdminSession,
+  passwordMatches,
+  startAdminSession,
+  touchAdminSession,
+} from "@/lib/admin-auth";
 import {
   PRODUCTS_TAG,
   createProduct,
@@ -39,10 +44,18 @@ export async function logout() {
   refresh();
 }
 
+// Called by the admin pages while you're using them, to keep the session going.
+// Returns false once the session has ended (the page then shows the sign-in form).
+export async function stillHere() {
+  return touchAdminSession();
+}
+
 // Applies change() to the order and saves it. Returns the saved order, or null if
 // change() made no change.
 async function updateOrder(formData, change) {
-  if (!(await isAdmin())) throw new Error("Not signed in");
+  // Every admin action also counts as activity; a session that has ended goes back
+  // to the sign-in form.
+  if (!(await touchAdminSession())) redirect("/admin");
   const order = await getOrder(String(formData.get("orderId") ?? ""));
   if (!order) throw new Error("Order not found");
   const updated = change(order);
@@ -124,7 +137,9 @@ function wholeNumber(raw, min, max) {
 
 // Adds a product (no slug) or updates one (slug), with an optional new photo.
 export async function saveProduct(_prev, formData) {
-  if (!(await isAdmin())) return { status: "error", errors: { form: "Please sign in again." } };
+  if (!(await touchAdminSession())) {
+    return { status: "error", errors: { form: "Please sign in again." } };
+  }
 
   const slug = String(formData.get("slug") ?? "").trim();
   const text = (field) => String(formData.get(field) ?? "").trim();
@@ -209,7 +224,7 @@ export async function saveProduct(_prev, formData) {
 }
 
 export async function deleteProduct(formData) {
-  if (!(await isAdmin())) throw new Error("Not signed in");
+  if (!(await touchAdminSession())) redirect("/admin");
   await removeProduct(String(formData.get("slug") ?? ""));
   updateTag(PRODUCTS_TAG);
   redirect("/admin/products?deleted=1");

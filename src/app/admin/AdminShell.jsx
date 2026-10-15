@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { adminPasswordConfigured, isAdmin } from "@/lib/admin-auth";
+import { IDLE_SECONDS, adminPasswordConfigured, isAdmin } from "@/lib/admin-auth";
 import { logout } from "./actions";
 import { LoginForm } from "./LoginForm";
+import { SessionGuard } from "./SessionGuard";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", id: "dashboard" },
@@ -64,6 +65,7 @@ export async function AdminShell({ active, autoRefresh = false, children }) {
           </form>
         </nav>
       </div>
+      <SessionGuard idleSeconds={IDLE_SECONDS} />
       {autoRefresh && <AutoRefresh intervalMs={30000} />}
       {await children()}
     </div>
