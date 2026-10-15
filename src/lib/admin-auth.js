@@ -5,8 +5,8 @@ export const ADMIN_COOKIE = "fruidry_admin";
 
 // Admin sign-ins are short-lived, so the panel asks for the password again after
 // each session:
-// - the cookie is a browser-session cookie: closing the browser signs you out (unless
-//   the browser reopens your last tabs; the idle limit still applies then);
+// - opening or reloading an admin page signs you out (see src/proxy.js), and the
+//   cookie is a browser-session cookie, gone when the browser closes;
 // - 30 minutes without any activity in the admin panel (in any tab) signs you out;
 // - after 8 hours you must sign in again, even if you've been active.
 // Both times are inside the signed token and checked on the server, so an old or

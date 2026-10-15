@@ -1,3 +1,4 @@
+import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ORDER_STATUS, STATUS_LABELS, isNew, listOrders } from "@/lib/orders";
@@ -71,7 +72,8 @@ function OrdersList({ params, orders, siteUrl }) {
     <div className="space-y-6">
       <h1 className="text-3xl font-extrabold tracking-tight">Orders</h1>
 
-      <form action="/admin/orders" className="flex flex-wrap gap-2">
+      {/* Searches without reloading the page (a reload asks for the password again). */}
+      <Form action="/admin/orders" className="flex flex-wrap gap-2">
         {status !== "all" && <input type="hidden" name="status" value={status} />}
         <input
           name="q"
@@ -86,7 +88,7 @@ function OrdersList({ params, orders, siteUrl }) {
         >
           Search
         </button>
-      </form>
+      </Form>
 
       <nav className="flex flex-wrap gap-2" aria-label="Filter by status">
         {FILTERS.map((f) => (

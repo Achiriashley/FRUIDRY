@@ -85,7 +85,8 @@ changed on the admin **Product** page.
 ## Admin panel
 
 Go to `/admin` and sign in with `ADMIN_PASSWORD`. There is no link to it on the
-public site, so bookmark it.
+public site, so bookmark it. For security, it asks for the password each time you open or
+reload it and after 30 minutes without activity (see Security below).
 
 - **Dashboard**: new orders, orders to deliver, and sales this month and in total.
 - **Orders**: every order, filterable by status and searchable by order number,
@@ -142,13 +143,15 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Security
 
 - **Admin sign-in**: 5 attempts per 15 minutes per network, then blocked for the rest of
-  that window. Sessions are short: closing the browser signs you out, so do 30 minutes
-  without activity in the admin panel (in any tab, even with the page open) and 8 hours
-  after signing in (a warning shows 10 minutes before). If your browser is set to reopen
-  your last tabs, it may keep you signed in after closing it, but the 30-minute limit
-  still applies. The limits are inside the signed session and checked on the server
-  (`IDLE_SECONDS` and `MAX_SECONDS` in `src/lib/admin-auth.js`). Changing
-  `ADMIN_PASSWORD` signs everyone out. Use a long, random password (16+ characters).
+  that window. The password is needed again each time an admin page is opened or
+  reloaded (a new tab, the Back button, reopening the browser, typing the address), after
+  30 minutes without activity in the admin panel (in any tab, even with the page open),
+  and 8 hours after signing in (a warning shows 10 minutes before). Moving around inside
+  the panel doesn't ask again. Opening the panel in a second tab signs out the first.
+  The time limits are inside the signed session and checked on the server (`IDLE_SECONDS`
+  and `MAX_SECONDS` in `src/lib/admin-auth.js`); page loads are handled in `src/proxy.js`.
+  Changing `ADMIN_PASSWORD` signs everyone out. Use a long, random password (16+
+  characters).
 - **Spam limits**: 10 orders per hour and 5 contact messages per hour per network. Counts
   are kept in Supabase (`rate_limits`) so they hold across servers; without Supabase they
   are kept in memory.

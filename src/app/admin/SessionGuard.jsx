@@ -124,6 +124,12 @@ export function SessionGuard({ idleSeconds }) {
       );
     }
 
+    // Coming back with the browser's Back button can show the page from memory without
+    // loading it: reload it, which asks for the password (see src/proxy.js).
+    function onPageShow(event) {
+      if (event.persisted) window.location.reload();
+    }
+
     // Opening the admin panel counts as activity. Every page asks for the session's
     // state when it's shown (a page Next.js kept hidden may be out of date).
     tab.lastActivity ||= Date.now();
@@ -133,12 +139,14 @@ export function SessionGuard({ idleSeconds }) {
       window.addEventListener(event, onActivity, { capture: true, passive: true });
     }
     document.addEventListener("visibilitychange", check);
+    window.addEventListener("pageshow", onPageShow);
     const timer = setInterval(check, 15_000);
     return () => {
       for (const event of ACTIVITY_EVENTS) {
         window.removeEventListener(event, onActivity, { capture: true });
       }
       document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("pageshow", onPageShow);
       clearInterval(timer);
     };
   }, [idleSeconds]);

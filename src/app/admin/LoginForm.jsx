@@ -12,6 +12,10 @@ export function LoginForm() {
       className="mx-auto max-w-sm space-y-4 rounded-2xl bg-white p-8 shadow-sm"
     >
       <h1 className="text-2xl font-bold">Orders admin</h1>
+      <p className="text-sm text-stone-600">
+        For your security, the password is needed each time the admin panel is opened or reloaded,
+        and after 30 minutes without activity.
+      </p>
       <div>
         <label htmlFor={`${uid}-password`} className="text-sm font-medium">
           Password

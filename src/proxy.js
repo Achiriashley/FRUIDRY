@@ -1,5 +1,27 @@
 import { NextResponse } from "next/server";
+import { ADMIN_COOKIE } from "@/lib/admin-auth";
 import { DEFAULT_LOCALE, LOCALES, LOCALE_COOKIE, hasLocale } from "@/lib/i18n";
+
+// Opening, reloading or coming back to an admin page asks for the password again:
+// a full page load ends the admin session. Moving around inside the panel (menu links,
+// buttons, the dashboard's auto-refresh) isn't a page load: Next.js fetches those in the
+// background. Browsers mark page loads with Sec-Fetch-Dest: document (a header pages
+// can't fake); older ones without it are told apart by asking for HTML.
+function isPageLoad(request) {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  const dest = request.headers.get("sec-fetch-dest");
+  if (dest) return dest === "document";
+  return (request.headers.get("accept") ?? "").includes("text/html");
+}
+
+function adminPageLoad(request) {
+  if (!isPageLoad(request) || !request.cookies.has(ADMIN_COOKIE)) return;
+  // Not signed in for this page (it shows the sign-in form), nor afterwards.
+  request.cookies.delete(ADMIN_COOKIE);
+  const response = NextResponse.next({ request: { headers: request.headers } });
+  response.cookies.delete(ADMIN_COOKIE);
+  return response;
+}
 
 // The language a visitor should see: their earlier choice, then their browser's
 // preferred language, then French.
@@ -23,6 +45,7 @@ function preferredLocale(request) {
 export function proxy(request) {
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1];
+  if (first === "admin") return adminPageLoad(request);
   if (hasLocale(first)) return;
 
   const url = request.nextUrl.clone();
@@ -33,7 +56,11 @@ export function proxy(request) {
 }
 
 export const config = {
-  // Everything except Next.js files, the admin panel, uploaded photos, files in
-  // public/ (anything with a file extension), and search engine files.
-  matcher: ["/((?!_next/|admin|uploads/|sitemap\\.xml|robots\\.txt|.*\\.[a-zA-Z0-9]+$).*)"],
+  // The admin panel, and everything else except Next.js files, uploaded photos, files
+  // in public/ (anything with a file extension), and search engine files.
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/((?!_next/|admin|uploads/|sitemap\\.xml|robots\\.txt|.*\\.[a-zA-Z0-9]+$).*)",
+  ],
 };
