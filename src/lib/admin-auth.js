@@ -2,6 +2,18 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "fruidry_admin";
+// When the admin last signed out (or a page load ended the sign-in). Sign-ins from
+// before then are refused, even if a slow request from another tab brings their
+// cookie back afterwards.
+export const ADMIN_ENDED_COOKIE = "fruidry_admin_ended";
+
+// No maxAge or expires: the browser deletes these cookies when it's closed.
+export const ADMIN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+};
 
 // Admin sign-ins are short-lived, so the panel asks for the password again after
 // each session:
@@ -48,8 +60,8 @@ function sessionToken(issuedAt, lastActive) {
 }
 
 // The session in a cookie, or null if it's forged, from an older version, idle for
-// too long or older than the 8-hour limit.
-function readSession(token) {
+// too long, older than the 8-hour limit or from before the last sign-out.
+function readSession(token, endedAt) {
   const parts = String(token ?? "").split(".");
   if (parts.length !== 4 || parts[0] !== "v3") return null;
   const [version, issued, last, signature] = parts;
@@ -60,23 +72,19 @@ function readSession(token) {
   if (!Number.isInteger(issuedAt) || !Number.isInteger(lastActive)) return null;
   if (lastActive < issuedAt || lastActive > now + 60) return null;
   if (now - issuedAt > MAX_SECONDS || now - lastActive > IDLE_SECONDS) return null;
+  if (issuedAt <= endedAt) return null;
   return { issuedAt, lastActive };
 }
 
 async function currentSession() {
   if (!adminPasswordConfigured()) return null;
-  return readSession((await cookies()).get(ADMIN_COOKIE)?.value);
+  const jar = await cookies();
+  const endedAt = Number(jar.get(ADMIN_ENDED_COOKIE)?.value) || 0;
+  return readSession(jar.get(ADMIN_COOKIE)?.value, endedAt);
 }
 
 async function setSessionCookie(token) {
-  // No maxAge or expires: the browser deletes the cookie when it's closed (unless it
-  // reopens your last tabs).
-  (await cookies()).set(ADMIN_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  (await cookies()).set(ADMIN_COOKIE, token, ADMIN_COOKIE_OPTIONS);
 }
 
 export async function isAdmin() {
@@ -86,6 +94,7 @@ export async function isAdmin() {
 export async function startAdminSession() {
   const now = nowSeconds();
   await setSessionCookie(sessionToken(now, now));
+  (await cookies()).delete(ADMIN_ENDED_COOKIE);
 }
 
 // How the session is doing, or null if it has ended: seconds since the last activity
@@ -109,5 +118,7 @@ export async function touchAdminSession() {
 }
 
 export async function endAdminSession() {
-  (await cookies()).delete(ADMIN_COOKIE);
+  const jar = await cookies();
+  jar.delete(ADMIN_COOKIE);
+  jar.set(ADMIN_ENDED_COOKIE, String(nowSeconds()), ADMIN_COOKIE_OPTIONS);
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE } from "@/lib/admin-auth";
+import { ADMIN_COOKIE, ADMIN_COOKIE_OPTIONS, ADMIN_ENDED_COOKIE } from "@/lib/admin-auth";
 import { DEFAULT_LOCALE, LOCALES, LOCALE_COOKIE, hasLocale } from "@/lib/i18n";
 
 // Opening, reloading or coming back to an admin page asks for the password again:
@@ -20,6 +20,9 @@ function adminPageLoad(request) {
   request.cookies.delete(ADMIN_COOKIE);
   const response = NextResponse.next({ request: { headers: request.headers } });
   response.cookies.delete(ADMIN_COOKIE);
+  // Same as signing out (see endAdminSession).
+  const now = String(Math.floor(Date.now() / 1000));
+  response.cookies.set(ADMIN_ENDED_COOKIE, now, ADMIN_COOKIE_OPTIONS);
   return response;
 }
 

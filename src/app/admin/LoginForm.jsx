@@ -7,8 +7,10 @@ export function LoginForm() {
   const uid = useId();
   const [state, formAction, pending] = useActionState(login, { error: null });
   return (
+    // Wrapped in a function so a press before the page has finished loading is held and
+    // sent once it has (instead of a plain form post).
     <form
-      action={formAction}
+      action={(formData) => formAction(formData)}
       className="mx-auto max-w-sm space-y-4 rounded-2xl bg-white p-8 shadow-sm"
     >
       <h1 className="text-2xl font-bold">Orders admin</h1>

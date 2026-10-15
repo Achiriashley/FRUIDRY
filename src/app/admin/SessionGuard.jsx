@@ -154,7 +154,11 @@ export function SessionGuard({ idleSeconds }) {
   if (!signOutAt) return null;
   const time = new Date(signOutAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return (
-    <p role="status" className="rounded-2xl bg-sun-light px-5 py-3 text-sm text-stone-900">
+    // Stays in view just below the site header while scrolling through a long form.
+    <p
+      role="status"
+      className="sticky top-30 z-30 rounded-2xl bg-sun-light px-5 py-3 text-sm text-stone-900 shadow-md sm:top-22"
+    >
       For your security, you&apos;ll be signed out at <strong>{time}</strong>, 8 hours after signing
       in. Save any changes before then; you can sign in again straight after.
     </p>
