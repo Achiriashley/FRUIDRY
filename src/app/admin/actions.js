@@ -44,12 +44,6 @@ export async function logout() {
   refresh();
 }
 
-// Called by the admin pages while you're using them, to keep the session going.
-// Returns false once the session has ended (the page then shows the sign-in form).
-export async function stillHere() {
-  return touchAdminSession();
-}
-
 // Applies change() to the order and saves it. Returns the saved order, or null if
 // change() made no change.
 async function updateOrder(formData, change) {

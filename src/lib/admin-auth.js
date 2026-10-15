@@ -5,8 +5,9 @@ export const ADMIN_COOKIE = "fruidry_admin";
 
 // Admin sign-ins are short-lived, so the panel asks for the password again after
 // each session:
-// - the cookie is a browser-session cookie: closing the browser signs you out;
-// - 30 minutes without any activity in the admin panel signs you out;
+// - the cookie is a browser-session cookie: closing the browser signs you out (unless
+//   the browser reopens your last tabs; the idle limit still applies then);
+// - 30 minutes without any activity in the admin panel (in any tab) signs you out;
 // - after 8 hours you must sign in again, even if you've been active.
 // Both times are inside the signed token and checked on the server, so an old or
 // copied cookie stops working on its own.
@@ -86,14 +87,24 @@ export async function startAdminSession() {
   await setSessionCookie(sessionToken(now, now));
 }
 
-// Records activity in the admin panel, which keeps the session going (up to the
-// 8-hour limit). Returns false if the session has already ended. Only works where
-// cookies can be set: Server Actions and Route Handlers.
-export async function touchAdminSession() {
+// How the session is doing, or null if it has ended: seconds since the last activity
+// (in any tab) and seconds left before the 8-hour limit. With `active`, it also records
+// activity, which keeps the session going. Recording only works where cookies can be
+// set: Server Actions and Route Handlers.
+export async function adminSessionStatus({ active = false } = {}) {
   const session = await currentSession();
-  if (!session) return false;
-  await setSessionCookie(sessionToken(session.issuedAt, nowSeconds()));
-  return true;
+  if (!session) return null;
+  const now = nowSeconds();
+  if (active) await setSessionCookie(sessionToken(session.issuedAt, now));
+  return {
+    idleSeconds: active ? 0 : Math.max(0, now - session.lastActive),
+    secondsLeft: session.issuedAt + MAX_SECONDS - now,
+  };
+}
+
+// Records activity in the admin panel. Returns false if the session has already ended.
+export async function touchAdminSession() {
+  return (await adminSessionStatus({ active: true })) !== null;
 }
 
 export async function endAdminSession() {

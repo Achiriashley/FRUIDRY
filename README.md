@@ -143,8 +143,10 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 - **Admin sign-in**: 5 attempts per 15 minutes per network, then blocked for the rest of
   that window. Sessions are short: closing the browser signs you out, so do 30 minutes
-  without activity in the admin panel (even with the page open) and 8 hours after
-  signing in. The limits are inside the signed session and checked on the server
+  without activity in the admin panel (in any tab, even with the page open) and 8 hours
+  after signing in (a warning shows 10 minutes before). If your browser is set to reopen
+  your last tabs, it may keep you signed in after closing it, but the 30-minute limit
+  still applies. The limits are inside the signed session and checked on the server
   (`IDLE_SECONDS` and `MAX_SECONDS` in `src/lib/admin-auth.js`). Changing
   `ADMIN_PASSWORD` signs everyone out. Use a long, random password (16+ characters).
 - **Spam limits**: 10 orders per hour and 5 contact messages per hour per network. Counts

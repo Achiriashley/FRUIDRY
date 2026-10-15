@@ -2,9 +2,9 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { IDLE_SECONDS, adminPasswordConfigured, isAdmin } from "@/lib/admin-auth";
-import { logout } from "./actions";
 import { LoginForm } from "./LoginForm";
 import { SessionGuard } from "./SessionGuard";
+import { SignOutButton } from "./SignOutButton";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", id: "dashboard" },
@@ -55,14 +55,7 @@ export async function AdminShell({ active, autoRefresh = false, children }) {
           <Link href="/" className="rounded-full px-3 py-1.5 text-stone-300 hover:text-white">
             View shop
           </Link>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-full px-3 py-1.5 text-stone-300 hover:text-white"
-            >
-              Sign out
-            </button>
-          </form>
+          <SignOutButton className="rounded-full px-3 py-1.5 text-stone-300 hover:text-white" />
         </nav>
       </div>
       <SessionGuard idleSeconds={IDLE_SECONDS} />
