@@ -27,6 +27,8 @@ async function sessionCheck(active) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ active }),
     cache: "no-store",
+    // Gives up on a stalled connection, so the next check can try again.
+    signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`Session check failed (${response.status})`);
   return response.json();
