@@ -69,7 +69,8 @@ async function currentSession() {
 }
 
 async function setSessionCookie(token) {
-  // No maxAge or expires: the browser deletes the cookie when it's closed.
+  // No maxAge or expires: the browser deletes the cookie when it's closed (unless it
+  // reopens your last tabs).
   (await cookies()).set(ADMIN_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",

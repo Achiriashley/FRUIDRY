@@ -1,4 +1,6 @@
-import { adminSessionStatus } from "@/lib/admin-auth";
+import { adminSessionStatus, isAdmin } from "@/lib/admin-auth";
+
+const NO_STORE = { headers: { "Cache-Control": "no-store" } };
 
 // Used by the admin pages (SessionGuard) to keep the sign-in going while the panel is
 // in use. POST {"active": true} reports activity. Returns how long the session has been
@@ -10,7 +12,8 @@ export async function POST(request) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     return new Response(null, { status: 415 });
   }
+  // Without a valid sign-in the answer is null, and the request body isn't even read.
+  if (!(await isAdmin())) return Response.json(null, NO_STORE);
   const body = await request.json().catch(() => null);
-  const status = await adminSessionStatus({ active: body?.active === true });
-  return Response.json(status, { headers: { "Cache-Control": "no-store" } });
+  return Response.json(await adminSessionStatus({ active: body?.active === true }), NO_STORE);
 }

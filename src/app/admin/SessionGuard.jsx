@@ -17,12 +17,14 @@ const tab = {
   lastAsked: 0,
   asking: false,
   endsAt: null,
+  inFlight: new Set(),
+  stopped: false,
 };
 
 // Asks the server how the session is doing; `active` also reports activity, which
 // keeps it going. See src/app/admin/session/route.js.
 async function sessionCheck(active) {
-  const response = await fetch("/admin/session", {
+  const request = fetch("/admin/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ active }),
@@ -30,8 +32,27 @@ async function sessionCheck(active) {
     // Gives up on a stalled connection, so the next check can try again.
     signal: AbortSignal.timeout(15_000),
   });
-  if (!response.ok) throw new Error(`Session check failed (${response.status})`);
-  return response.json();
+  tab.inFlight.add(request);
+  try {
+    const response = await request;
+    if (!response.ok) throw new Error(`Session check failed (${response.status})`);
+    return await response.json();
+  } finally {
+    tab.inFlight.delete(request);
+  }
+}
+
+// Used when signing out: stops session checks and waits for any already sent, so a
+// check started by the same click can't bring the sign-in cookie back afterwards.
+export async function stopSessionChecks() {
+  tab.stopped = true;
+  clearTimeout(tab.checkInTimer);
+  tab.checkInTimer = null;
+  await Promise.allSettled([...tab.inFlight]);
+}
+
+export function resumeSessionChecks() {
+  tab.stopped = false;
 }
 
 // Signs the admin out after a period without activity (clicks, taps, typing), even if
@@ -53,6 +74,7 @@ export function SessionGuard({ idleSeconds }) {
     // Takes in the server's answer. null means the session has ended: reloading the
     // page shows the sign-in form and clears the admin pages kept in memory.
     function apply(status) {
+      if (tab.stopped) return;
       if (!status) {
         window.location.reload();
         return;
@@ -68,7 +90,7 @@ export function SessionGuard({ idleSeconds }) {
     // that's offline after waking up doesn't send a request on every tap).
     function ask() {
       const now = Date.now();
-      if (tab.asking || now - tab.lastAsked < 5000) return;
+      if (tab.stopped || tab.asking || now - tab.lastAsked < 5000) return;
       tab.asking = true;
       tab.lastAsked = now;
       sessionCheck(false)
@@ -85,6 +107,7 @@ export function SessionGuard({ idleSeconds }) {
     }
 
     function onActivity() {
+      if (tab.stopped) return;
       const now = Date.now();
       // Coming back after a long time without activity here: the server decides
       // (the session may have ended, or another tab may have kept it going).
