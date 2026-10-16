@@ -202,7 +202,7 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, payment
 instructions, the admin panel (sign-in rules, orders, products, stock, waiting lists),
-both languages, accessibility basics and security protections (about 300 checks in
+both languages, accessibility basics and security protections (about 250 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 
