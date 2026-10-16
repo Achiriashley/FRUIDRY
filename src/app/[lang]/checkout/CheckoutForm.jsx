@@ -8,6 +8,7 @@ import { useLocale } from "@/components/LocaleProvider";
 import { formatPrice } from "@/lib/products";
 import { placeOrder } from "./actions";
 import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
+import { PayWithMomo } from "@/components/PayWithMomo";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none placeholder:text-stone-500 focus:border-brand focus:ring-2 focus:ring-brand/20";
@@ -205,7 +206,7 @@ function OrderSent({ state }) {
         <span className="font-mono font-semibold">{state.reference}</span>
         {t.checkout.readyMiddle}
         <strong>{t.checkout.readySend}</strong>
-        {t.checkout.readyAfter}
+        {Number.isFinite(state.total) ? t.checkout.readyAfter : t.checkout.readyAfterNoPay}
       </p>
       <a
         href={state.whatsappUrl}
@@ -213,6 +214,12 @@ function OrderSent({ state }) {
       >
         {t.checkout.openAgain}
       </a>
+      {/* Orders shown again after returning from WhatsApp may predate the payment details. */}
+      {Number.isFinite(state.total) && (
+        <div className="mt-8">
+          <PayWithMomo total={state.total} proofUrl={state.proofUrl} />
+        </div>
+      )}
       {state.orderId && (
         <p className="mt-4 text-sm">
           <Link

@@ -4,6 +4,7 @@ import { ProductImage } from "@/components/ProductImage";
 import { getProducts } from "@/lib/catalog";
 import { getProductImages } from "@/lib/product-images";
 import { formatPrice, isInStock, isLowStock, stockLeft } from "@/lib/products";
+import { listWaitlist } from "@/lib/waitlist";
 import { AdminPage, AdminShell } from "../AdminShell";
 
 export const metadata = { title: "Products", robots: { index: false } };
@@ -14,8 +15,12 @@ export default function ProductsPage({ searchParams }) {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="products">
           {async () => {
-            const [products, params] = await Promise.all([getProducts(), searchParams]);
-            return <ProductList products={products} params={params} />;
+            const [products, params, waiting] = await Promise.all([
+              getProducts(),
+              searchParams,
+              waitingCounts(),
+            ]);
+            return <ProductList products={products} params={params} waiting={waiting} />;
           }}
         </AdminShell>
       </Suspense>
@@ -23,7 +28,18 @@ export default function ProductsPage({ searchParams }) {
   );
 }
 
-function ProductList({ products, params }) {
+// How many people are waiting to hear about each product ("Notify me").
+async function waitingCounts() {
+  try {
+    const counts = {};
+    for (const entry of await listWaitlist()) counts[entry.slug] = (counts[entry.slug] ?? 0) + 1;
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+function ProductList({ products, params, waiting }) {
   const images = getProductImages();
   const notice = params.added
     ? "Product added. It's now in the shop."
@@ -75,6 +91,11 @@ function ProductList({ products, params }) {
                 <div className="text-right">
                   <p className="font-bold">{formatPrice(product.price)}</p>
                   <StockStatus product={product} />
+                  {waiting[product.slug] > 0 && (
+                    <p className="text-xs font-semibold text-brand">
+                      🔔 {waiting[product.slug]} waiting
+                    </p>
+                  )}
                 </div>
                 <span className="text-stone-400" aria-hidden>
                   ›

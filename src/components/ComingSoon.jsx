@@ -30,9 +30,12 @@ export function ComingSoon({ products, images, t }) {
                   {t.comingSoon.badge}
                 </span>
               </div>
-              <p className="p-3 font-semibold text-stone-900 group-hover:text-brand">
-                {product.name}
-              </p>
+              <div className="p-3">
+                <p className="font-semibold text-stone-900 group-hover:text-brand">
+                  {product.name}
+                </p>
+                <p className="mt-1 text-sm font-medium text-brand">🔔 {t.comingSoon.cardCta}</p>
+              </div>
             </ProductLink>
           </li>
         ))}

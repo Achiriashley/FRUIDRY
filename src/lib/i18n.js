@@ -124,6 +124,21 @@ const en = {
     heading: "More flavours on the way",
     intro: "New Fruidry flavours, arriving soon.",
     notYet: "This flavour isn't available to order yet. Check back soon!",
+    cardCta: "Notify me",
+    notifyTitle: "Want to know when it's here?",
+    notifyIntro: "Leave your WhatsApp number and we'll send you one message when you can order it.",
+    phone: "WhatsApp number",
+    phoneHint: "e.g. 6 71 23 45 67",
+    notify: "Notify me",
+    notifying: "Saving…",
+    notifyConsent: "We use your number only to send you that one message, then delete it. See our",
+    notifyDone: (name) => `Thanks! We'll message you on WhatsApp when ${name} is available.`,
+    errors: {
+      phone: "Enter a Cameroon mobile number, e.g. 671234567.",
+      notComingSoon: "This flavour is already available: you can order it now.",
+      rateLimited: (wait) => `Too many tries from your network. Please try again in ${wait}.`,
+      failed: "Sorry, we couldn't save your number. Please message us on WhatsApp instead.",
+    },
   },
   product: {
     notFound: "Product not found",
@@ -240,7 +255,8 @@ const en = {
     readyBefore: "Your order ",
     readyMiddle: " is ready in WhatsApp. Press ",
     readySend: "send",
-    readyAfter: " there to place it, and we'll reply to arrange payment and delivery.",
+    readyAfter: " there to place it, then pay as shown below.",
+    readyAfterNoPay: " there to place it, and we'll reply to arrange payment and delivery.",
     openAgain: "Open WhatsApp again",
     viewOrder: "View your order",
     receiptHint: "(your receipt appears there once we confirm payment)",
@@ -279,8 +295,19 @@ const en = {
     placed: "Placed",
     total: "Total",
     nextSteps:
-      "We'll reply on WhatsApp to arrange payment and delivery. Once your payment is confirmed, your receipt will appear on this page.",
+      "Once we've confirmed your payment, your receipt will appear on this page. We'll arrange delivery with you on WhatsApp.",
     sendAgain: "Send the order on WhatsApp again",
+  },
+  pay: {
+    title: "How to pay",
+    intro: (total) => `Pay ${total} with MTN Mobile Money by dialling this code on your phone:`,
+    dial: "Dial the code",
+    copy: "Copy the code",
+    copied: "Copied!",
+    delivery: "Any delivery cost will be confirmed with you on WhatsApp.",
+    then: "Then send us a screenshot of the payment confirmation message on WhatsApp. We'll confirm your order as soon as we've checked the payment.",
+    sendProof: "Send the screenshot on WhatsApp",
+    proofMessage: (reference) => `Hello Fruidry! Here is my payment for order ${reference}:`,
   },
   receipt: {
     paymentConfirmed: "Payment confirmed",
@@ -304,7 +331,7 @@ const en = {
   privacy: {
     title: "Privacy policy",
     description: "What information Fruidry collects, why, and how you stay in control of it.",
-    updated: "Last updated: 13 October 2026",
+    updated: "Last updated: 16 October 2026",
     sections: [
       {
         heading: "Who we are",
@@ -330,9 +357,15 @@ const en = {
         ],
       },
       {
+        heading: "If you ask to hear about a new flavour",
+        paragraphs: [
+          "If you leave your WhatsApp number on a flavour that's coming soon, we keep that number, the flavour and your language. We use them only to send you one WhatsApp message when the flavour is available, then delete them. You can ask us to delete them sooner at any time.",
+        ],
+      },
+      {
         heading: "Where your information is kept",
         paragraphs: [
-          "Orders are stored in our order database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
+          "Orders and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
           "We don't sell your information or share it with anyone else, except the person delivering your order.",
         ],
       },
@@ -456,6 +489,26 @@ const fr = {
     heading: "D'autres saveurs arrivent",
     intro: "De nouvelles saveurs Fruidry, bientôt disponibles.",
     notYet: "Cette saveur n'est pas encore disponible à la commande. Revenez bientôt !",
+    cardCta: "Me prévenir",
+    notifyTitle: "Envie d'être prévenu de son arrivée ?",
+    notifyIntro:
+      "Laissez votre numéro WhatsApp et nous vous enverrons un seul message dès que vous pourrez la commander.",
+    phone: "Numéro WhatsApp",
+    phoneHint: "ex. 6 71 23 45 67",
+    notify: "Me prévenir",
+    notifying: "Enregistrement…",
+    notifyConsent:
+      "Nous utilisons votre numéro uniquement pour vous envoyer ce message, puis nous le supprimons. Voir notre",
+    notifyDone: (name) =>
+      `Merci ! Nous vous écrirons sur WhatsApp dès que ${name} sera disponible.`,
+    errors: {
+      phone: "Entrez un numéro mobile camerounais, par ex. 671234567.",
+      notComingSoon: "Cette saveur est déjà disponible : vous pouvez la commander dès maintenant.",
+      rateLimited: (wait) =>
+        `Trop de tentatives depuis votre réseau. Veuillez réessayer dans ${wait}.`,
+      failed:
+        "Désolé, nous n'avons pas pu enregistrer votre numéro. Écrivez-nous plutôt sur WhatsApp.",
+    },
   },
   product: {
     notFound: "Produit introuvable",
@@ -575,7 +628,8 @@ const fr = {
     readyBefore: "Votre commande ",
     readyMiddle: " est prête dans WhatsApp. Appuyez sur ",
     readySend: "envoyer",
-    readyAfter:
+    readyAfter: " pour la passer, puis payez comme indiqué ci-dessous.",
+    readyAfterNoPay:
       " pour la passer, et nous vous répondrons pour organiser le paiement et la livraison.",
     openAgain: "Rouvrir WhatsApp",
     viewOrder: "Voir votre commande",
@@ -617,8 +671,21 @@ const fr = {
     placed: "Passée le",
     total: "Total",
     nextSteps:
-      "Nous vous répondrons sur WhatsApp pour organiser le paiement et la livraison. Dès que votre paiement sera confirmé, votre reçu apparaîtra sur cette page.",
+      "Dès que nous aurons confirmé votre paiement, votre reçu apparaîtra sur cette page. Nous organiserons la livraison avec vous sur WhatsApp.",
     sendAgain: "Renvoyer la commande sur WhatsApp",
+  },
+  pay: {
+    title: "Comment payer",
+    intro: (total) =>
+      `Payez ${total} avec MTN Mobile Money en composant ce code sur votre téléphone :`,
+    dial: "Composer le code",
+    copy: "Copier le code",
+    copied: "Copié !",
+    delivery: "Les éventuels frais de livraison vous seront confirmés sur WhatsApp.",
+    then: "Ensuite, envoyez-nous une capture d'écran du message de confirmation du paiement sur WhatsApp. Nous confirmerons votre commande dès que nous aurons vérifié le paiement.",
+    sendProof: "Envoyer la capture sur WhatsApp",
+    proofMessage: (reference) =>
+      `Bonjour Fruidry ! Voici mon paiement pour la commande ${reference} :`,
   },
   receipt: {
     paymentConfirmed: "Paiement confirmé",
@@ -643,7 +710,7 @@ const fr = {
     title: "Politique de confidentialité",
     description:
       "Quelles informations Fruidry collecte, pourquoi, et comment vous gardez le contrôle.",
-    updated: "Dernière mise à jour : 13 octobre 2026",
+    updated: "Dernière mise à jour : 16 octobre 2026",
     sections: [
       {
         heading: "Qui sommes-nous",
@@ -669,9 +736,15 @@ const fr = {
         ],
       },
       {
+        heading: "Si vous demandez à être prévenu d'une nouvelle saveur",
+        paragraphs: [
+          "Si vous laissez votre numéro WhatsApp sur une saveur bientôt disponible, nous conservons ce numéro, la saveur et votre langue. Nous les utilisons uniquement pour vous envoyer un seul message WhatsApp quand la saveur sera disponible, puis nous les supprimons. Vous pouvez nous demander de les supprimer plus tôt à tout moment.",
+        ],
+      },
+      {
         heading: "Où sont conservées vos informations",
         paragraphs: [
-          "Les commandes sont enregistrées dans notre base de données de commandes (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
+          "Les commandes et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
           "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
         ],
       },

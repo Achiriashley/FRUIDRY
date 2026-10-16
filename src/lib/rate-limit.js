@@ -15,6 +15,7 @@ export const LIMITS = {
   adminLogin: { max: 5, windowSeconds: 15 * 60 },
   placeOrder: { max: 10, windowSeconds: 60 * 60 },
   contact: { max: 5, windowSeconds: 60 * 60 },
+  waitlist: { max: 10, windowSeconds: 60 * 60 },
 };
 
 const memory = new Map();
@@ -77,6 +78,23 @@ export async function rateLimit(action) {
   const allowed = entry.count <= max;
   const retryAfterSeconds = Math.max(1, Math.ceil((entry.resetAt - Date.now()) / 1000));
   return { allowed, retryAfterSeconds };
+}
+
+// Clears this visitor's count, e.g. after a correct admin password, so only wrong
+// passwords count towards the limit (the admin panel asks for it on every page load).
+export async function forgetRateLimit(action) {
+  const key = `${action}:${await clientKey()}`;
+  memory.delete(key);
+  const config = supabaseConfig();
+  if (config) {
+    try {
+      await supabaseRequest(config, "rate_limits", `?key=eq.${encodeURIComponent(key)}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Couldn't clear a rate-limit count", error.message);
+    }
+  }
 }
 
 // "a minute" / "15 minutes" (or the French equivalent).

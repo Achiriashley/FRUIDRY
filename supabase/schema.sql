@@ -1,4 +1,5 @@
--- Run this once in the Supabase SQL editor to create the orders table.
+-- Run this in the Supabase SQL editor to create the tables. It's safe to run again
+-- (for example after an update adds a table): existing data is kept.
 create table if not exists public.orders (
   id text primary key,
   created_at timestamptz not null default now(),
@@ -20,6 +21,19 @@ create table if not exists public.products (
 );
 
 alter table public.products enable row level security;
+
+-- "Notify me" on coming-soon flavours: WhatsApp numbers waiting to hear when a flavour
+-- is available. Removed from the admin panel once they've been told.
+create table if not exists public.waitlist (
+  id text primary key,
+  slug text not null,
+  phone text not null,
+  lang text not null,
+  created_at timestamptz not null default now(),
+  unique (slug, phone)
+);
+
+alter table public.waitlist enable row level security;
 
 -- Public folder for product photos uploaded from the admin panel.
 insert into storage.buckets (id, name, public)

@@ -195,7 +195,12 @@ export function OrderCard({ order, siteUrl }) {
             Send receipt on WhatsApp
           </a>
         )}
-        <Link href={orderPath(order)} className="text-sm text-stone-600 underline hover:text-brand">
+        {/* In a new tab: coming back to the panel would be a page load, which asks for the password. */}
+        <Link
+          href={orderPath(order)}
+          target="_blank"
+          className="text-sm text-stone-600 underline hover:text-brand"
+        >
           {isPaid(order) ? "View receipt" : "View customer page"}
         </Link>
       </div>

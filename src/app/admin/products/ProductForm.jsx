@@ -144,6 +144,7 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
           <h2 className="text-xl font-bold">{product.name}</h2>
           <a
             href={`/en/shop/${product.slug}`}
+            target="_blank"
             className="text-sm text-stone-600 underline hover:text-brand"
           >
             View in shop

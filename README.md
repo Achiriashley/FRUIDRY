@@ -13,6 +13,10 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Add to cart** and **Buy now** buttons on every product (Buy now goes straight to checkout)
 - **Cart** (`/cart`) that persists in `localStorage`, with quantity controls
 - **Checkout on WhatsApp** (`/checkout`): see below
+- **Payment instructions after ordering**: the MTN Mobile Money code with the order's exact
+  amount, a button to dial it, and a button to send the payment screenshot on WhatsApp
+- **"Notify me" on coming-soon flavours**: visitors leave their WhatsApp number to hear
+  when a flavour is available (see Coming soon below)
 - **Admin panel** (`/admin`): see below
 - **Our story** (`/about`) page
 - **Contact page** (`/contact`) with your phone number, WhatsApp and social accounts
@@ -69,7 +73,9 @@ Open [http://localhost:3000](http://localhost:3000).
    **Order on WhatsApp**.
 2. WhatsApp opens with a message to your number, already filled in: the order number
    (e.g. `FD-4NBXKR`), each item's code (e.g. `FD-MIX-50`), quantity and price, the total,
-   and their delivery details. They press send.
+   and their delivery details. They press send. Back on the site (and on their order
+   page), they see how to pay: the MTN Mobile Money code with the exact amount, and a
+   button to send you the payment screenshot on WhatsApp.
 3. The order is also saved to the admin panel under **New orders**. Press **Ask for payment
    on WhatsApp** on it: WhatsApp opens with a message to the customer, in their language,
    with the amount and the MTN Mobile Money code to dial for it (e.g.
@@ -114,6 +120,15 @@ shown in a "Coming soon" section with their photo but no price, and can't be ord
 When one is ready to sell, open it in the admin panel, check its price, untick
 **Coming soon** and save: it moves into the shop straight away.
 
+**Waiting list**: on a coming-soon flavour's shop page, visitors can leave their WhatsApp
+number to be told when it's available. The products list shows how many are waiting
+(🔔), and the product's page in the admin panel lists them, each with a **Tell them on
+WhatsApp** button (a ready-made message in their language with a link to the flavour) and
+**Remove**. Once you've told them, remove them: the privacy page promises numbers are
+deleted after that. Deleting a product also deletes its waiting list. With Supabase, run
+`supabase/schema.sql` again after updating to create the `waitlist` table (it only adds
+what's missing).
+
 Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
 ### Settings
@@ -130,7 +145,8 @@ Copy `.env.example` to `.env.local` and set:
 - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (optional): store orders and product edits in
   [Supabase](https://supabase.com). Create a free project, run `supabase/schema.sql`
   in its SQL editor (it creates the tables, a public `product-images` folder for photos and
-  the rate-limit counter used to block password guessing and spam),
+  the rate-limit counter used to block password guessing and spam; it's safe to run again
+  after an update, which is how new tables such as the waiting list are added),
   then copy from Project Settings:
   - the **Project URL** into `SUPABASE_URL`
   - a **secret key** (starts with `sb_secret_`, under API Keys), or on older projects
@@ -147,19 +163,21 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 ## Security
 
-- **Admin sign-in**: 5 attempts per 15 minutes per network, then blocked for the rest of
-  that window. The password is needed again each time an admin page is opened or
+- **Admin sign-in**: 5 wrong passwords per 15 minutes per network, then blocked for the rest
+  of that window. The password is needed again each time an admin page is opened or
   reloaded (a new tab, the Back button, reopening the browser, typing the address), after
   30 minutes without activity in the admin panel (in any tab, even with the page open),
   and 8 hours after signing in (a warning shows 10 minutes before). Moving around inside
-  the panel doesn't ask again. Opening the panel in a second tab signs out the first.
+  the panel doesn't ask again, and a short loss of connection just waits and retries (a
+  server error or a new deployment while the panel is open may reload the page and ask
+  again). Opening the panel in a second tab signs out the first.
   The time limits are inside the signed session and checked on the server (`IDLE_SECONDS`
   and `MAX_SECONDS` in `src/lib/admin-auth.js`); page loads are handled in `src/proxy.js`.
   Changing `ADMIN_PASSWORD` signs everyone out. Use a long, random password (16+
   characters).
-- **Spam limits**: 10 orders per hour and 5 contact messages per hour per network. Counts
-  are kept in Supabase (`rate_limits`) so they hold across servers; without Supabase they
-  are kept in memory.
+- **Spam limits**: 10 orders, 5 contact messages and 10 waiting-list sign-ups per hour per
+  network. Counts are kept in Supabase (`rate_limits`) so they hold across servers; without
+  Supabase they are kept in memory.
 - **Orders**: prices and totals are always recalculated on the server from the product
   list; quantities are limited to 1–50 and sold-out products can't be ordered.
 - **Uploads**: admin-only; photos are checked by their actual contents (JPEG, PNG or

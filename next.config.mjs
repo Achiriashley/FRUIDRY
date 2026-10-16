@@ -50,6 +50,10 @@ const nextConfig = {
   experimental: {
     // Product photos are resized in the browser first, but allow some headroom.
     serverActions: { bodySizeLimit: "4mb" },
+    // When a background request fails (a phone losing its connection for a moment),
+    // wait for the connection and retry instead of reloading the whole page. A reload
+    // would ask the admin for the password again (see src/proxy.js).
+    useOffline: true,
   },
   images: {
     remotePatterns: supabaseImagePattern(),

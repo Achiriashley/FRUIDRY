@@ -10,6 +10,7 @@ import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
+import { NotifyForm } from "./NotifyForm";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -144,7 +145,10 @@ async function ProductDetails({ params }) {
           </ul>
           <div className="mt-8">
             {product.comingSoon ? (
-              <p className="text-pretty text-stone-600">{t.comingSoon.notYet}</p>
+              <div className="space-y-4">
+                <p className="text-pretty text-stone-600">{t.comingSoon.notYet}</p>
+                <NotifyForm slug={product.slug} />
+              </div>
             ) : (
               <AddToCartButton slug={product.slug} inStock={isInStock(product)} withQuantity />
             )}

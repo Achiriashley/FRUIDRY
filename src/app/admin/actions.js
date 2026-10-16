@@ -18,8 +18,9 @@ import {
 } from "@/lib/catalog";
 import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
 import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
-import { rateLimit, retryMessage } from "@/lib/rate-limit";
+import { forgetRateLimit, rateLimit, retryMessage } from "@/lib/rate-limit";
 import { detectImageType, saveImage } from "@/lib/storage";
+import { removeFromWaitlist, removeProductFromWaitlist } from "@/lib/waitlist";
 
 export async function login(_prev, formData) {
   // Every attempt counts, so password guessing is capped at a few tries per 15 minutes.
@@ -35,6 +36,8 @@ export async function login(_prev, formData) {
     return { error: "Wrong password." };
   }
   await startAdminSession();
+  // Only wrong passwords count towards the limit.
+  await forgetRateLimit("adminLogin");
   refresh();
   return { error: null };
 }
@@ -219,7 +222,21 @@ export async function saveProduct(_prev, formData) {
 
 export async function deleteProduct(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
-  await removeProduct(String(formData.get("slug") ?? ""));
+  const slug = String(formData.get("slug") ?? "");
+  await removeProduct(slug);
+  // Nobody can be told about a deleted product, so its waiting list goes too.
+  try {
+    await removeProductFromWaitlist(slug);
+  } catch (error) {
+    console.error("Couldn't remove the deleted product's waiting list", error.message);
+  }
   updateTag(PRODUCTS_TAG);
   redirect("/admin/products?deleted=1");
+}
+
+// Removes people from a waiting list (after telling them the flavour is available).
+export async function removeWaitlistEntries(formData) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  await removeFromWaitlist(formData.getAll("id").map(String).slice(0, 10000));
+  refresh();
 }
