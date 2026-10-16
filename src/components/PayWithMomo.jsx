@@ -25,15 +25,16 @@ export function PayWithMomo({ total, proofUrl }) {
   return (
     <section
       aria-labelledby="pay-heading"
-      className="rounded-2xl border-2 border-sun bg-white p-6 text-left shadow-sm"
+      className="rounded-2xl border-2 border-sun bg-white p-4 text-left shadow-sm sm:p-6"
     >
       <h2 id="pay-heading" className="text-xl font-bold">
         {t.pay.title}
       </h2>
       <p className="mt-2 text-stone-700">{t.pay.intro(formatPrice(total))}</p>
+      {/* On one line, so the amount can't look split (e.g. "5" / "000#"). */}
       <p
         translate="no"
-        className="mt-3 rounded-xl bg-cream px-4 py-3 text-center font-mono text-xl font-bold tracking-wide break-all select-all"
+        className="mt-3 overflow-x-auto rounded-xl bg-cream px-3 py-3 text-center font-mono text-base font-bold whitespace-nowrap select-all min-[400px]:text-lg sm:text-xl"
       >
         {code}
       </p>

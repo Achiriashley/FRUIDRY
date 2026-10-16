@@ -69,7 +69,7 @@ export function NotifyForm({ slug }) {
       <p className="mt-3 text-xs text-stone-500">
         {t.comingSoon.notifyConsent}{" "}
         <Link href={href("/privacy")} className="underline hover:text-brand">
-          {t.footer.privacy}
+          {t.privacy.title}
         </Link>
         .
       </p>
