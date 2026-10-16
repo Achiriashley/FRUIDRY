@@ -16,7 +16,7 @@ export const metadata = { title: "Edit product", robots: { index: false } };
 // breaking the page.
 async function loadWaitlist(slug) {
   try {
-    const entries = (await listWaitlist()).filter((entry) => entry.slug === slug);
+    const entries = await listWaitlist(slug);
     return { entries, setupNeeded: false };
   } catch (error) {
     if (!waitlistTableMissing(error))

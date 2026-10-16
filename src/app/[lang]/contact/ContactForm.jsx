@@ -104,6 +104,7 @@ function ContactFormInner({ onNewMessage }) {
   return (
     <form
       ref={formRef}
+      action={formAction}
       onSubmit={submitKeepingInput(formAction)}
       className="space-y-4 rounded-2xl bg-white p-6 shadow-sm"
       noValidate

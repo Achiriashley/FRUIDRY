@@ -132,7 +132,7 @@ const en = {
     notify: "Notify me",
     notifying: "Saving…",
     notifyConsent: "We use your number only to send you that one message, then delete it. See our",
-    notifyDone: (name) => `Thanks! We'll message you on WhatsApp when ${name} is available.`,
+    notifyDone: (name) => `Thanks! We'll message you on WhatsApp as soon as you can order ${name}.`,
     errors: {
       phone: "Enter a Cameroon mobile number, e.g. 671234567.",
       notComingSoon: "This flavour is already available: you can order it now.",
@@ -500,7 +500,7 @@ const fr = {
     notifyConsent:
       "Nous utilisons votre numéro uniquement pour vous envoyer ce message, puis nous le supprimons. Voir notre",
     notifyDone: (name) =>
-      `Merci ! Nous vous écrirons sur WhatsApp dès que ${name} sera disponible.`,
+      `Merci ! Nous vous écrirons sur WhatsApp dès que la saveur « ${name} » sera disponible.`,
     errors: {
       phone: "Entrez un numéro mobile camerounais, par ex. 671234567.",
       notComingSoon: "Cette saveur est déjà disponible : vous pouvez la commander dès maintenant.",

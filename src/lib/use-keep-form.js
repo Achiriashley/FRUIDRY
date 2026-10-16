@@ -4,7 +4,9 @@ import { startTransition, useEffect, useRef } from "react";
 
 // React resets a form's fields after a form action runs, which would wipe what
 // the visitor typed whenever we show a validation error. Submitting through
-// onSubmit instead keeps their input.
+// onSubmit instead keeps their input. Give the form action={formAction} too: before
+// the page's JavaScript has loaded, it then posts the form to the server (instead of
+// putting the fields in the address as a plain GET would).
 export function submitKeepingInput(formAction) {
   return (event) => {
     event.preventDefault();

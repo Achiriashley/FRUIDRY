@@ -26,6 +26,7 @@ export function NotifyForm({ slug }) {
   return (
     <form
       ref={formRef}
+      action={formAction}
       onSubmit={submitKeepingInput(formAction)}
       noValidate
       className="rounded-2xl bg-white p-5 shadow-sm"

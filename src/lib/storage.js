@@ -37,7 +37,9 @@ export async function supabaseRequest(config, table, query, init = {}) {
   if (!res.ok) {
     throw new Error(`Supabase request failed (${res.status}): ${await res.text()}`);
   }
-  return res.status === 204 || res.status === 201 ? null : res.json();
+  // Writes reply with no body (201, 204, or 200 when an upsert updated an existing row).
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");

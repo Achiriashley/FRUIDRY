@@ -33,16 +33,28 @@ const supabaseStore = {
         created_at: entry.createdAt,
       }),
     }),
-  async list(config) {
-    const rows = await supabaseRequest(
-      config,
-      "waitlist",
-      "?select=id,slug,phone,lang,created_at&order=created_at.asc&limit=10000",
-    );
+  // Supabase returns at most "Max rows" (1,000 by default) per request: read page by page.
+  async list(config, slug) {
+    const filter = slug ? `&slug=eq.${encodeURIComponent(slug)}` : "";
+    const rows = [];
+    for (;;) {
+      const page = await supabaseRequest(
+        config,
+        "waitlist",
+        `?select=id,slug,phone,lang,created_at${filter}` +
+          `&order=created_at.asc,id.asc&limit=1000&offset=${rows.length}`,
+      );
+      if (!page?.length) break;
+      rows.push(...page);
+    }
     return rows.map(({ created_at: createdAt, ...rest }) => ({ ...rest, createdAt }));
   },
-  remove: (config, ids) =>
-    supabaseRequest(config, "waitlist", `?id=in.(${ids.join(",")})`, { method: "DELETE" }),
+  async remove(config, ids) {
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200).join(",");
+      await supabaseRequest(config, "waitlist", `?id=in.(${chunk})`, { method: "DELETE" });
+    }
+  },
   removeProduct: (config, slug) =>
     supabaseRequest(config, "waitlist", `?slug=eq.${encodeURIComponent(slug)}`, {
       method: "DELETE",
@@ -54,7 +66,10 @@ const fileStore = {
     waitlistFile.update((list) =>
       list.some((e) => e.slug === entry.slug && e.phone === entry.phone) ? list : [...list, entry],
     ),
-  list: () => waitlistFile.read(),
+  async list(slug) {
+    const list = await waitlistFile.read();
+    return slug ? list.filter((e) => e.slug === slug) : list;
+  },
   remove: (ids) => waitlistFile.update((list) => list.filter((e) => !ids.includes(e.id))),
   removeProduct: (slug) => waitlistFile.update((list) => list.filter((e) => e.slug !== slug)),
 };
@@ -65,10 +80,10 @@ export async function addToWaitlist(details) {
   return config ? supabaseStore.add(config, entry) : fileStore.add(entry);
 }
 
-// Everyone waiting, oldest first.
-export async function listWaitlist() {
+// Everyone waiting (for one product, if given), oldest first.
+export async function listWaitlist(slug) {
   const config = supabaseConfig();
-  return config ? supabaseStore.list(config) : fileStore.list();
+  return config ? supabaseStore.list(config, slug) : fileStore.list(slug);
 }
 
 export async function removeFromWaitlist(ids) {

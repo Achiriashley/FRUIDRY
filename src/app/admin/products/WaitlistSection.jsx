@@ -7,9 +7,9 @@ import { RemoveAllButton } from "./RemoveAllButton";
 function launchMessage(product, lang, siteUrl) {
   const link = `${siteUrl}/${lang}/shop/${product.slug}`;
   return lang === "fr"
-    ? `Bonjour ! Bonne nouvelle de Fruidry : ${product.nameFr || product.name} est maintenant ` +
-        `disponible 🎉 Commandez ici : ${link}`
-    : `Hello! Good news from Fruidry: ${product.name} is now available 🎉 Order here: ${link}`;
+    ? `Bonjour\u202f! Bonne nouvelle de Fruidry\u00a0: la saveur «\u00a0${product.nameFr || product.name}\u00a0» ` +
+        `est maintenant disponible 🎉 Commandez ici\u00a0: ${link}`
+    : `Hello! Good news from Fruidry: you can now order ${product.name} 🎉 Order here: ${link}`;
 }
 
 // People waiting to hear when this flavour is available ("Notify me" on its shop page).

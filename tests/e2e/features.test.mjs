@@ -193,7 +193,7 @@ const placeOrder = async (lang, name, qty) => {
   check(
     "a good number is saved",
     await pg
-      .getByText("Thanks! We'll message you on WhatsApp when Mango is available.")
+      .getByText("Thanks! We'll message you on WhatsApp as soon as you can order Mango.")
       .isVisible(),
   );
   await pg.reload();
@@ -235,7 +235,9 @@ const placeOrder = async (lang, name, qty) => {
   check(
     "in French too",
     await fp
-      .getByText("Nous vous écrirons sur WhatsApp dès que Fraises sera disponible")
+      .getByText(
+        /Nous vous écrirons sur WhatsApp dès que la saveur «\u00a0Fraises\u00a0» sera disponible/,
+      )
       .isVisible(),
   );
   await fc.close();
@@ -295,7 +297,7 @@ const placeOrder = async (lang, name, qty) => {
   check(
     "'Tell them on WhatsApp' has a launch message with the link",
     tell.startsWith("https://wa.me/237671234567") &&
-      tellText.includes("Mango is now available") &&
+      tellText.includes("you can now order Mango") &&
       tellText.includes("/en/shop/mango-pack"),
     tellText,
   );
@@ -309,8 +311,11 @@ const placeOrder = async (lang, name, qty) => {
   );
   check(
     "…in French for French sign-ups",
-    fTell.startsWith("Bonjour ! Bonne nouvelle de Fruidry : Fraises est maintenant disponible") &&
-      fTell.includes("/fr/shop/strawberry-pack"),
+    fTell
+      .replace(/[\u202f\u00a0]/g, " ")
+      .startsWith(
+        "Bonjour ! Bonne nouvelle de Fruidry : la saveur « Fraises » est maintenant disponible",
+      ) && fTell.includes("/fr/shop/strawberry-pack"),
     fTell,
   );
   await a.goto(B + "/admin/products/mango-pack");
@@ -362,6 +367,47 @@ const placeOrder = async (lang, name, qty) => {
     ),
   );
   await pp.context().close();
+}
+
+// ---------- 2b. "Notify me" pressed before the page's JavaScript has loaded ----------
+{
+  const c = await b.newContext({ locale: "en-GB" });
+  const pg = await c.newPage();
+  pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.setExtraHTTPHeaders({ "x-real-ip": "10.6.6.30" });
+  const docs = [];
+  pg.on("request", (r) => {
+    if (r.resourceType() === "document") docs.push(`${r.method()} ${r.url()}`);
+  });
+  let hold = true;
+  await c.route(/\/_next\/static\/chunks\/.*\.js/, async (route) => {
+    while (hold) await new Promise((ok) => setTimeout(ok, 100));
+    return route.continue();
+  });
+  await pg.goto(B + "/en/shop/pineapple-pack", { waitUntil: "commit" });
+  const phone = pg.locator('input[name="phone"]').first();
+  await phone.waitFor({ state: "attached", timeout: 15000 });
+  await phone.fill("677555444", { force: true });
+  await pg
+    .locator('form:has(input[name="phone"]) button[type="submit"]')
+    .first()
+    .click({ force: true, noWaitAfter: true });
+  await pg.waitForTimeout(1500);
+  hold = false;
+  await pg.waitForTimeout(3000);
+  check(
+    "pressing 'Notify me' before the page has loaded never puts the number in the address",
+    !docs.some((d) => d.includes("677555444")),
+    docs.join(" | "),
+  );
+  const saved = waitlistFile();
+  if (saved) {
+    check(
+      "…and the number is saved",
+      saved.some((e) => e.slug === "pineapple-pack" && e.phone === "677555444"),
+    );
+  }
+  await c.close();
 }
 
 // ---------- 3. Correct passwords don't use up sign-in attempts ----------
