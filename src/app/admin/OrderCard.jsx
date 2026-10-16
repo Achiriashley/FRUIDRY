@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ORDER_STATUS, STATUS_LABELS, formatOrderDate, isPaid } from "@/lib/orders";
-import { whatsAppLink } from "@/lib/shop-config";
+import { momoPayCode, whatsAppLink } from "@/lib/shop-config";
 import { formatPrice } from "@/lib/products";
 import { confirmPayment, markDelivered, rejectPayment } from "./actions";
 
@@ -36,7 +36,48 @@ function receiptMessage(order, siteUrl) {
         `for order ${order.reference} is confirmed. Your receipt: ${link}`;
 }
 
+// Asks a new order's customer to pay with MTN Mobile Money and send a screenshot.
+// The code is between ``` so WhatsApp shows its * as typed (not as bold).
+function paymentRequestMessage(order) {
+  const { name } = order.customer;
+  const total = formatPrice(order.total);
+  const code = "```" + momoPayCode(order.total) + "```";
+  const lines =
+    order.lang === "fr"
+      ? [
+          `Bonjour ${name} 👋 Merci pour votre commande *${order.reference}* !`,
+          "",
+          `Montant à payer : *${total}*`,
+          "",
+          "Payez avec MTN Mobile Money en composant :",
+          code,
+          "",
+          "Ensuite, envoyez-nous ici une *capture d'écran du message de confirmation* (avec le " +
+            "numéro de transaction). Dès que nous aurons vérifié le paiement, votre commande " +
+            "sera confirmée et nous organiserons la livraison. Merci ! 🍓",
+        ]
+      : [
+          `Hello ${name} 👋 Thank you for your order *${order.reference}*!`,
+          "",
+          `Amount to pay: *${total}*`,
+          "",
+          "Pay with MTN Mobile Money by dialling:",
+          code,
+          "",
+          "Then send us a *screenshot of the confirmation message* here (showing the " +
+            "transaction ID). As soon as we've checked the payment, your order is confirmed " +
+            "and we'll arrange delivery. Thank you! 🍓",
+        ];
+  return lines.join("\n");
+}
+
+// New orders that haven't been paid or cancelled.
+function asksForPayment(order) {
+  return !isPaid(order) && order.status !== ORDER_STATUS.rejected;
+}
+
 function customerMessage(order) {
+  if (asksForPayment(order)) return paymentRequestMessage(order);
   const { name } = order.customer;
   return order.lang === "fr"
     ? `Bonjour ${name}, ici Fruidry au sujet de votre commande ${order.reference}.`
@@ -142,7 +183,7 @@ export function OrderCard({ order, siteUrl }) {
           rel="noreferrer"
           className="rounded-full border border-[#25D366] px-4 py-2 text-sm font-semibold text-brand hover:bg-green-50"
         >
-          Message on WhatsApp
+          {asksForPayment(order) ? "Ask for payment on WhatsApp" : "Message on WhatsApp"}
         </a>
         {isPaid(order) && (
           <a

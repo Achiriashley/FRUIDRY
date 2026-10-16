@@ -70,10 +70,15 @@ Open [http://localhost:3000](http://localhost:3000).
 2. WhatsApp opens with a message to your number, already filled in: the order number
    (e.g. `FD-4NBXKR`), each item's code (e.g. `FD-MIX-50`), quantity and price, the total,
    and their delivery details. They press send.
-3. You reply on WhatsApp to arrange payment and delivery.
-4. The order is also saved to the admin panel under **New orders**. Once they've paid,
-   click **Mark as paid**: their order page (`/order/...`) becomes a printable receipt,
-   and you can send them the receipt link on WhatsApp.
+3. The order is also saved to the admin panel under **New orders**. Press **Ask for payment
+   on WhatsApp** on it: WhatsApp opens with a message to the customer, in their language,
+   with the amount and the MTN Mobile Money code to dial for it (e.g.
+   `*126*16*747434*5000#`), asking for a screenshot of the payment confirmation. You can
+   change it before sending. The merchant code is `MOMO_MERCHANT_CODE` in
+   `src/lib/shop-config.js`.
+4. Once they've paid, check the money has arrived in your MoMo account (screenshots can be
+   faked), then click **Mark as paid**: their order page (`/order/...`) becomes a printable
+   receipt, and you can send them the receipt link on WhatsApp.
 5. After delivery, click **Mark as delivered**.
 
 If saving the order fails (for example if Supabase isn't set up), the customer is still

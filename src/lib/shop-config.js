@@ -25,6 +25,14 @@ export function whatsAppLink(number, text) {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
+// MTN Mobile Money "MoMo Pay" merchant code. Customers pay by dialling the code below
+// with the amount; the admin panel puts it in the payment request it sends on WhatsApp.
+export const MOMO_MERCHANT_CODE = "747434";
+
+export function momoPayCode(amount) {
+  return `*126*16*${MOMO_MERCHANT_CODE}*${Math.round(amount)}#`;
+}
+
 // Contact details shown on the site (from the packaging). Change them here.
 export const CONTACT = {
   phone: "+237 671 820 032",
