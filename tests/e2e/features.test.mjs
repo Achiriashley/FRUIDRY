@@ -1,0 +1,443 @@
+// Payment instructions after ordering, "Notify me" on coming-soon flavours, the sign-in
+// limit only counting wrong passwords, and a dropped background request not signing the
+// admin out. Waiting-list storage is checked in the test server's data/ folder
+// (E2E_DATA_DIR, set by tests/run.mjs).
+import fs from "node:fs";
+import path from "node:path";
+import { BASE_URL as B, adminHarness, check, finish, launch, nowS, signToken } from "./lib.mjs";
+
+const b = await launch();
+const errs = [];
+const waitlistFile = () => {
+  const dir = process.env.E2E_DATA_DIR;
+  return dir ? JSON.parse(fs.readFileSync(path.join(dir, "waitlist.json"), "utf8")) : null;
+};
+const adminContext = async () => {
+  const c = await b.newContext({ locale: "en-GB" });
+  await adminHarness(c);
+  await c.addCookies([{ name: "fruidry_admin", value: signToken(nowS()), url: B }]);
+  return c;
+};
+let ip = 20;
+const placeOrder = async (lang, name, qty) => {
+  const c = await b.newContext({
+    locale: lang === "fr" ? "fr-FR" : "en-GB",
+    permissions: ["clipboard-read", "clipboard-write"],
+  });
+  await c.route("https://wa.me/**", (r) => r.fulfill({ status: 200, body: "wa" }));
+  const pg = await c.newPage();
+  pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.setExtraHTTPHeaders({ "x-real-ip": `10.5.5.${ip++}` });
+  await pg.goto(`${B}/${lang}/shop/mixed-fruit-pack`);
+  await pg.waitForTimeout(400);
+  await pg.evaluate(
+    (q) =>
+      localStorage.setItem(
+        "fruidry-cart",
+        JSON.stringify([{ slug: "mixed-fruit-pack", quantity: q }]),
+      ),
+    qty,
+  );
+  await pg.goto(`${B}/${lang}/checkout`);
+  await pg.waitForTimeout(700);
+  const f = pg.locator("form:visible", { has: pg.locator('input[name="phone"]') }).first();
+  await f.locator('input[name="name"]').fill(name);
+  await f.locator('input[name="phone"]').fill("677123456");
+  await f.locator('[name="address"]').first().fill("Douala");
+  const nav = pg.waitForURL("https://wa.me/**", { timeout: 8000 }).catch(() => {});
+  await f.locator('button[type="submit"]').first().click();
+  await nav;
+  await pg.goBack();
+  await pg.waitForTimeout(1200);
+  return { c, pg };
+};
+
+// ---------- 1. Payment instructions after ordering ----------
+{
+  const { c, pg } = await placeOrder("en", "Pay Test", 2);
+  const box = pg.locator("section", { has: pg.getByRole("heading", { name: "How to pay" }) });
+  check("after ordering, 'How to pay' is shown", await box.isVisible());
+  check(
+    "…with the MoMo code for the exact amount",
+    (await box.textContent()).includes("*126*16*747434*5000#"),
+  );
+  const plain = (x) => (x ?? "").replace(/[\u202f\u00a0]/g, " ");
+  check(
+    "…and the amount in words",
+    plain(await box.textContent()).includes("Pay 5 000 FCFA with MTN Mobile Money"),
+  );
+  const dial = await box.getByRole("link", { name: "Dial the code" }).getAttribute("href");
+  check(
+    "'Dial the code' opens the dialer with the code",
+    dial === "tel:*126*16*747434*5000%23",
+    dial,
+  );
+  await box.getByRole("button", { name: "Copy the code" }).click();
+  await pg.waitForTimeout(300);
+  check(
+    "'Copy the code' copies it",
+    (await pg.evaluate(() => navigator.clipboard.readText())) === "*126*16*747434*5000#",
+  );
+  check("…and says it's copied", await box.getByRole("button", { name: "Copied!" }).isVisible());
+  const proof = await box
+    .getByRole("link", { name: "Send the screenshot on WhatsApp" })
+    .getAttribute("href");
+  const proofText = decodeURIComponent(new URL(proof).searchParams.get("text"));
+  check(
+    "the screenshot button opens a chat with the shop about this order",
+    proof.startsWith("https://wa.me/237600000000") &&
+      /^Hello Fruidry! Here is my payment for order FD-[A-Z0-9]{6}:$/.test(proofText),
+    proofText,
+  );
+  check(
+    "the confirmation says to pay below",
+    (await pg.locator('[role="status"]').first().textContent()).includes("then pay as shown below"),
+  );
+  const orderLink = await pg.getByRole("link", { name: "View your order" }).getAttribute("href");
+  await pg.goto(B + orderLink);
+  await pg.waitForTimeout(800);
+  check(
+    "the order page shows how to pay too",
+    (await pg.getByRole("heading", { name: "How to pay" }).isVisible()) &&
+      (await pg.textContent("body")).includes("*126*16*747434*5000#"),
+  );
+  await c.close();
+}
+{
+  const { c, pg } = await placeOrder("fr", "Paiement Test", 3);
+  const box = pg.locator("section", { has: pg.getByRole("heading", { name: "Comment payer" }) });
+  const text = ((await box.textContent()) ?? "").replace(/[\u202f\u00a0]/g, " ");
+  check(
+    "in French: 'Comment payer' with the code for 7 500 FCFA",
+    text.includes("*126*16*747434*7500#") &&
+      text.includes("Payez 7 500 FCFA avec MTN Mobile Money"),
+    text.slice(0, 120),
+  );
+  const proof = await box
+    .getByRole("link", { name: "Envoyer la capture sur WhatsApp" })
+    .getAttribute("href");
+  check(
+    "…and a French screenshot message",
+    decodeURIComponent(new URL(proof).searchParams.get("text")).startsWith(
+      "Bonjour Fruidry ! Voici mon paiement pour la commande FD-",
+    ),
+  );
+  const orderLink = await pg
+    .getByRole("link", { name: "Voir votre commande" })
+    .getAttribute("href");
+  // Paid orders show the receipt, not payment instructions.
+  const a = await (await adminContext()).newPage();
+  a.on("pageerror", (e) => errs.push(e.message));
+  await a.goto(B + "/admin/orders?q=Paiement");
+  await a.waitForTimeout(1000);
+  await a
+    .locator("article", { hasText: "Paiement Test" })
+    .first()
+    .getByRole("button", { name: "Mark as paid" })
+    .click();
+  await a.waitForTimeout(2000);
+  await pg.goto(B + orderLink);
+  await pg.waitForTimeout(800);
+  check(
+    "once paid, the order page shows the receipt instead",
+    (await pg.getByRole("heading", { name: "Comment payer" }).count()) === 0 &&
+      (await pg.textContent("body")).includes("RC-"),
+  );
+  await a.context().close();
+  await c.close();
+}
+
+// ---------- 2. Notify me ----------
+{
+  const c = await b.newContext({ locale: "en-GB" });
+  const pg = await c.newPage();
+  pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.setExtraHTTPHeaders({ "x-real-ip": "10.6.6.1" });
+  await pg.goto(B + "/en");
+  await pg.waitForTimeout(600);
+  check(
+    "coming-soon cards say 'Notify me'",
+    (await pg.locator("#coming-soon-heading").locator("..").getByText("Notify me").count()) >= 4,
+  );
+  await pg.goto(B + "/en/shop/mixed-fruit-pack");
+  await pg.waitForTimeout(500);
+  check(
+    "products on sale have no 'Notify me' form",
+    (await pg.getByRole("heading", { name: "Want to know when it's here?" }).count()) === 0,
+  );
+  await pg.goto(B + "/en/shop/mango-pack");
+  await pg.waitForTimeout(700);
+  const form = pg.locator("form", {
+    has: pg.getByRole("heading", { name: "Want to know when it's here?" }),
+  });
+  check("a coming-soon flavour has the 'Notify me' form", await form.isVisible());
+  check(
+    "…with the privacy note",
+    (await form.textContent()).includes("only to send you that one message, then delete it"),
+  );
+  await form.getByLabel("WhatsApp number").fill("12345");
+  await form.getByRole("button", { name: "Notify me" }).click();
+  await pg.waitForTimeout(800);
+  check(
+    "a wrong number is refused",
+    await form.getByText("Enter a Cameroon mobile number").isVisible(),
+  );
+  check(
+    "…and the field is marked and focused",
+    (await form.getByLabel("WhatsApp number").getAttribute("aria-invalid")) === "true" &&
+      (await pg.evaluate(() => document.activeElement?.name)) === "phone",
+  );
+  await form.getByLabel("WhatsApp number").fill("6 71 23 45 67");
+  await form.getByRole("button", { name: "Notify me" }).click();
+  await pg.waitForTimeout(1000);
+  check(
+    "a good number is saved",
+    await pg
+      .getByText("Thanks! We'll message you on WhatsApp when Mango is available.")
+      .isVisible(),
+  );
+  await pg.reload();
+  await pg.waitForTimeout(700);
+  const f2 = pg.locator("form", {
+    has: pg.getByRole("heading", { name: "Want to know when it's here?" }),
+  });
+  await f2.getByLabel("WhatsApp number").fill("+237 671234567");
+  await f2.getByRole("button", { name: "Notify me" }).click();
+  await pg.waitForTimeout(1000);
+  // A flavour that's on sale now can't be joined (e.g. an old page left open).
+  await pg.goto(B + "/en/shop/apple-pack");
+  await pg.waitForTimeout(700);
+  const f3 = pg.locator("form", {
+    has: pg.getByRole("heading", { name: "Want to know when it's here?" }),
+  });
+  await f3.locator('input[name="slug"]').evaluate((el) => (el.value = "mixed-fruit-pack"));
+  await f3.getByLabel("WhatsApp number").fill("699000000");
+  await f3.getByRole("button", { name: "Notify me" }).click();
+  await pg.waitForTimeout(800);
+  check(
+    "a flavour already on sale can't be joined",
+    await pg.getByText("This flavour is already available").isVisible(),
+  );
+  await f3.locator('input[name="slug"]').evaluate((el) => (el.value = "apple-pack"));
+  await f3.getByLabel("WhatsApp number").fill("699000000");
+  await f3.getByRole("button", { name: "Notify me" }).click();
+  await pg.waitForTimeout(800);
+  await c.close();
+  const fc = await b.newContext({ locale: "fr-FR" });
+  const fp = await fc.newPage();
+  await fp.setExtraHTTPHeaders({ "x-real-ip": "10.6.6.2" });
+  await fp.goto(B + "/fr/shop/strawberry-pack");
+  await fp.waitForTimeout(700);
+  const ff = fp.locator("form", { has: fp.getByRole("heading", { name: /Envie d.être prévenu/ }) });
+  await ff.getByLabel("Numéro WhatsApp").fill("+237 699 11 22 33");
+  await ff.getByRole("button", { name: "Me prévenir" }).click();
+  await fp.waitForTimeout(1000);
+  check(
+    "in French too",
+    await fp
+      .getByText("Nous vous écrirons sur WhatsApp dès que Fraises sera disponible")
+      .isVisible(),
+  );
+  await fc.close();
+  const list = waitlistFile() ?? [];
+  check(
+    "the same number on the same flavour is kept once",
+    list.filter((e) => e.slug === "mango-pack").length === 1,
+    JSON.stringify(list.map((e) => `${e.slug}:${e.phone}:${e.lang}`)),
+  );
+  check(
+    "numbers are stored in one format with the language",
+    list.some((e) => e.slug === "mango-pack" && e.phone === "671234567" && e.lang === "en") &&
+      list.some((e) => e.slug === "strawberry-pack" && e.phone === "699112233" && e.lang === "fr"),
+  );
+
+  // Spam limit: 10 sign-ups per hour per network
+  const sc = await b.newContext({ locale: "en-GB" });
+  const sp = await sc.newPage();
+  await sp.setExtraHTTPHeaders({ "x-real-ip": "10.6.6.9" });
+  let blocked = false;
+  for (let i = 0; i < 11; i++) {
+    await sp.goto(B + "/en/shop/pineapple-pack");
+    await sp.waitForTimeout(400);
+    const fs2 = sp.locator("form", {
+      has: sp.getByRole("heading", { name: "Want to know when it's here?" }),
+    });
+    await fs2
+      .getByLabel("WhatsApp number")
+      .fill(`69900001${String(i).padStart(1, "0")}`.slice(0, 9));
+    await fs2.getByRole("button", { name: "Notify me" }).click();
+    await sp.waitForTimeout(500);
+    if (i === 10) blocked = await sp.getByText("Too many tries from your network").isVisible();
+  }
+  check("an 11th sign-up within the hour from one network is refused", blocked);
+  await sc.close();
+
+  // Admin: counts, list, messages, remove
+  const ac = await adminContext();
+  const a = await ac.newPage();
+  a.on("pageerror", (e) => errs.push(e.message));
+  await a.goto(B + "/admin/products");
+  await a.waitForTimeout(900);
+  check(
+    "the products list shows how many are waiting",
+    (await a.locator("li", { hasText: "Mango" }).first().textContent()).includes("🔔 1 waiting"),
+  );
+  await a.goto(B + "/admin/products/mango-pack");
+  await a.waitForTimeout(900);
+  const sec = a.locator("section", { has: a.getByRole("heading", { name: /Waiting list/ }) });
+  check(
+    "the product page lists the waiting numbers",
+    (await sec.getByRole("heading").textContent()) === "Waiting list (1)" &&
+      (await sec.textContent()).includes("671234567"),
+  );
+  const tell = await sec.getByRole("link", { name: "Tell them on WhatsApp" }).getAttribute("href");
+  const tellText = decodeURIComponent(new URL(tell).searchParams.get("text"));
+  check(
+    "'Tell them on WhatsApp' has a launch message with the link",
+    tell.startsWith("https://wa.me/237671234567") &&
+      tellText.includes("Mango is now available") &&
+      tellText.includes("/en/shop/mango-pack"),
+    tellText,
+  );
+  await a.goto(B + "/admin/products/strawberry-pack");
+  await a.waitForTimeout(900);
+  const fsec = a.locator("section", { has: a.getByRole("heading", { name: /Waiting list/ }) });
+  const fTell = decodeURIComponent(
+    new URL(
+      await fsec.getByRole("link", { name: "Tell them on WhatsApp" }).getAttribute("href"),
+    ).searchParams.get("text"),
+  );
+  check(
+    "…in French for French sign-ups",
+    fTell.startsWith("Bonjour ! Bonne nouvelle de Fruidry : Fraises est maintenant disponible") &&
+      fTell.includes("/fr/shop/strawberry-pack"),
+    fTell,
+  );
+  await a.goto(B + "/admin/products/mango-pack");
+  await a.waitForTimeout(900);
+  await a
+    .locator("section", { has: a.getByRole("heading", { name: /Waiting list/ }) })
+    .getByRole("button", { name: "Remove" })
+    .click();
+  await a.waitForTimeout(1500);
+  check(
+    "'Remove' takes them off the list",
+    (await a.getByRole("heading", { name: /Waiting list/ }).textContent()) === "Waiting list (0)",
+  );
+  await a.goto(B + "/admin/products/pineapple-pack");
+  await a.waitForTimeout(900);
+  a.once("dialog", (d) => d.accept());
+  await a.getByRole("button", { name: /Remove everyone/ }).click();
+  await a.waitForTimeout(1500);
+  check(
+    "'Remove everyone' empties the list",
+    (await a.getByRole("heading", { name: /Waiting list/ }).textContent()) === "Waiting list (0)",
+  );
+  await a.goto(B + "/admin/products/apple-pack");
+  await a.waitForTimeout(900);
+  a.once("dialog", (d) => d.accept());
+  await a.getByRole("button", { name: "Delete product" }).click();
+  await a.waitForTimeout(2000);
+  const after = waitlistFile() ?? [];
+  check(
+    "deleting a product deletes its waiting list",
+    !after.some((e) => e.slug === "apple-pack") && after.some((e) => e.slug === "strawberry-pack"),
+    JSON.stringify(after.map((e) => e.slug)),
+  );
+  await ac.close();
+
+  const pp = await (await b.newContext({ locale: "en-GB" })).newPage();
+  await pp.goto(B + "/en/privacy");
+  await pp.waitForTimeout(500);
+  check(
+    "the privacy page explains the waiting list",
+    (await pp.textContent("body")).includes("If you ask to hear about a new flavour"),
+  );
+  await pp.goto(B + "/fr/privacy");
+  await pp.waitForTimeout(500);
+  check(
+    "…in French too",
+    (await pp.textContent("body")).includes(
+      "Si vous demandez à être prévenu d'une nouvelle saveur",
+    ),
+  );
+  await pp.context().close();
+}
+
+// ---------- 3. Correct passwords don't use up sign-in attempts ----------
+{
+  const c = await b.newContext({ locale: "en-GB" });
+  const pg = await c.newPage();
+  pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.setExtraHTTPHeaders({ "x-real-ip": "10.7.1.1" });
+  let ok = 0;
+  for (let i = 0; i < 7; i++) {
+    await pg.goto(B + "/admin");
+    await pg.waitForTimeout(400);
+    await pg.locator('input[name="password"]:visible').first().fill("test-pass-123");
+    await pg.getByRole("button", { name: "Sign in" }).first().click();
+    if (
+      await pg
+        .getByRole("button", { name: "Sign out" })
+        .first()
+        .waitFor({ timeout: 5000 })
+        .then(
+          () => true,
+          () => false,
+        )
+    )
+      ok++;
+  }
+  check("signing in 7 times in a row (reloads) is never blocked", ok === 7, `${ok}/7`);
+  let blocked = false;
+  for (let i = 0; i < 6; i++) {
+    await pg.goto(B + "/admin");
+    await pg.waitForTimeout(300);
+    await pg
+      .locator('input[name="password"]:visible')
+      .first()
+      .fill("wrong-" + i);
+    await pg.getByRole("button", { name: "Sign in" }).first().click();
+    await pg.waitForTimeout(900);
+    if (i === 5) blocked = await pg.getByText("Too many sign-in attempts").isVisible();
+  }
+  check("…but wrong passwords are still limited to 5", blocked);
+  await c.close();
+}
+
+// ---------- 4. A dropped background request waits and retries (no sign-out) ----------
+{
+  const c = await adminContext();
+  const pg = await c.newPage();
+  pg.on("pageerror", (e) => errs.push(e.message));
+  await pg.goto(B + "/admin");
+  await pg.waitForTimeout(1000);
+  await c.unrouteAll(); // from here on, a page load would ask for the password
+  const docs = [];
+  pg.on("request", (r) => {
+    if (r.resourceType() === "document") docs.push(r.url());
+  });
+  let dropped = false;
+  await c.route("**/admin/orders**", (route) => {
+    if (!dropped && route.request().headers()["rsc"]) {
+      dropped = true;
+      return route.abort("internetdisconnected");
+    }
+    return route.fallback();
+  });
+  await pg.getByRole("link", { name: "Orders" }).first().click();
+  await pg.waitForTimeout(4000);
+  check(
+    "after one dropped request, the click still works and you stay signed in",
+    dropped &&
+      docs.length === 0 &&
+      /\/admin\/orders/.test(pg.url()) &&
+      (await pg.getByRole("button", { name: "Sign out" }).first().isVisible()),
+    `dropped=${dropped} docs=${docs.join(",")} url=${pg.url()}`,
+  );
+  await c.close();
+}
+
+check("no page errors", errs.length === 0, errs.join(" | "));
+finish();
+await b.close();

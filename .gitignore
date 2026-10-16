@@ -40,3 +40,7 @@ yarn-error.log*
 
 # order storage (local development)
 /data
+
+# end-to-end tests: throwaway app copies and screenshots (see tests/run.mjs)
+/.e2e/
+/tests/e2e/.artifacts/

@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Throwaway app copies made by the end-to-end test runner (tests/run.mjs).
+    ".e2e/**",
   ]),
 ]);
 

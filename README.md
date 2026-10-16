@@ -190,12 +190,27 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 ## Scripts
 
-| Command         | Description                   |
-| --------------- | ----------------------------- |
-| `npm run dev`   | Start the development server  |
-| `npm run build` | Create a production build     |
-| `npm start`     | Serve the production build    |
-| `npm run lint`  | Run ESLint                    |
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Start the development server         |
+| `npm run build`    | Create a production build            |
+| `npm start`        | Serve the production build           |
+| `npm run lint`     | Run ESLint                           |
+| `npm run test:e2e` | Run the end-to-end tests (see below) |
+
+## Tests
+
+`npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, payment
+instructions, the admin panel (sign-in rules, orders, products, stock, waiting lists),
+both languages, accessibility basics and security protections (about 300 checks in
+`tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
+`npm run test:e2e -- stock reload` runs only some suites.
+
+It never touches your real shop: it builds a separate copy of the site in `.e2e/` with
+an empty order list, a test admin password, none of your `.env` settings and no
+Supabase, starts it on port 3150 (`E2E_PORT` to change), and deletes the copy at the
+end. Logs stay in `.e2e/logs-3150/`. The first time, install a browser for it with
+`npx playwright install chromium`.
 
 ## Project structure
 
@@ -206,7 +221,11 @@ src/
   components/       Header, footer, product card, cart provider, etc.
   lib/i18n.js       French and English texts
   lib/products.js   Product catalogue data and helpers
-  proxy.js          Sends addresses without a language to /fr or /en
+  proxy.js          Sends addresses without a language to /fr or /en; signs the admin
+                    out on page loads
+tests/
+  run.mjs           Runs the end-to-end tests against a throwaway copy of the site
+  e2e/              The test suites
 ```
 
 Products are managed from the admin panel. The starting product (Mixed Fruit Pack) is
