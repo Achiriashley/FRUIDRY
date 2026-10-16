@@ -255,8 +255,7 @@ const en = {
     readyBefore: "Your order ",
     readyMiddle: " is ready in WhatsApp. Press ",
     readySend: "send",
-    readyAfter: " there to place it, then pay as shown below.",
-    readyAfterNoPay: " there to place it, and we'll reply to arrange payment and delivery.",
+    readyAfter: " there to place it, and we'll reply to arrange payment and delivery.",
     openAgain: "Open WhatsApp again",
     viewOrder: "View your order",
     receiptHint: "(your receipt appears there once we confirm payment)",
@@ -295,19 +294,8 @@ const en = {
     placed: "Placed",
     total: "Total",
     nextSteps:
-      "Once we've confirmed your payment, your receipt will appear on this page. We'll arrange delivery with you on WhatsApp.",
+      "We'll reply on WhatsApp to arrange payment and delivery. Once your payment is confirmed, your receipt will appear on this page.",
     sendAgain: "Send the order on WhatsApp again",
-  },
-  pay: {
-    title: "How to pay",
-    intro: (total) => `Pay ${total} with MTN Mobile Money by dialling this code on your phone:`,
-    dial: "Dial the code",
-    copy: "Copy the code",
-    copied: "Copied!",
-    delivery: "Any delivery cost will be confirmed with you on WhatsApp.",
-    then: "Then send us a screenshot of the payment confirmation message on WhatsApp. We'll confirm your order as soon as we've checked the payment.",
-    sendProof: "Send the screenshot on WhatsApp",
-    proofMessage: (reference) => `Hello Fruidry! Here is my payment for order ${reference}:`,
   },
   receipt: {
     paymentConfirmed: "Payment confirmed",
@@ -628,8 +616,7 @@ const fr = {
     readyBefore: "Votre commande ",
     readyMiddle: " est prête dans WhatsApp. Appuyez sur ",
     readySend: "envoyer",
-    readyAfter: " pour la passer, puis payez comme indiqué ci-dessous.",
-    readyAfterNoPay:
+    readyAfter:
       " pour la passer, et nous vous répondrons pour organiser le paiement et la livraison.",
     openAgain: "Rouvrir WhatsApp",
     viewOrder: "Voir votre commande",
@@ -671,21 +658,8 @@ const fr = {
     placed: "Passée le",
     total: "Total",
     nextSteps:
-      "Dès que nous aurons confirmé votre paiement, votre reçu apparaîtra sur cette page. Nous organiserons la livraison avec vous sur WhatsApp.",
+      "Nous vous répondrons sur WhatsApp pour organiser le paiement et la livraison. Dès que votre paiement sera confirmé, votre reçu apparaîtra sur cette page.",
     sendAgain: "Renvoyer la commande sur WhatsApp",
-  },
-  pay: {
-    title: "Comment payer",
-    intro: (total) =>
-      `Payez ${total} avec MTN Mobile Money en composant ce code sur votre téléphone :`,
-    dial: "Composer le code",
-    copy: "Copier le code",
-    copied: "Copié !",
-    delivery: "Les éventuels frais de livraison vous seront confirmés sur WhatsApp.",
-    then: "Ensuite, envoyez-nous une capture d'écran du message de confirmation du paiement sur WhatsApp. Nous confirmerons votre commande dès que nous aurons vérifié le paiement.",
-    sendProof: "Envoyer la capture sur WhatsApp",
-    proofMessage: (reference) =>
-      `Bonjour Fruidry ! Voici mon paiement pour la commande ${reference} :`,
   },
   receipt: {
     paymentConfirmed: "Paiement confirmé",

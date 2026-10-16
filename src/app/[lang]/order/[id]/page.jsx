@@ -7,7 +7,6 @@ import { ORDER_STATUS, getOrder, isPaid } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { shopWhatsAppNumber, whatsAppLink } from "@/lib/shop-config";
 import { orderMessage } from "@/lib/whatsapp-order";
-import { PayWithMomo } from "@/components/PayWithMomo";
 import { Receipt } from "./Receipt";
 
 export async function generateMetadata() {
@@ -73,13 +72,6 @@ async function OrderDetails({ params }) {
           <span>{formatPrice(order.total)}</span>
         </div>
       </div>
-
-      {order.status === ORDER_STATUS.awaitingPayment && (
-        <PayWithMomo
-          total={order.total}
-          proofUrl={shopNumber && whatsAppLink(shopNumber, t.pay.proofMessage(order.reference))}
-        />
-      )}
 
       {cancelled ? (
         <div className="rounded-2xl bg-red-50 p-6 text-red-700" role="alert">

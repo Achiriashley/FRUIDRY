@@ -13,8 +13,6 @@ The storefront for Fruidry, a brand of freeze-dried fruit snacks. It is built wi
 - **Add to cart** and **Buy now** buttons on every product (Buy now goes straight to checkout)
 - **Cart** (`/cart`) that persists in `localStorage`, with quantity controls
 - **Checkout on WhatsApp** (`/checkout`): see below
-- **Payment instructions after ordering**: the MTN Mobile Money code with the order's exact
-  amount, a button to dial it, and a button to send the payment screenshot on WhatsApp
 - **"Notify me" on coming-soon flavours**: visitors leave their WhatsApp number to hear
   when a flavour is available (see Coming soon below)
 - **Admin panel** (`/admin`): see below
@@ -73,9 +71,7 @@ Open [http://localhost:3000](http://localhost:3000).
    **Order on WhatsApp**.
 2. WhatsApp opens with a message to your number, already filled in: the order number
    (e.g. `FD-4NBXKR`), each item's code (e.g. `FD-MIX-50`), quantity and price, the total,
-   and their delivery details. They press send. Back on the site (and on their order
-   page), they see how to pay: the MTN Mobile Money code with the exact amount, and a
-   button to send you the payment screenshot on WhatsApp.
+   and their delivery details. They press send.
 3. The order is also saved to the admin panel under **New orders**. Press **Ask for payment
    on WhatsApp** on it: WhatsApp opens with a message to the customer, in their language,
    with the amount and the MTN Mobile Money code to dial for it (e.g.
@@ -200,8 +196,8 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 ## Tests
 
-`npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, payment
-instructions, the admin panel (sign-in rules, orders, products, stock, waiting lists),
+`npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
+panel (sign-in rules, orders, products, stock, waiting lists),
 both languages, accessibility basics and security protections (about 250 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.

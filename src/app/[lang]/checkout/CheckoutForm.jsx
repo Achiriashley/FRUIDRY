@@ -8,7 +8,6 @@ import { useLocale } from "@/components/LocaleProvider";
 import { formatPrice } from "@/lib/products";
 import { placeOrder } from "./actions";
 import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
-import { PayWithMomo } from "@/components/PayWithMomo";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none placeholder:text-stone-500 focus:border-brand focus:ring-2 focus:ring-brand/20";
@@ -197,33 +196,24 @@ function CheckoutFormInner() {
 function OrderSent({ state }) {
   const { t, href } = useLocale();
   return (
-    <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+    <div className="rounded-2xl bg-white p-8 text-center shadow-sm" role="status">
       <p className="text-5xl" aria-hidden>
         💬
       </p>
-      {/* Only the confirmation is announced, not the payment box below it. */}
-      <div role="status">
-        <h2 className="mt-4 text-2xl font-bold">{t.checkout.almostDone}</h2>
-        <p className="mt-2 text-stone-600">
-          {t.checkout.readyBefore}
-          <span className="font-mono font-semibold">{state.reference}</span>
-          {t.checkout.readyMiddle}
-          <strong>{t.checkout.readySend}</strong>
-          {Number.isFinite(state.total) ? t.checkout.readyAfter : t.checkout.readyAfterNoPay}
-        </p>
-      </div>
+      <h2 className="mt-4 text-2xl font-bold">{t.checkout.almostDone}</h2>
+      <p className="mt-2 text-stone-600">
+        {t.checkout.readyBefore}
+        <span className="font-mono font-semibold">{state.reference}</span>
+        {t.checkout.readyMiddle}
+        <strong>{t.checkout.readySend}</strong>
+        {t.checkout.readyAfter}
+      </p>
       <a
         href={state.whatsappUrl}
         className="mt-6 inline-block rounded-full btn-whatsapp px-6 py-3 font-semibold"
       >
         {t.checkout.openAgain}
       </a>
-      {/* Orders shown again after returning from WhatsApp may predate the payment details. */}
-      {Number.isFinite(state.total) && (
-        <div className="mt-8">
-          <PayWithMomo total={state.total} proofUrl={state.proofUrl} />
-        </div>
-      )}
       {state.orderId && (
         <p className="mt-4 text-sm">
           <Link

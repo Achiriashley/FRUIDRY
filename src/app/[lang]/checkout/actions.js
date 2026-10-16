@@ -126,8 +126,5 @@ export async function placeOrder(_prev, formData) {
     orderId: saved ? order.id : null,
     reference: order.reference,
     whatsappUrl: whatsAppLink(shopNumber, orderMessage(order)),
-    // For the payment instructions shown after ordering.
-    total: order.total,
-    proofUrl: whatsAppLink(shopNumber, getDictionary(lang).pay.proofMessage(order.reference)),
   };
 }
