@@ -30,6 +30,28 @@ check(
   "…and explains when it's needed",
   await pg.getByText("each time the admin panel is opened or reloaded").isVisible(),
 );
+// The eye button shows and hides the password.
+{
+  const field = pg.locator('input[name="password"]:visible').first();
+  await field.fill("peek-123");
+  check("the password starts hidden", (await field.getAttribute("type")) === "password");
+  await pg.getByRole("button", { name: "Show password" }).click();
+  check(
+    "the eye shows it",
+    (await field.getAttribute("type")) === "text" &&
+      (await field.inputValue()) === "peek-123" &&
+      (await pg.getByRole("button", { name: "Hide password" }).getAttribute("aria-pressed")) ===
+        "true",
+  );
+  await pg.getByRole("button", { name: "Hide password" }).click();
+  check("…and hides it again", (await field.getAttribute("type")) === "password");
+  await pg.getByRole("button", { name: "Show password" }).click();
+  await pg.setExtraHTTPHeaders({ "x-real-ip": "10.9.7.1" });
+  await pg.getByRole("button", { name: "Sign in" }).first().click();
+  await pg.getByText("Wrong password.").waitFor();
+  check("a sign-in attempt hides it again", (await field.getAttribute("type")) === "password");
+  await field.fill("");
+}
 await signIn(pg);
 check("signing in shows the panel", await signedIn(pg));
 for (const name of ["Orders", "Products", "Dashboard"]) {
