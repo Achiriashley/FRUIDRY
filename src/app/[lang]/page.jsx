@@ -42,6 +42,15 @@ export default async function Home() {
           sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
         }}
       />
+      {/* Tells Google to show "Fruidry" as the site's name in search results. */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Fruidry",
+          url: `${origin}/`,
+        }}
+      />
       <Hero products={forSale} images={images} lang={lang} t={t} />
 
       <section className="mx-auto max-w-6xl px-4 py-16">

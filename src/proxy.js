@@ -2,6 +2,30 @@ import { NextResponse } from "next/server";
 import { ADMIN_COOKIE, ADMIN_COOKIE_OPTIONS, ADMIN_ENDED_COOKIE } from "@/lib/admin-auth";
 import { DEFAULT_LOCALE, LOCALES, LOCALE_COOKIE, hasLocale } from "@/lib/i18n";
 
+// The shop's own domain: SITE_URL, or else the custom domain added in Vercel.
+function ownDomain() {
+  const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const address = process.env.SITE_URL || (vercelDomain ? `https://${vercelDomain}` : "");
+  try {
+    return address ? new URL(address) : null;
+  } catch {
+    return null;
+  }
+}
+
+// On the live site, visitors and search engines that arrive at the Vercel address
+// (fruidry.vercel.app) are sent to the shop's own domain, so there's only one site to
+// find. Preview deployments keep their own address.
+function toOwnDomain(request) {
+  if (process.env.VERCEL_ENV !== "production") return;
+  if (request.method !== "GET" && request.method !== "HEAD") return;
+  const host = request.headers.get("host") ?? "";
+  const own = ownDomain();
+  if (!host.endsWith(".vercel.app") || !own || own.host.endsWith(".vercel.app")) return;
+  const { pathname, search } = request.nextUrl;
+  return NextResponse.redirect(new URL(pathname + search, own.origin), 308);
+}
+
 // Opening, reloading or coming back to an admin page asks for the password again:
 // a full page load ends the admin session. Moving around inside the panel (menu links,
 // buttons, the dashboard's auto-refresh) isn't a page load: Next.js fetches those in the
@@ -46,6 +70,8 @@ function preferredLocale(request) {
 // shared before the site was bilingual, like /shop or /order/...) are sent to the
 // visitor's language.
 export function proxy(request) {
+  const moved = toOwnDomain(request);
+  if (moved) return moved;
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1];
   if (first === "admin") return adminPageLoad(request);
