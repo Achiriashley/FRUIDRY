@@ -150,7 +150,7 @@ Copy `.env.example` to `.env.local` and set:
 - `WHATSAPP_NUMBER`: your WhatsApp number with the country code, e.g. `2376XXXXXXXX`.
   Customers' orders are sent here.
 - `ADMIN_PASSWORD`: the password for `/admin`. Without it the admin page stays locked.
-- `SITE_URL` (optional): your site's address, e.g. `https://fruidry.cm`, used in
+- `SITE_URL` (optional): your site's address, `https://www.fruidry.com`, used in
   receipt links sent on WhatsApp and in the links search engines see. If it's not set,
   receipt links use the address you're browsing on, and search engines get the Vercel
   production address.
