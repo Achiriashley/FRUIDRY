@@ -43,16 +43,19 @@ own domain; on Vercel the production address is used until then.
 
 ## Your own domain
 
-1. Vercel → your project → **Settings → Domains** → add `fruidry.com` (and `www.fruidry.com`,
-   set to redirect to it).
+The shop's address is `https://www.fruidry.com`.
+
+1. Vercel → your project → **Settings → Domains** → add `www.fruidry.com`, and `fruidry.com`
+   set to redirect to it.
 2. At the company where you bought the domain, add the DNS records Vercel shows, exactly as
    shown. It can take from a few minutes to a day to work.
-3. Vercel → **Settings → Environment Variables**: set `SITE_URL` to `https://fruidry.com`
+3. Vercel → **Settings → Environment Variables**: set `SITE_URL` to `https://www.fruidry.com`
    (Production), then redeploy.
 
 The live site then sends visitors and search engines from `fruidry.vercel.app` to the
 same page on your domain, and links in receipts, the sitemap and search results use it.
-In Google Search Console, add it as a **Domain** property (verified with a DNS record).
+In Google Search Console, add `fruidry.com` as a **Domain** property (verified with a DNS
+record); it covers `www` too.
 
 ## Privacy and visitor statistics
 
