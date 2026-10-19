@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh, updateTag } from "next/cache";
+import { refresh, revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   endAdminSession,
@@ -249,18 +249,24 @@ export async function removeWaitlistEntries(formData) {
   refresh();
 }
 
+// After a review is published or removed: refreshes the reviews and, to be sure, the
+// product pages built from them.
+function refreshReviews() {
+  updateTag(REVIEWS_TAG);
+  revalidatePath("/[lang]/shop/[slug]", "page");
+  refresh();
+}
+
 // Shows a review on its product's page (and in the rating Google sees).
 export async function publishReview(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   await approveReview(String(formData.get("id") ?? ""));
-  updateTag(REVIEWS_TAG);
-  refresh();
+  refreshReviews();
 }
 
 // Deletes a review: one waiting for approval, or one already shown.
 export async function removeReview(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   await deleteReview(String(formData.get("id") ?? ""));
-  updateTag(REVIEWS_TAG);
-  refresh();
+  refreshReviews();
 }

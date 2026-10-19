@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { cacheTag } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { jsonFile, supabaseConfig, supabaseRequest } from "./storage";
 
 // Customer reviews of a product: a star rating, a first name and a few words. Visitors
@@ -95,12 +95,15 @@ export async function listReviews() {
 }
 
 // A product's approved reviews, most recently approved first, as shown on its page.
-// Cached with the page; approving or deleting a review refreshes it (REVIEWS_TAG). If
-// the reviews can't be read (for example before the Supabase table exists), the page
-// is shown without reviews instead of failing.
+// Cached with the page; approving or deleting a review refreshes it (REVIEWS_TAG). On
+// Vercel each server keeps its own copy of cached data, so the copy is also re-read
+// every minute: a server that missed the change catches up on its own. If the reviews
+// can't be read (for example before the Supabase table exists), the page is shown
+// without reviews instead of failing.
 export async function getApprovedReviews(slug) {
   "use cache";
   cacheTag(REVIEWS_TAG);
+  cacheLife("minutes");
   try {
     const config = supabaseConfig();
     const list = config
