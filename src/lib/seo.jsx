@@ -31,7 +31,8 @@ export function pageMetadata(lang, path, { title, description, ownOgImage = fals
     openGraph: {
       type: "website",
       siteName: "Fruidry",
-      title: title ?? t.meta.siteTitle,
+      // The "| Fruidry" ending of page titles isn't added to link previews by itself.
+      title: title ? `${title} | Fruidry` : t.meta.siteTitle,
       description,
       url: localePath(lang, path),
       locale: t.meta.ogLocale,

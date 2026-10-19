@@ -78,6 +78,11 @@ export function proxy(request) {
   if (hasLocale(first)) return;
 
   const url = request.nextUrl.clone();
+  // "/FR/shop" (typed by hand, or auto-capitalised on a phone) -> "/fr/shop".
+  if (hasLocale(first.toLowerCase())) {
+    url.pathname = `/${first.toLowerCase()}${pathname.slice(first.length + 1)}`;
+    return NextResponse.redirect(url, 308);
+  }
   url.pathname = `/${preferredLocale(request)}${pathname === "/" ? "" : pathname}`;
   const response = NextResponse.redirect(url);
   response.headers.set("Vary", "Accept-Language, Cookie");

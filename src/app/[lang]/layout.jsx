@@ -1,5 +1,7 @@
+import { notFound } from "next/navigation";
+import { lang as langParam } from "next/root-params";
 import { SiteFrame } from "@/components/SiteFrame";
-import { LOCALES, getDictionary } from "@/lib/i18n";
+import { LOCALES, getDictionary, hasLocale } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { siteOrigin } from "@/lib/seo";
 import "../globals.css";
@@ -20,5 +22,8 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
+  // Addresses that look like files (/index.html, /wp-login.php...) skip the language
+  // redirect in src/proxy.js and would otherwise show the home page: they're not pages.
+  if (!hasLocale(await langParam())) notFound();
   return <SiteFrame lang={await getLocale()}>{children}</SiteFrame>;
 }

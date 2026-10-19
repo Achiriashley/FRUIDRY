@@ -1,16 +1,20 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImage } from "@/components/ProductImage";
 import { getProductImages } from "@/lib/product-images";
 import { getProduct, getProducts } from "@/lib/catalog";
-import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
+import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
 import { NotifyForm } from "./NotifyForm";
+
+// Each product page is built ahead of time, with its text in the page itself, so
+// search engines and link previews read it without running any JavaScript. A product
+// added later is built on its first visit, and an unknown one gets a real 404.
+export const ensureStatic = "navigation";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -24,25 +28,27 @@ export async function generateMetadata({ params }) {
   const found = await getProduct(slug);
   if (!found) return { title: t.product.notFound };
   const product = localizeProduct(found, lang);
+  // "Mangue lyophilisée 50 g", then e.g. "Un mélange croquant de fruits lyophilisés.
+  // 100 % fruit · Sans sucre ajouté · Sans conservateurs. 2 500 FCFA / 50 g, livraison
+  // partout au Cameroun." Everything comes from the product's own details.
+  const sentence = (text) => (text && !/[.!?…]$/.test(text) ? `${text}.` : text);
   const detail = product.comingSoon
     ? `${t.comingSoon.badge}.`
-    : `${formatPrice(product.price)} / ${product.weight}.`;
+    : t.product.metaPrice([formatPrice(product.price), product.weight].filter(Boolean).join(" / "));
   return pageMetadata(lang, `/shop/${slug}`, {
     ownOgImage: true,
-    title: product.name,
-    description: `${product.tagline} ${detail}`.trim(),
+    title: [searchName(product), product.weight].filter(Boolean).join(" "),
+    description: [
+      sentence(product.tagline?.trim()),
+      sentence(product.highlights?.slice(0, 3).join(" · ")),
+      detail,
+    ]
+      .filter(Boolean)
+      .join(" "),
   });
 }
 
-export default function ProductPage({ params }) {
-  return (
-    <Suspense fallback={<div className="mx-auto min-h-[60vh] max-w-6xl px-4 py-12" />}>
-      <ProductDetails params={params} />
-    </Suspense>
-  );
-}
-
-async function ProductDetails({ params }) {
+export default async function ProductPage({ params }) {
   const { slug } = await params;
   const lang = await getLocale();
   const t = getDictionary(lang);
@@ -143,6 +149,12 @@ async function ProductDetails({ params }) {
               </li>
             ))}
           </ul>
+          <Link
+            href={localePath(lang, "/about")}
+            className="mt-4 self-start text-sm font-semibold text-brand hover:underline"
+          >
+            {t.about.howWeMakeIt} →
+          </Link>
           <div className="mt-8">
             {product.comingSoon ? (
               <div className="space-y-4">

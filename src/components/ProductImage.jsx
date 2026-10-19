@@ -1,10 +1,11 @@
 import Image from "next/image";
+import { searchName } from "@/lib/i18n";
 
 export function ProductImage({
   product,
   src,
   sizes,
-  alt = product.name,
+  alt = searchName(product),
   emojiClassName = "text-7xl",
   className = "",
   preload = false,

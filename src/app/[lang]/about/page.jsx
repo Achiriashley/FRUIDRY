@@ -6,7 +6,10 @@ import { pageMetadata } from "@/lib/seo";
 export async function generateMetadata() {
   const lang = await getLocale();
   const t = getDictionary(lang);
-  return pageMetadata(lang, "/about", { title: t.about.title, description: t.about.description });
+  return pageMetadata(lang, "/about", {
+    title: t.about.metaTitle,
+    description: t.about.description,
+  });
 }
 
 export default async function AboutPage() {

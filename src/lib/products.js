@@ -10,13 +10,16 @@ const HIGHLIGHTS_FR = ["100 % fruit", "Sans sucre ajouté", "Sans conservateurs"
 // from the admin panel (/admin/products), which saves its edits on top of these.
 // Photos are in public/products/<slug>.png. The *Fr fields are shown on the French
 // site (/fr). "Coming soon" products are shown but can't be ordered until that box
-// is unticked in the admin panel.
+// is unticked in the admin panel. searchName/searchNameFr is the fuller name used in
+// Google results and link previews ("Mangue lyophilisée"); it's dropped if the
+// product is renamed in the admin panel (see catalog.js).
 export const defaultProducts = [
   {
     slug: "mixed-fruit-pack",
     // Item code customers quote on WhatsApp.
     sku: "FD-MIX-50",
     name: "Mixed Fruit Pack",
+    searchName: "Freeze-dried Mixed Fruit Pack",
     category: "mixes",
     price: 2500,
     weight: "50 g",
@@ -27,6 +30,7 @@ export const defaultProducts = [
       "A delicious blend of freeze-dried strawberries, mango, apple, pineapple, banana, kiwi, dragon fruit, passion fruit and more, frozen at peak ripeness and dried until light and crunchy. Eat it straight from the pack, or sprinkle it on yoghurt, oats or ice cream.",
     highlights: ["100% fruit", "No added sugar", "No preservatives", "Light & crunchy"],
     nameFr: "Mélange de fruits",
+    searchNameFr: "Mélange de fruits lyophilisés",
     taglineFr: "Un mélange croquant de fruits lyophilisés.",
     descriptionFr:
       "Un délicieux mélange de fraise, mangue, pomme, ananas, banane, kiwi, fruit du dragon, fruit de la passion et bien plus encore, congelés à pleine maturité puis séchés jusqu'à devenir légers et croquants. À croquer directement dans le sachet, ou à parsemer sur un yaourt, des flocons d'avoine ou une glace.",
@@ -38,6 +42,7 @@ export const defaultProducts = [
     slug: "mango-pack",
     sku: "FD-MANGO-50",
     name: "Mango",
+    searchName: "Freeze-dried Mango",
     category: "fruits",
     price: 2500,
     weight: "50 g",
@@ -48,6 +53,7 @@ export const defaultProducts = [
       "A delicious burst of sweet and tropical mango, freeze-dried to preserve its natural flavour, nutrients and goodness. Enjoy it straight from the pack, or add it to yoghurt, cereal, smoothies and desserts.",
     highlights: HIGHLIGHTS,
     nameFr: "Mangue",
+    searchNameFr: "Mangue lyophilisée",
     taglineFr: "De la mangue tropicale lyophilisée, douce et sucrée.",
     descriptionFr:
       "Une délicieuse explosion de mangue douce et tropicale, lyophilisée pour préserver sa saveur naturelle, ses nutriments et tous ses bienfaits. À déguster directement dans le sachet, ou à ajouter à vos yaourts, céréales, smoothies et desserts.",
@@ -59,6 +65,7 @@ export const defaultProducts = [
     slug: "strawberry-pack",
     sku: "FD-STRAW-50",
     name: "Strawberries",
+    searchName: "Freeze-dried Strawberries",
     category: "fruits",
     price: 2500,
     weight: "50 g",
@@ -69,6 +76,7 @@ export const defaultProducts = [
       "Naturally sweet and delicious freeze-dried strawberries, full of real fruit flavour and goodness. Enjoy them straight from the pack, on yoghurt, oats or ice cream.",
     highlights: HIGHLIGHTS,
     nameFr: "Fraises",
+    searchNameFr: "Fraises lyophilisées",
     taglineFr: "Des fraises lyophilisées naturellement sucrées.",
     descriptionFr:
       "De délicieuses fraises lyophilisées, naturellement sucrées, pleines du vrai goût du fruit et de ses bienfaits. À déguster nature, sur un yaourt, des flocons d'avoine ou une glace.",
@@ -80,6 +88,7 @@ export const defaultProducts = [
     slug: "pineapple-pack",
     sku: "FD-PINE-50",
     name: "Pineapple",
+    searchName: "Freeze-dried Pineapple",
     category: "fruits",
     price: 2500,
     weight: "50 g",
@@ -90,6 +99,7 @@ export const defaultProducts = [
       "Deliciously sweet and naturally nutritious, our freeze-dried pineapple is made from 100% real fruit, carefully processed to lock in flavour, colour and nutrients. The perfect healthy snack for any time, anywhere.",
     highlights: HIGHLIGHTS,
     nameFr: "Ananas",
+    searchNameFr: "Ananas lyophilisé",
     taglineFr: "Des rondelles d'ananas lyophilisées et croquantes.",
     descriptionFr:
       "Délicieusement sucré et naturellement nutritif, notre ananas lyophilisé est 100 % fruit, préparé avec soin pour préserver sa saveur, sa couleur et ses nutriments. Le snack sain idéal, à tout moment et partout.",
@@ -101,6 +111,7 @@ export const defaultProducts = [
     slug: "apple-pack",
     sku: "FD-APPLE-50",
     name: "Apple",
+    searchName: "Freeze-dried Apple",
     category: "fruits",
     price: 2500,
     weight: "50 g",
@@ -111,6 +122,7 @@ export const defaultProducts = [
       "Deliciously crisp freeze-dried apple rings, with a naturally sweet taste and all the goodness of real fruit. Enjoy them straight from the pack, on yoghurt, oats or ice cream, or in your recipes.",
     highlights: HIGHLIGHTS,
     nameFr: "Pomme",
+    searchNameFr: "Pomme lyophilisée",
     taglineFr: "Des rondelles de pomme lyophilisées et croustillantes.",
     descriptionFr:
       "De délicieuses rondelles de pomme lyophilisées, naturellement sucrées et pleines de tous les bienfaits du vrai fruit. À déguster nature, sur un yaourt, des flocons d'avoine ou une glace, ou dans vos recettes.",

@@ -9,7 +9,10 @@ import { pageMetadata } from "@/lib/seo";
 export async function generateMetadata() {
   const lang = await getLocale();
   const t = getDictionary(lang);
-  return pageMetadata(lang, "/shop", { title: t.shop.title, description: t.shop.description });
+  return pageMetadata(lang, "/shop", {
+    title: t.shop.metaTitle,
+    description: t.shop.description,
+  });
 }
 
 export default async function ShopPage() {

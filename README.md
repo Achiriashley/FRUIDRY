@@ -36,10 +36,16 @@ phone's language, or French. The admin panel stays in English.
 
 For search engines and link previews, each page has its own title and description in
 its language, links to its translation (`hreflang`), and a preview picture for WhatsApp
-and social media. Product pages also tell Google the price, currency and stock (structured
-data). `/sitemap.xml` lists every page in both languages and `/robots.txt` keeps the admin,
-cart, checkout and order pages out of search results. Set `SITE_URL` once you have your
-own domain; on Vercel the production address is used until then.
+and social media. Titles use the words people search for ("Mangue lyophilisée 50 g |
+Fruidry", "Fruidry | Snacks de fruits lyophilisés au Cameroun"); the page headings keep
+the short names. Starting products have a fuller name for search results (`searchName` in
+`src/lib/products.js`); a product renamed or added in the admin panel uses its name.
+Product pages are built ahead of time with all their text in the page, and also tell
+Google the price, currency and stock (structured data). Addresses that aren't pages get a
+real 404, and `/FR/...` is sent to `/fr/...`. `/sitemap.xml` lists every page in both
+languages; the admin, cart, checkout and order pages are kept out of search results. Set
+`SITE_URL` once you have your own domain; on Vercel the production address is used until
+then.
 
 ## Your own domain
 
@@ -213,8 +219,8 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Tests
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
-panel (sign-in rules, orders, products, stock, waiting lists),
-both languages, accessibility basics and security protections (about 250 checks in
+panel (sign-in rules, orders, products, stock, waiting lists), both languages, what search
+engines see, accessibility basics and security protections (about 290 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

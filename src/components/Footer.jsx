@@ -19,6 +19,7 @@ export function Footer({ lang }) {
           />
           <p className="mt-2 text-sm">{t.footer.tagline}</p>
           <ul className="mt-4 space-y-1 text-sm">
+            <li>{t.contact.location}</li>
             <li>
               <a href={phoneLink(CONTACT.phone)} className="hover:text-white">
                 {CONTACT.phone}

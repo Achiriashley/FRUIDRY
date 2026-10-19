@@ -3,7 +3,7 @@ import { AddToCartButton } from "./AddToCartButton";
 import { ProductLink } from "./ProductLink";
 import { ProductImage } from "./ProductImage";
 
-export function ProductCard({ product, image }) {
+export function ProductCard({ product, image, preload = false }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md">
       <ProductLink slug={product.slug} className="block" tabIndex={-1} aria-hidden>
@@ -12,6 +12,7 @@ export function ProductCard({ product, image }) {
           src={image}
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="aspect-square transition group-hover:scale-[1.02]"
+          preload={preload}
         />
       </ProductLink>
       <div className="flex flex-1 flex-col gap-2 p-4">

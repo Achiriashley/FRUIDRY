@@ -32,7 +32,15 @@ export function localizeProduct(product, lang) {
       localized[field] = mapTexts(french, frenchSpacing);
     }
   }
+  // The search-result name never falls back to English: the product's name is used.
+  localized.searchName = product.searchNameFr || localized.name;
   return localized;
+}
+
+// The product's name in Google results, link previews and photo descriptions
+// ("Mangue lyophilisée"), or its plain name if it has no fuller one.
+export function searchName(product) {
+  return product.searchName || product.name;
 }
 
 export function formatDate(iso, lang) {
@@ -46,9 +54,9 @@ export function formatDate(iso, lang) {
 const en = {
   colon: ":",
   meta: {
-    siteTitle: "Fruidry | Freeze-dried fruit",
+    siteTitle: "Fruidry | Freeze-dried fruit snacks in Cameroon",
     siteDescription:
-      "Crunchy freeze-dried fruit snacks with no added sugar and no preservatives. Order on WhatsApp, delivered across Cameroon.",
+      "Crunchy freeze-dried fruit snacks with no added sugar and no preservatives. Based in Douala, we deliver across Cameroon: order on WhatsApp.",
     ogLocale: "en_GB",
   },
   nav: {
@@ -113,8 +121,10 @@ const en = {
   },
   shop: {
     title: "Shop",
+    // In Google results and link previews (the page heading stays "Shop").
+    metaTitle: "Shop freeze-dried fruit snacks",
     description:
-      "Browse every Fruidry freeze-dried fruit snack. Order on WhatsApp, delivered across Cameroon.",
+      "Every Fruidry freeze-dried fruit snack: 100% fruit, no added sugar. Order on WhatsApp, delivered across Cameroon.",
     intro: "Every pouch is just fruit, freeze-dried for crunch.",
     all: "All",
     filterLabel: "Filter by category",
@@ -144,6 +154,8 @@ const en = {
     notFound: "Product not found",
     backToShop: "← Back to shop",
     itemCode: "Item code",
+    // End of the product's description in Google results.
+    metaPrice: (priceAndWeight) => `${priceAndWeight}, delivered across Cameroon.`,
     related: "You might also like",
     soldOut: "Sold out",
     decrease: "Decrease quantity",
@@ -155,7 +167,10 @@ const en = {
   },
   about: {
     title: "Our story",
-    description: "How Fruidry started, where our fruit comes from and how freeze-drying works.",
+    // In Google results and link previews (the page heading stays "Our story").
+    metaTitle: "Our story and how freeze-drying works",
+    description:
+      "Fruidry was founded in Cameroon. Where our fruit comes from, and how freeze-drying keeps its taste, nutrients and crunch with no added sugar.",
     paragraphs: [
       "Fruidry was founded in Cameroon with a simple idea: make healthy, tasty fruit snacks easy to enjoy every day. No added sugar, no preservatives, just fruit.",
       "For now, our fruit is freeze-dried by a partner producer in China and imported to Cameroon by us.",
@@ -188,8 +203,10 @@ const en = {
     shopTheRange: "Shop the range",
   },
   contact: {
-    title: "Contact",
-    description: "Get in touch with Fruidry by WhatsApp, phone or social media.",
+    // In Google results and link previews (the page heading is below).
+    title: "Contact us in Douala: WhatsApp and phone",
+    description:
+      "Questions about an order, wholesale or our freeze-dried fruit? Chat with us on WhatsApp or call us. Based in Douala, we deliver across Cameroon.",
     heading: "Say hello",
     intro:
       "Questions about an order, wholesale or our fruit? Chat with us on WhatsApp, give us a call, or write your message below.",
@@ -399,9 +416,9 @@ const fr = {
   // French puts a space before ":".
   colon: " :",
   meta: {
-    siteTitle: "Fruidry | Fruits lyophilisés",
+    siteTitle: "Fruidry | Snacks de fruits lyophilisés au Cameroun",
     siteDescription:
-      "Des snacks de fruits lyophilisés croquants, sans sucre ajouté ni conservateurs. Commandez sur WhatsApp, livraison partout au Cameroun.",
+      "Des snacks de fruits lyophilisés croquants, sans sucre ajouté ni conservateurs. Basés à Douala, nous livrons partout au Cameroun : commandez sur WhatsApp.",
     ogLocale: "fr_FR",
   },
   nav: {
@@ -466,8 +483,9 @@ const fr = {
   },
   shop: {
     title: "Boutique",
+    metaTitle: "Boutique de fruits lyophilisés",
     description:
-      "Découvrez tous les snacks de fruits lyophilisés Fruidry. Commandez sur WhatsApp, livraison partout au Cameroun.",
+      "Tous les snacks de fruits lyophilisés Fruidry : 100 % fruit, sans sucre ajouté. Commandez sur WhatsApp, livraison partout au Cameroun.",
     intro: "Chaque sachet, c'est juste du fruit, lyophilisé pour le croquant.",
     all: "Tout",
     filterLabel: "Filtrer par catégorie",
@@ -502,6 +520,7 @@ const fr = {
     notFound: "Produit introuvable",
     backToShop: "← Retour à la boutique",
     itemCode: "Code article",
+    metaPrice: (priceAndWeight) => `${priceAndWeight}, livraison partout au Cameroun.`,
     related: "Vous aimerez aussi",
     soldOut: "Épuisé",
     decrease: "Diminuer la quantité",
@@ -513,8 +532,9 @@ const fr = {
   },
   about: {
     title: "Notre histoire",
+    metaTitle: "Notre histoire et la lyophilisation des fruits",
     description:
-      "Comment Fruidry est né, d'où viennent nos fruits et comment fonctionne la lyophilisation.",
+      "Fruidry est né au Cameroun. D'où viennent nos fruits, et comment la lyophilisation préserve leur goût, leurs nutriments et leur croquant, sans sucre ajouté.",
     paragraphs: [
       "Fruidry a été fondé au Cameroun avec une idée simple : proposer des snacks aux fruits, sains et savoureux, à déguster au quotidien. Sans sucre ajouté, sans conservateurs, juste du fruit.",
       "Pour l'instant, nos fruits sont lyophilisés par un producteur partenaire en Chine, puis importés au Cameroun par nos soins.",
@@ -547,8 +567,9 @@ const fr = {
     shopTheRange: "Découvrir la gamme",
   },
   contact: {
-    title: "Contact",
-    description: "Contactez Fruidry sur WhatsApp, par téléphone ou sur les réseaux sociaux.",
+    title: "Nous contacter à Douala : WhatsApp et téléphone",
+    description:
+      "Une question sur une commande, la vente en gros ou nos fruits lyophilisés ? Écrivez-nous sur WhatsApp. Basés à Douala, nous livrons partout au Cameroun.",
     heading: "Écrivez-nous",
     intro:
       "Une question sur une commande, la vente en gros ou nos fruits ? Discutez avec nous sur WhatsApp, appelez-nous ou laissez votre message ci-dessous.",

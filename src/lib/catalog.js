@@ -80,7 +80,7 @@ export async function getProducts() {
 
   const starting = defaultProducts
     .filter((p) => !stored[p.slug]?.deleted)
-    .map((p) => ({ ...p, ...pickEditable(stored[p.slug]) }));
+    .map((p) => withoutOldSearchNames(p, { ...p, ...pickEditable(stored[p.slug]) }));
 
   const added = Object.entries(stored)
     .filter(([slug, data]) => !STARTING.has(slug) && !data.deleted && data.name)
@@ -88,6 +88,15 @@ export async function getProducts() {
     .map(([slug, data]) => ({ ...NEW_PRODUCT_DEFAULTS, ...pickEditable(data), slug }));
 
   return [...starting, ...added];
+}
+
+// The search-result name of a starting product ("Freeze-dried Mango") describes its
+// original name; once it's renamed in the admin panel, the new name is used instead.
+function withoutOldSearchNames(original, product) {
+  const result = { ...product };
+  if (product.name !== original.name) delete result.searchName;
+  if (product.nameFr !== original.nameFr) delete result.searchNameFr;
+  return result;
 }
 
 export async function getProduct(slug) {

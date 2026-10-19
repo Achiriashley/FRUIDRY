@@ -44,8 +44,14 @@ export function ShopGrid({ products, images }) {
         </p>
       )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visible.map((product) => (
-          <ProductCard key={product.slug} product={product} image={images[product.slug]} />
+        {visible.map((product, i) => (
+          <ProductCard
+            key={product.slug}
+            product={product}
+            image={images[product.slug]}
+            // The first photo is the largest thing on screen when the page opens.
+            preload={i === 0}
+          />
         ))}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductImage } from "@/components/ProductImage";
 import { getProductImages } from "@/lib/product-images";
 import { getProducts } from "@/lib/catalog";
-import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
+import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
@@ -37,6 +37,8 @@ export default async function Home() {
           url: origin,
           logo: `${origin}/brand/logo-lockup.png`,
           description: t.meta.siteDescription,
+          // The city shown on the contact page and in the footer.
+          address: { "@type": "PostalAddress", addressLocality: "Douala", addressCountry: "CM" },
           areaServed: { "@type": "Country", name: "Cameroon" },
           telephone: CONTACT.phone,
           sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
@@ -187,7 +189,7 @@ function Hero({ products, images, lang, t }) {
           {photo ? (
             <Image
               src={photo}
-              alt={pictured.name}
+              alt={searchName(pictured)}
               width={557}
               height={900}
               preload
