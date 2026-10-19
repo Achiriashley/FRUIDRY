@@ -20,6 +20,7 @@ import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/l
 import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
 import { forgetRateLimit, rateLimit, retryMessage } from "@/lib/rate-limit";
 import { detectImageType, saveImage } from "@/lib/storage";
+import { REVIEWS_TAG, approveReview, deleteProductReviews, deleteReview } from "@/lib/reviews";
 import { removeFromWaitlist, removeProductFromWaitlist } from "@/lib/waitlist";
 
 export async function login(_prev, formData) {
@@ -224,11 +225,18 @@ export async function deleteProduct(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   const slug = String(formData.get("slug") ?? "");
   await removeProduct(slug);
-  // Nobody can be told about a deleted product, so its waiting list goes too.
+  // Nobody can be told about a deleted product, so its waiting list goes too, and
+  // its reviews have no page to appear on any more.
   try {
     await removeProductFromWaitlist(slug);
   } catch (error) {
     console.error("Couldn't remove the deleted product's waiting list", error.message);
+  }
+  try {
+    await deleteProductReviews(slug);
+    updateTag(REVIEWS_TAG);
+  } catch (error) {
+    console.error("Couldn't remove the deleted product's reviews", error.message);
   }
   updateTag(PRODUCTS_TAG);
   redirect("/admin/products?deleted=1");
@@ -238,5 +246,21 @@ export async function deleteProduct(formData) {
 export async function removeWaitlistEntries(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   await removeFromWaitlist(formData.getAll("id").map(String).slice(0, 10000));
+  refresh();
+}
+
+// Shows a review on its product's page (and in the rating Google sees).
+export async function publishReview(formData) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  await approveReview(String(formData.get("id") ?? ""));
+  updateTag(REVIEWS_TAG);
+  refresh();
+}
+
+// Deletes a review: one waiting for approval, or one already shown.
+export async function removeReview(formData) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  await deleteReview(String(formData.get("id") ?? ""));
+  updateTag(REVIEWS_TAG);
   refresh();
 }

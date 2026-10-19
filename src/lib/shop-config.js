@@ -40,6 +40,9 @@ export function momoPayCode(amount) {
 //   Google's format can't say ("returns accepted" or "no returns" only).
 export const DELIVERY_DAYS = { min: 2, max: 5 };
 
+// Longest first name and review text accepted from the review form.
+export const REVIEW_LIMITS = { name: 40, comment: 1000 };
+
 // Contact details shown on the site (from the packaging). Change them here.
 export const CONTACT = {
   phone: "+237 671 820 032",

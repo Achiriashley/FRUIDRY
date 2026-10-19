@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ORDER_STATUS, isNew, isPaid, listOrders } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
 import { formatPrice, isLowStock, stockLeft } from "@/lib/products";
+import { listReviews } from "@/lib/reviews";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "./AdminShell";
 import { OrderCard } from "./OrderCard";
@@ -15,19 +16,34 @@ export default function DashboardPage() {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="dashboard" autoRefresh>
           {async () => {
-            const [orders, siteUrl, products] = await Promise.all([
+            const [orders, siteUrl, products, reviewsWaiting] = await Promise.all([
               listOrders(),
               getSiteUrl(),
               getProducts(),
+              countReviewsWaiting(),
             ]);
             return (
-              <Dashboard orders={orders} siteUrl={siteUrl} lowStock={products.filter(isLowStock)} />
+              <Dashboard
+                orders={orders}
+                siteUrl={siteUrl}
+                lowStock={products.filter(isLowStock)}
+                reviewsWaiting={reviewsWaiting}
+              />
             );
           }}
         </AdminShell>
       </Suspense>
     </AdminPage>
   );
+}
+
+// Reviews customers have sent that aren't published yet (0 if they can't be read).
+async function countReviewsWaiting() {
+  try {
+    return (await listReviews()).filter((r) => r.status !== "approved").length;
+  } catch {
+    return 0;
+  }
 }
 
 // Calendar month in Cameroon time, e.g. "2026-10".
@@ -54,7 +70,7 @@ function Stat({ label, value, hint, href, highlight = false }) {
   return href ? <Link href={href}>{body}</Link> : body;
 }
 
-function Dashboard({ orders, siteUrl, lowStock }) {
+function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting }) {
   const paid = orders.filter(isPaid);
   const thisMonth = monthKey(new Date().toISOString());
   const paidThisMonth = paid.filter((o) => monthKey(o.receipt.confirmedAt) === thisMonth);
@@ -92,6 +108,20 @@ function Dashboard({ orders, siteUrl, lowStock }) {
           hint={`${packs(paid)} packs · ${paid.length} orders`}
         />
       </div>
+
+      {reviewsWaiting > 0 && (
+        <section className="rounded-2xl bg-yellow-100 p-5 shadow-sm">
+          <h2 className="text-xl font-bold">
+            {reviewsWaiting === 1 ? "1 new review" : `${reviewsWaiting} new reviews`}
+          </h2>
+          <p className="mt-1 text-sm text-stone-700">
+            Customers are waiting to see their review on the shop.{" "}
+            <Link href="/admin/reviews" className="font-semibold text-brand hover:underline">
+              Check and publish →
+            </Link>
+          </p>
+        </section>
+      )}
 
       {lowStock.length > 0 && (
         <section className="rounded-2xl bg-yellow-100 p-5 shadow-sm">

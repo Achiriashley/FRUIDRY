@@ -150,6 +150,34 @@ const en = {
       failed: "Sorry, we couldn't save your number. Please message us on WhatsApp instead.",
     },
   },
+  reviews: {
+    heading: "Customer reviews",
+    summary: (average, count) =>
+      `${average} out of 5 · ${count} ${count === 1 ? "review" : "reviews"}`,
+    stars: (rating) => `Rated ${rating} out of 5`,
+    none: "No reviews yet. Tried this pack? Tell others what you think.",
+    formTitle: "Leave a review",
+    rating: "Your rating",
+    star: (n) => (n === 1 ? "1 star" : `${n} stars`),
+    name: "Your first name",
+    nameHint: "e.g. Marie N.",
+    comment: "Your review",
+    commentHint: "What did you like? How do you enjoy it?",
+    send: "Send my review",
+    sending: "Sending…",
+    consent:
+      "Your first name, rating and review are shown on this page once we've checked them. See our",
+    done: "Thank you! Your review will appear here once we've checked it.",
+    errors: {
+      rating: "Choose a number of stars.",
+      name: "Enter your first name.",
+      comment: "Write a few words about the product.",
+      tooLong: (max) => `Keep it under ${max} characters.`,
+      rateLimited: (wait) => `Too many reviews from this connection. Try again in ${wait}.`,
+      notForSale: "Reviews open once this flavour is available.",
+      failed: "Sorry, your review couldn't be sent. Please try again later.",
+    },
+  },
   product: {
     notFound: "Product not found",
     backToShop: "← Back to shop",
@@ -336,7 +364,7 @@ const en = {
   privacy: {
     title: "Privacy policy",
     description: "What information Fruidry collects, why, and how you stay in control of it.",
-    updated: "Last updated: 16 October 2026",
+    updated: "Last updated: 19 October 2026",
     sections: [
       {
         heading: "Who we are",
@@ -368,9 +396,15 @@ const en = {
         ],
       },
       {
+        heading: "If you leave a review",
+        paragraphs: [
+          "If you review a product, we keep your first name, your rating, what you wrote, your language and the date. Once we've checked it, your first name, rating, review and the date are shown publicly on the product's page, and search engines such as Google can show the rating. You can ask us to remove your review at any time.",
+        ],
+      },
+      {
         heading: "Where your information is kept",
         paragraphs: [
-          "Orders and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
+          "Orders, reviews and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
           "We don't sell your information or share it with anyone else, except the person delivering your order.",
         ],
       },
@@ -514,6 +548,33 @@ const fr = {
         `Trop de tentatives depuis votre réseau. Veuillez réessayer dans ${wait}.`,
       failed:
         "Désolé, nous n'avons pas pu enregistrer votre numéro. Écrivez-nous plutôt sur WhatsApp.",
+    },
+  },
+  reviews: {
+    heading: "Avis clients",
+    summary: (average, count) => `${average} sur 5 · ${count} avis`,
+    stars: (rating) => `Noté ${rating} sur 5`,
+    none: "Pas encore d'avis. Vous avez goûté ce sachet ? Dites-nous ce que vous en pensez.",
+    formTitle: "Donner votre avis",
+    rating: "Votre note",
+    star: (n) => (n === 1 ? "1 étoile" : `${n} étoiles`),
+    name: "Votre prénom",
+    nameHint: "ex. Marie N.",
+    comment: "Votre avis",
+    commentHint: "Qu'avez-vous aimé ? Comment le dégustez-vous ?",
+    send: "Envoyer mon avis",
+    sending: "Envoi…",
+    consent:
+      "Votre prénom, votre note et votre avis seront affichés sur cette page après vérification. Voir notre",
+    done: "Merci ! Votre avis apparaîtra ici après vérification.",
+    errors: {
+      rating: "Choisissez une note.",
+      name: "Indiquez votre prénom.",
+      comment: "Écrivez quelques mots sur le produit.",
+      tooLong: (max) => `${max} caractères maximum.`,
+      rateLimited: (wait) => `Trop d'avis envoyés depuis cette connexion. Réessayez dans ${wait}.`,
+      notForSale: "Les avis seront ouverts quand cette saveur sera disponible.",
+      failed: "Désolé, votre avis n'a pas pu être envoyé. Réessayez plus tard.",
     },
   },
   product: {
@@ -705,7 +766,7 @@ const fr = {
     title: "Politique de confidentialité",
     description:
       "Quelles informations Fruidry collecte, pourquoi, et comment vous gardez le contrôle.",
-    updated: "Dernière mise à jour : 16 octobre 2026",
+    updated: "Dernière mise à jour : 19 octobre 2026",
     sections: [
       {
         heading: "Qui sommes-nous",
@@ -737,9 +798,15 @@ const fr = {
         ],
       },
       {
+        heading: "Si vous donnez votre avis",
+        paragraphs: [
+          "Si vous donnez votre avis sur un produit, nous conservons votre prénom, votre note, ce que vous avez écrit, votre langue et la date. Après vérification, votre prénom, votre note, votre avis et la date sont affichés publiquement sur la page du produit, et les moteurs de recherche comme Google peuvent afficher la note. Vous pouvez nous demander de retirer votre avis à tout moment.",
+        ],
+      },
+      {
         heading: "Où sont conservées vos informations",
         paragraphs: [
-          "Les commandes et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
+          "Les commandes, les avis et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
           "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
         ],
       },

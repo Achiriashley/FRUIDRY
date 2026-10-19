@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard", id: "dashboard" },
   { href: "/admin/orders", label: "Orders", id: "orders" },
   { href: "/admin/products", label: "Products", id: "products" },
+  { href: "/admin/reviews", label: "Reviews", id: "reviews" },
 ];
 
 // Wraps every admin page: checks the admin is signed in and draws the menu.

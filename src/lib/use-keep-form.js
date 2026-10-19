@@ -25,7 +25,9 @@ export function useFieldErrors(state, uid, fields) {
     if (state.status !== "error" || handled.current === state) return;
     handled.current = state;
     const first = fields.find((field) => state.errors?.[field]);
-    if (first) formRef.current?.elements.namedItem(first)?.focus();
+    // A group of radio buttons comes back as a list: focus its first button.
+    const element = first && formRef.current?.elements.namedItem(first);
+    (element instanceof RadioNodeList ? element[0] : element)?.focus();
   }, [state, fields]);
 
   const errorId = (field) => `${uid}-${field}-error`;

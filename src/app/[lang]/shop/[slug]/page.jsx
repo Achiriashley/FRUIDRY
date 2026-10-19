@@ -8,9 +8,11 @@ import { getProduct, getProducts } from "@/lib/catalog";
 import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
+import { getApprovedReviews, ratingSummary } from "@/lib/reviews";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
 import { DELIVERY_DAYS } from "@/lib/shop-config";
 import { NotifyForm } from "./NotifyForm";
+import { ProductReviews } from "./ProductReviews";
 
 // Each product page is built ahead of time, with its text in the page itself, so
 // search engines and link previews read it without running any JavaScript. A product
@@ -71,6 +73,9 @@ export default async function ProductPage({ params }) {
   const origin = siteOrigin();
   const pageUrl = `${origin}${localePath(lang, `/shop/${product.slug}`)}`;
   const photo = product.image || images[product.slug];
+  // Reviews only for products on sale: nobody has tried a coming-soon flavour yet.
+  const reviews = product.comingSoon ? [] : await getApprovedReviews(product.slug);
+  const summary = ratingSummary(reviews);
   // Products customers can order first, then same-category ones.
   const related = products
     .filter((p) => p.slug !== product.slug)
@@ -120,6 +125,28 @@ export default async function ProductPage({ params }) {
                 returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
               },
             },
+            // Only real, approved reviews shown on this page (Google's rules).
+            ...(summary.count > 0 && {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: summary.average,
+                reviewCount: summary.count,
+                bestRating: 5,
+                worstRating: 1,
+              },
+              review: reviews.slice(0, 10).map((r) => ({
+                "@type": "Review",
+                author: { "@type": "Person", name: r.name },
+                datePublished: r.createdAt.slice(0, 10),
+                reviewBody: r.comment,
+                reviewRating: {
+                  "@type": "Rating",
+                  ratingValue: r.rating,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              })),
+            }),
           }}
         />
       )}
@@ -192,6 +219,10 @@ export default async function ProductPage({ params }) {
           </div>
         </div>
       </div>
+
+      {!product.comingSoon && (
+        <ProductReviews slug={product.slug} reviews={reviews} summary={summary} lang={lang} t={t} />
+      )}
 
       {related.length > 0 && (
         <section className="mt-20">

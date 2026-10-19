@@ -16,6 +16,7 @@ export const LIMITS = {
   placeOrder: { max: 10, windowSeconds: 60 * 60 },
   contact: { max: 5, windowSeconds: 60 * 60 },
   waitlist: { max: 10, windowSeconds: 60 * 60 },
+  review: { max: 5, windowSeconds: 60 * 60 },
 };
 
 const memory = new Map();

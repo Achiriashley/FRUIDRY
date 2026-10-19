@@ -117,7 +117,8 @@ Go to `/admin` and sign in with `ADMIN_PASSWORD`. There is no link to it on the
 public site, so bookmark it. For security, it asks for the password each time you open or
 reload it and after 30 minutes without activity (see Security below).
 
-- **Dashboard**: new orders, orders to deliver, and sales this month and in total.
+- **Dashboard**: new orders, orders to deliver, sales this month and in total, and new
+  reviews to check.
 - **Orders**: every order, filterable by status and searchable by order number,
   customer name or phone.
 - **Products**: add new products (with a photo), edit any product's item code, name,
@@ -146,6 +147,15 @@ WhatsApp** button (a ready-made message in their language with a link to the fla
 deleted after that. Deleting a product also deletes its waiting list. With Supabase, run
 `supabase/schema.sql` again after updating to create the `waitlist` table (it only adds
 what's missing).
+
+**Customer reviews**: on a product's shop page (not coming-soon ones), customers can leave
+a star rating, their first name and a few words. Nothing is shown until you publish it
+under **Reviews** in the admin panel; the dashboard says when new ones arrive. Published
+reviews appear on the product page with the average, and the rating is given to Google
+(structured data), which can show the stars in its results. **Remove from shop** takes one
+down. A hidden field catches robots, each connection can send 5 reviews an hour, and
+deleting a product deletes its reviews. With Supabase, run `supabase/schema.sql` again
+to create the `reviews` table.
 
 Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
@@ -219,8 +229,8 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Tests
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
-panel (sign-in rules, orders, products, stock, waiting lists), both languages, what search
-engines see, accessibility basics and security protections (about 290 checks in
+panel (sign-in rules, orders, products, stock, waiting lists, reviews), both languages,
+what search engines see, accessibility basics and security protections (about 310 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

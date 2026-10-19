@@ -35,6 +35,24 @@ create table if not exists public.waitlist (
 
 alter table public.waitlist enable row level security;
 
+-- Customer reviews left on product pages. Shown on the site (and to Google) only once
+-- approved in the admin panel (/admin/reviews).
+create table if not exists public.reviews (
+  id text primary key,
+  slug text not null,
+  name text not null,
+  rating smallint not null check (rating between 1 and 5),
+  comment text not null,
+  lang text not null,
+  status text not null default 'pending' check (status in ('pending', 'approved')),
+  created_at timestamptz not null default now(),
+  approved_at timestamptz
+);
+
+create index if not exists reviews_slug_status_idx on public.reviews (slug, status);
+
+alter table public.reviews enable row level security;
+
 -- Public folder for product photos uploaded from the admin panel.
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)
