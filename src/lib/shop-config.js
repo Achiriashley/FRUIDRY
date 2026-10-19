@@ -33,6 +33,13 @@ export function momoPayCode(amount) {
   return `*126*16*${MOMO_MERCHANT_CODE}*${Math.round(amount)}#`;
 }
 
+// Delivery and returns, given to Google with each product on sale (product page).
+// - Delivery: 2 to 5 days after payment, anywhere in Cameroon. The fee depends on what
+//   the rider charges for the address, so no fee is given.
+// - Returns: packs aren't taken back. A damaged or wrong pack is replaced, which
+//   Google's format can't say ("returns accepted" or "no returns" only).
+export const DELIVERY_DAYS = { min: 2, max: 5 };
+
 // Contact details shown on the site (from the packaging). Change them here.
 export const CONTACT = {
   phone: "+237 671 820 032",

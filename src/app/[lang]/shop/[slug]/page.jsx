@@ -9,12 +9,21 @@ import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i1
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
+import { DELIVERY_DAYS } from "@/lib/shop-config";
 import { NotifyForm } from "./NotifyForm";
 
 // Each product page is built ahead of time, with its text in the page itself, so
 // search engines and link previews read it without running any JavaScript. A product
 // added later is built on its first visit, and an unknown one gets a real 404.
 export const ensureStatic = "navigation";
+
+// A number of days, as structured data for search engines.
+const days = (minValue, maxValue) => ({
+  "@type": "QuantitativeValue",
+  minValue,
+  maxValue,
+  unitCode: "DAY",
+});
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -94,6 +103,22 @@ export default async function ProductPage({ params }) {
               availability: isInStock(product)
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
+              // Delivery anywhere in Cameroon in 2 to 5 days in all (sent within a day,
+              // then on the road); no fee, as it depends on the rider.
+              shippingDetails: {
+                "@type": "OfferShippingDetails",
+                shippingDestination: { "@type": "DefinedRegion", addressCountry: "CM" },
+                deliveryTime: {
+                  "@type": "ShippingDeliveryTime",
+                  handlingTime: days(0, 1),
+                  transitTime: days(DELIVERY_DAYS.min, DELIVERY_DAYS.max - 1),
+                },
+              },
+              hasMerchantReturnPolicy: {
+                "@type": "MerchantReturnPolicy",
+                applicableCountry: "CM",
+                returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+              },
             },
           }}
         />

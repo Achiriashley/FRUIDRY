@@ -47,6 +47,50 @@ for (const [path, expected] of Object.entries(expectedTitles)) {
   );
 }
 
+// ---------- Product data for Google ----------
+
+const jsonLd = (page) =>
+  [...page.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) =>
+    JSON.parse(m[1]),
+  );
+{
+  const product = jsonLd(await html("/fr/shop/mixed-fruit-pack")).find(
+    (d) => d["@type"] === "Product",
+  );
+  const offer = product?.offers ?? {};
+  const shipping = offer.shippingDetails ?? {};
+  const time = shipping.deliveryTime ?? {};
+  check(
+    "product data: price in XAF, in stock",
+    offer.price === 2500 && offer.priceCurrency === "XAF" && /InStock$/.test(offer.availability),
+    JSON.stringify(offer).slice(0, 160),
+  );
+  check(
+    "product data: delivery anywhere in Cameroon in 2 to 5 days, with no made-up fee",
+    shipping.shippingDestination?.addressCountry === "CM" &&
+      time.handlingTime.minValue + time.transitTime.minValue === 2 &&
+      time.handlingTime.maxValue + time.transitTime.maxValue === 5 &&
+      time.transitTime.unitCode === "DAY" &&
+      shipping.shippingRate === undefined,
+    JSON.stringify(shipping),
+  );
+  check(
+    "product data: returns policy for Cameroon",
+    offer.hasMerchantReturnPolicy?.applicableCountry === "CM" &&
+      /MerchantReturnNotPermitted$/.test(offer.hasMerchantReturnPolicy?.returnPolicyCategory),
+    JSON.stringify(offer.hasMerchantReturnPolicy),
+  );
+  check(
+    "no ratings or reviews are claimed",
+    !("aggregateRating" in product) && !("review" in product),
+  );
+  const soon = jsonLd(await html("/fr/shop/mango-pack"));
+  check(
+    "a coming-soon product has no product data (it has no price yet)",
+    !soon.some((d) => d["@type"] === "Product"),
+  );
+}
+
 // ---------- Product pages without JavaScript ----------
 
 const b = await launch({ adminHarness: true });
