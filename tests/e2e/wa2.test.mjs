@@ -62,7 +62,7 @@ await p.waitForTimeout(1500);
 const a = await ctx.newPage();
 a.on("pageerror", (e) => errs.push("admin " + e.message));
 await a.goto(B + "/admin");
-await a.getByLabel("Password").fill(ADMIN_PASSWORD);
+await a.getByLabel("Password", { exact: true }).fill(ADMIN_PASSWORD);
 await a.getByRole("button", { name: "Sign in" }).click();
 await a.getByRole("heading", { name: "Dashboard" }).first().waitFor();
 await a.waitForTimeout(1000);
