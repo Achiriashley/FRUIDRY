@@ -20,9 +20,10 @@ p.on("console", (m) => {
 await p.goto(B + "/fr/privacy");
 await p.waitForTimeout(800);
 check(
-  "French privacy page renders all sections",
-  (await p.locator("main h2").count()) === 9 &&
-    (await p.getByRole("heading", { name: "Politique de confidentialité" }).isVisible()),
+  "French privacy page renders all sections, reviews included",
+  (await p.locator("main h2").count()) === 10 &&
+    (await p.getByRole("heading", { name: "Politique de confidentialité" }).isVisible()) &&
+    (await p.getByRole("heading", { name: "Si vous donnez votre avis" }).isVisible()),
 );
 check(
   "phone number is a tap-to-call link",
@@ -51,7 +52,8 @@ await p.waitForTimeout(600);
 check(
   "English privacy page",
   (await p.getByRole("heading", { name: "Privacy policy" }).isVisible()) &&
-    (await p.locator("main h2").count()) === 9,
+    (await p.locator("main h2").count()) === 10 &&
+    (await p.getByRole("heading", { name: "If you leave a review" }).isVisible()),
 );
 // Checkout and contact show the consent line with a privacy link
 await p.goto(B + "/en/shop/mixed-fruit-pack");
