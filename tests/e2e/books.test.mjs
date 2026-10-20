@@ -55,11 +55,18 @@ async function open(title) {
   if (!(await d.evaluate((el) => el.open))) await d.locator("summary").click();
   return d;
 }
+// Presses a form's button and returns the form's text once the new result is shown
+// (not the message left from the previous save).
 async function submit(d, button) {
+  const form = d.locator("form");
+  const before = plain(await form.innerText());
   await d.getByRole("button", { name: button }).click();
-  await d.locator('[role="status"], [role="alert"], .text-red-600').first().waitFor();
-  await a.waitForTimeout(300);
-  return plain(await d.locator("form").innerText());
+  for (let i = 0; i < 100; i++) {
+    await a.waitForTimeout(100);
+    const text = plain(await form.innerText());
+    if (!text.includes("Saving…") && text !== before) return text;
+  }
+  throw new Error(`No result after pressing ${button}`);
 }
 
 // Stock arrives for a product whose packs aren't counted yet.
