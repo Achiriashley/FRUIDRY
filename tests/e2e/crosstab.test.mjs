@@ -120,7 +120,10 @@ for (const kind of ["check-in", "Mark as paid"]) {
   await pg.locator('input[name="password"]').first().waitFor({ state: "attached", timeout: 15000 });
   const visible = await pg.locator('input[name="password"]').first().isVisible();
   await pg.locator('input[name="password"]').first().fill(ADMIN_PASSWORD, { force: true });
-  await pg.locator('button[type="submit"]').first().click({ noWaitAfter: true, force: true });
+  // The form can arrive a moment before it's shown; the page's scripts are still held.
+  const signIn = pg.locator('button[type="submit"]').first();
+  await signIn.waitFor({ state: "visible", timeout: 15000 });
+  await signIn.click({ noWaitAfter: true, force: true });
   await pg.waitForTimeout(800);
   hold = false;
   await pg
