@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ORDER_STATUS, isNew, isPaid, listOrders } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
+import { listEntries } from "@/lib/ledger";
 import { formatPrice, isLowStock, stockLeft } from "@/lib/products";
 import { listReviews } from "@/lib/reviews";
 import { getSiteUrl } from "@/lib/site-url";
@@ -16,11 +17,12 @@ export default function DashboardPage() {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="dashboard" autoRefresh>
           {async () => {
-            const [orders, siteUrl, products, reviewsWaiting] = await Promise.all([
+            const [orders, siteUrl, products, reviewsWaiting, inPersonSales] = await Promise.all([
               listOrders(),
               getSiteUrl(),
               getProducts(),
               countReviewsWaiting(),
+              loadInPersonSales(),
             ]);
             return (
               <Dashboard
@@ -28,6 +30,7 @@ export default function DashboardPage() {
                 siteUrl={siteUrl}
                 lowStock={products.filter(isLowStock)}
                 reviewsWaiting={reviewsWaiting}
+                inPersonSales={inPersonSales}
               />
             );
           }}
@@ -43,6 +46,15 @@ async function countReviewsWaiting() {
     return (await listReviews()).filter((r) => r.status !== "approved").length;
   } catch {
     return 0;
+  }
+}
+
+// Sales recorded on the Books page (none if they can't be read).
+async function loadInPersonSales() {
+  try {
+    return (await listEntries()).filter((e) => e.type === "sale");
+  } catch {
+    return [];
   }
 }
 
@@ -70,13 +82,20 @@ function Stat({ label, value, hint, href, highlight = false }) {
   return href ? <Link href={href}>{body}</Link> : body;
 }
 
-function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting }) {
+function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales }) {
   const paid = orders.filter(isPaid);
   const thisMonth = monthKey(new Date().toISOString());
   const paidThisMonth = paid.filter((o) => monthKey(o.receipt.confirmedAt) === thisMonth);
+  const soldThisMonth = inPersonSales.filter((e) => e.date.startsWith(thisMonth));
   const sum = (list) => list.reduce((total, o) => total + o.total, 0);
   const packs = (list) =>
     list.reduce((total, o) => total + o.items.reduce((n, item) => n + item.quantity, 0), 0);
+  const inPersonPacks = (list) => list.reduce((total, e) => total + e.quantity, 0);
+  // Website orders, plus sales in person recorded on the Books page.
+  const salesHint = (orderList, saleList) =>
+    `${packs(orderList) + inPersonPacks(saleList)} packs · ${orderList.length} website ` +
+    (orderList.length === 1 ? "order" : "orders") +
+    (saleList.length > 0 ? `, ${saleList.length} in person` : "");
 
   const toCheck = orders.filter(isNew);
   const toDeliver = orders.filter((o) => o.status === ORDER_STATUS.confirmed);
@@ -99,13 +118,14 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting }) {
         />
         <Stat
           label="Sales this month"
-          value={formatPrice(sum(paidThisMonth))}
-          hint={`${packs(paidThisMonth)} packs · ${paidThisMonth.length} orders`}
+          value={formatPrice(sum(paidThisMonth) + sum(soldThisMonth))}
+          hint={salesHint(paidThisMonth, soldThisMonth)}
+          href="/admin/books"
         />
         <Stat
           label="Total sales"
-          value={formatPrice(sum(paid))}
-          hint={`${packs(paid)} packs · ${paid.length} orders`}
+          value={formatPrice(sum(paid) + sum(inPersonSales))}
+          hint={salesHint(paid, inPersonSales)}
         />
       </div>
 

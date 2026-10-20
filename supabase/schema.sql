@@ -53,6 +53,19 @@ create index if not exists reviews_slug_status_idx on public.reviews (slug, stat
 
 alter table public.reviews enable row level security;
 
+-- The books (/admin/books): sales made in person, stock arrivals and expenses.
+create table if not exists public.ledger (
+  id text primary key,
+  type text not null check (type in ('sale', 'stock', 'expense')),
+  entry_date date not null,
+  created_at timestamptz not null default now(),
+  data jsonb not null
+);
+
+create index if not exists ledger_entry_date_idx on public.ledger (entry_date desc);
+
+alter table public.ledger enable row level security;
+
 -- Public folder for product photos uploaded from the admin panel.
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)

@@ -10,12 +10,23 @@ import {
 } from "@/lib/admin-auth";
 import {
   PRODUCTS_TAG,
+  addStock,
   createProduct,
   deleteProduct as removeProduct,
+  getProduct,
   getProducts,
   subtractStock,
+  takeStock,
   updateProduct,
 } from "@/lib/catalog";
+import {
+  EXPENSE_CATEGORIES,
+  PAYMENT_METHODS,
+  addEntry,
+  cameroonDate,
+  deleteEntry,
+  getEntry,
+} from "@/lib/ledger";
 import { ORDER_STATUS, getOrder, isPaid, newReceiptNumber, saveOrder } from "@/lib/orders";
 import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
 import { forgetRateLimit, rateLimit, retryMessage } from "@/lib/rate-limit";
@@ -269,4 +280,170 @@ export async function removeReview(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   await deleteReview(String(formData.get("id") ?? ""));
   refreshReviews();
+}
+
+// ---------- Books (/admin/books) ----------
+
+const NOTE_LIMIT = 200;
+const MAX_AMOUNT = 1_000_000_000; // FCFA
+const MAX_PACKS = 1_000_000;
+
+// The fields every book entry shares: a valid date (not in the future, Cameroon time)
+// and an optional note.
+function entryBasics(formData, errors) {
+  const date = String(formData.get("date") ?? "").trim();
+  if (!validDate(date) || date < "2020-01-01") {
+    errors.date = "Choose the date.";
+  } else if (date > cameroonDate()) {
+    errors.date = "This date is in the future.";
+  }
+  const note = String(formData.get("note") ?? "").trim();
+  if (note.length > NOTE_LIMIT) errors.note = `Keep this under ${NOTE_LIMIT} characters.`;
+  return { date, note };
+}
+
+// A real calendar day written YYYY-MM-DD (so not 2026-02-30).
+function validDate(text) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const time = Date.parse(`${text}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === text;
+}
+
+async function entryProduct(formData, errors) {
+  const product = await getProduct(String(formData.get("slug") ?? "").slice(0, 100));
+  if (!product) errors.slug = "Choose a product.";
+  return product;
+}
+
+// "Mixed Fruit Pack: 38 packs left." after a change to counted stock, or "".
+function stockNote(product, counts, word) {
+  const count = counts[product.slug];
+  if (count === undefined) return "";
+  return ` ${product.name}: ${count} ${count === 1 ? "pack" : "packs"} ${word}.`;
+}
+
+async function saveEntry(entry, errors) {
+  try {
+    await addEntry(entry);
+    return true;
+  } catch (error) {
+    console.error("Couldn't save a book entry", error.message);
+    errors.form = "Sorry, this couldn't be saved. Please try again.";
+    return false;
+  }
+}
+
+// A sale made outside the website: takes the packs off the stock count.
+export async function recordSale(_prev, formData) {
+  if (!(await touchAdminSession())) {
+    return { status: "error", errors: { form: "Please sign in again." } };
+  }
+  const errors = {};
+  const { date, note } = entryBasics(formData, errors);
+  const product = await entryProduct(formData, errors);
+  const quantity = wholeNumber(formData.get("quantity"), 1, MAX_PACKS);
+  if (!quantity) errors.quantity = "Enter the number of packs, e.g. 2.";
+  const price = wholeNumber(formData.get("price"), 0, MAX_AMOUNT);
+  if (price === null || price === undefined) errors.price = "Enter the price per pack in FCFA.";
+  const payment = String(formData.get("payment") ?? "");
+  if (!(payment in PAYMENT_METHODS)) errors.payment = "Choose how they paid.";
+  if (Object.keys(errors).length > 0) return { status: "error", errors };
+
+  const entry = {
+    type: "sale",
+    date,
+    slug: product.slug,
+    name: product.name,
+    sku: product.sku,
+    quantity,
+    price,
+    total: quantity * price,
+    payment,
+    note,
+  };
+  if (!(await saveEntry(entry, errors))) return { status: "error", errors };
+  const counts = await changeStockSafely(takeStock, [{ slug: product.slug, quantity }]);
+  refresh();
+  return { status: "success", message: `Sale recorded.${stockNote(product, counts, "left")}` };
+}
+
+// Packs that arrived: adds them to the stock count, with what they cost (optional).
+export async function recordStockArrival(_prev, formData) {
+  if (!(await touchAdminSession())) {
+    return { status: "error", errors: { form: "Please sign in again." } };
+  }
+  const errors = {};
+  const { date, note } = entryBasics(formData, errors);
+  const product = await entryProduct(formData, errors);
+  const quantity = wholeNumber(formData.get("quantity"), 1, MAX_PACKS);
+  if (!quantity) errors.quantity = "Enter the number of packs, e.g. 100.";
+  const cost = wholeNumber(formData.get("cost"), 0, MAX_AMOUNT);
+  if (cost === undefined) errors.cost = "Enter a whole number of FCFA, or leave it empty.";
+  if (Object.keys(errors).length > 0) return { status: "error", errors };
+
+  const entry = {
+    type: "stock",
+    date,
+    slug: product.slug,
+    name: product.name,
+    sku: product.sku,
+    quantity,
+    cost,
+    note,
+  };
+  if (!(await saveEntry(entry, errors))) return { status: "error", errors };
+  const counts = await changeStockSafely(addStock, [{ slug: product.slug, quantity }]);
+  refresh();
+  const counted = counts[product.slug] !== undefined;
+  return {
+    status: "success",
+    message: counted
+      ? `Stock recorded.${stockNote(product, counts, "in stock")}`
+      : `Stock recorded. Packs aren't counted for ${product.name}, so no count changed: ` +
+        "to count them, enter Packs in stock on its product page.",
+  };
+}
+
+// Any other cost: delivery, packaging, transport, advertising...
+export async function recordExpense(_prev, formData) {
+  if (!(await touchAdminSession())) {
+    return { status: "error", errors: { form: "Please sign in again." } };
+  }
+  const errors = {};
+  const { date, note } = entryBasics(formData, errors);
+  const category = String(formData.get("category") ?? "");
+  if (!(category in EXPENSE_CATEGORIES)) errors.category = "Choose what it was for.";
+  const amount = wholeNumber(formData.get("amount"), 1, MAX_AMOUNT);
+  if (!amount) errors.amount = "Enter the amount in FCFA, e.g. 1500.";
+  if (category === "other" && !note && !errors.note) errors.note = "Say what it was for.";
+  if (Object.keys(errors).length > 0) return { status: "error", errors };
+
+  const entry = { type: "expense", date, category, amount, note };
+  if (!(await saveEntry(entry, errors))) return { status: "error", errors };
+  refresh();
+  return { status: "success", message: "Expense recorded." };
+}
+
+// Deletes an entry recorded by mistake, putting the stock count back as it was.
+export async function deleteBookEntry(formData) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  const entry = await getEntry(String(formData.get("id") ?? ""));
+  if (!entry) return refresh();
+  await deleteEntry(entry.id);
+  const items = [{ slug: entry.slug, quantity: entry.quantity }];
+  if (entry.type === "sale") await changeStockSafely(addStock, items);
+  if (entry.type === "stock") await changeStockSafely(takeStock, items);
+  refresh();
+}
+
+// Changes counted stock; the entry is already saved, so a failure is only logged.
+async function changeStockSafely(change, items) {
+  try {
+    const counts = await change(items);
+    if (Object.keys(counts).length > 0) updateTag(PRODUCTS_TAG);
+    return counts;
+  } catch (error) {
+    console.error("The stock count couldn't be updated", error.message);
+    return {};
+  }
 }

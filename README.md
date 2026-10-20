@@ -148,6 +148,23 @@ deleted after that. Deleting a product also deletes its waiting list. With Supab
 `supabase/schema.sql` again after updating to create the `waitlist` table (it only adds
 what's missing).
 
+**Books** (bookkeeping): record what happens outside the website, from your phone.
+
+- **Sale in person**: product, packs, price per pack (starts at the shop price) and how they
+  paid (cash or MTN MoMo). The packs come off the stock count.
+- **Stock arrival**: packs received and, if you like, what they cost you in all. The packs
+  are added to the stock count (for products whose packs are counted).
+- **Expense**: delivery, packaging, transport, advertising or other, with the amount.
+
+For each month, the page shows sales (website orders marked as paid, and sales in person
+by payment method), costs (stock bought and expenses), the money left (sales minus costs)
+and an estimated profit (sales minus what the packs sold cost you, from the costs of your
+stock arrivals, minus expenses), plus the stock count of each product. **Download for
+Excel** gives the month as an .xlsx file with a summary and every sale, stock arrival and
+expense. Deleting an entry recorded by mistake puts the stock count back. The dashboard's
+sales include sales in person. With Supabase, run `supabase/schema.sql` again to create
+the `ledger` table.
+
 **Customer reviews**: on a product's shop page (not coming-soon ones), customers can leave
 a star rating, their first name and a few words. Nothing is shown until you publish it
 under **Reviews** in the admin panel; the dashboard says when new ones arrive. Published
@@ -229,8 +246,8 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Tests
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
-panel (sign-in rules, orders, products, stock, waiting lists, reviews), both languages,
-what search engines see, accessibility basics and security protections (about 310 checks in
+panel (sign-in rules, orders, products, stock, books, waiting lists, reviews), both
+languages, what search engines see, accessibility basics and security protections (about 335 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

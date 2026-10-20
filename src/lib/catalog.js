@@ -137,20 +137,31 @@ export async function updateProduct(slug, fields) {
   await writeStored(slug, { ...existing, ...pickEditable(fields) });
 }
 
-// Takes sold packs off the stock of products whose stock is counted (never below 0).
-// Returns the slugs whose stock changed.
-export async function subtractStock(items) {
+// Adds (sign 1) or takes off (sign -1) packs for products whose stock is counted, never
+// going below 0. Returns the new count of each product whose count changed.
+async function adjustStock(items, sign) {
   const stored = await readStored();
-  const changed = [];
+  const counts = {};
   for (const { slug, quantity } of items) {
     const current = { ...STARTING.get(slug), ...pickEditable(stored[slug]) };
     if (stored[slug]?.deleted || !Number.isInteger(current.stock)) continue;
-    const stock = Math.max(0, current.stock - quantity);
-    await writeStored(slug, { ...stored[slug], stock });
-    changed.push(slug);
+    const stock = Math.max(0, current.stock + sign * quantity);
+    stored[slug] = { ...stored[slug], stock };
+    await writeStored(slug, stored[slug]);
+    counts[slug] = stock;
   }
-  return changed;
+  return counts;
 }
+
+// Takes sold packs off the stock count. Returns the slugs whose count changed.
+export async function subtractStock(items) {
+  return Object.keys(await adjustStock(items, -1));
+}
+
+// Packs taken off or put back by the bookkeeping page (in-person sales, stock arrivals,
+// and deleting either). Return { slug: new count } for counted products.
+export const takeStock = (items) => adjustStock(items, -1);
+export const addStock = (items) => adjustStock(items, 1);
 
 // Hides the product from the shop. Past orders keep their own copy of its details.
 export async function deleteProduct(slug) {
