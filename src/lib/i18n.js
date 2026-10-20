@@ -193,6 +193,89 @@ const en = {
     addToCart: "Add to cart",
     buyNow: "Buy now",
   },
+  // The questions page (/guide): what people search about freeze-dried fruit in
+  // Cameroon. Answers with ({ name, price, weight }) use the product on sale.
+  guide: {
+    navLabel: "Questions",
+    metaTitle: "Freeze-dried fruit in Cameroon: price and tips",
+    description: ({ price }) =>
+      "Everything about freeze-dried fruit in Cameroon: how it differs from dried fruit, " +
+      (price ? `price (${price}), ` : "price, ") +
+      "storage, and delivery in 2 to 5 days from Douala.",
+    title: "Freeze-dried fruit in Cameroon: your questions",
+    intro:
+      "Fruidry sells freeze-dried fruit from Douala and delivers across Cameroon. Here are the answers to the questions we're asked most often.",
+    moreQuestions: "Got another question? Ask us on WhatsApp.",
+    questions: [
+      {
+        q: "What is freeze-dried fruit?",
+        a: [
+          "It's fresh fruit, picked ripe, that is frozen and then dried under vacuum: the ice turns straight into vapour, with no high heat. The fruit keeps its taste, colour and nutrients, and becomes light and crunchy.",
+        ],
+        link: { path: "/about", label: "How freeze-drying works" },
+      },
+      {
+        q: "How is it different from dried fruit?",
+        a: [
+          "Ordinary dried fruit is dried with heat, in the sun or an oven, which makes it chewy and darker. Freeze-dried fruit is dried cold, under vacuum: it stays crunchy and keeps its colour and taste.",
+        ],
+      },
+      {
+        q: "How much does Fruidry freeze-dried fruit cost?",
+        a: [
+          ({ name, price, weight }) =>
+            name ? `Our ${name} costs ${price} (${weight}).` : "Our prices are shown in the shop.",
+          "The delivery fee depends on your address: we confirm it with you on WhatsApp.",
+        ],
+        link: { path: "/shop", label: "See the shop" },
+      },
+      {
+        q: "Where can I buy freeze-dried fruit in Cameroon?",
+        a: [
+          "Fruidry is based in Douala. For now, our fruit is sold only in our online shop: choose your packs, then send your order on WhatsApp in one tap. We deliver across Cameroon.",
+        ],
+      },
+      {
+        q: "Do you deliver to my town, and how long does it take?",
+        a: [
+          "Yes, we deliver across Cameroon, most often to Douala, Yaoundé, Buea, Limbe and Bamenda. Delivery takes 2 to 5 days depending on the distance.",
+        ],
+      },
+      {
+        q: "How long does freeze-dried fruit keep?",
+        a: [
+          "For months, as long as the pack stays properly sealed. Our fruit is packed in sealed, moisture-resistant aluminium pouches.",
+        ],
+      },
+      {
+        q: "How do I keep an opened pack?",
+        a: [
+          "Every pouch has a zip seal: close it well after each use and keep it somewhere dry. Left open or exposed to moisture, the fruit loses its crunch.",
+        ],
+      },
+      {
+        q: "How do I eat freeze-dried fruit?",
+        a: [
+          "As a snack, straight from the pack, or with yoghurt, granola or in a parfait. You can also rehydrate it in water: it gets its original taste back.",
+        ],
+      },
+      {
+        q: "Is there added sugar?",
+        a: ["No. Our freeze-dried fruit is 100% fruit, with no added sugar and no preservatives."],
+      },
+      {
+        q: "Where does your fruit come from?",
+        a: [
+          "For now, our fruit is freeze-dried by a partner producer in China and imported to Cameroon by us. Our goal is to freeze-dry fruit grown in Cameroon, right here at home, as soon as we have our own freeze-drying machine.",
+        ],
+      },
+    ],
+    flavours: {
+      q: "Which flavours do you have?",
+      available: "Available now:",
+      soon: "Coming soon:",
+    },
+  },
   about: {
     title: "Our story",
     // In Google results and link previews (the page heading stays "Our story").
@@ -590,6 +673,91 @@ const fr = {
     addedStatus: "Ajouté au panier",
     addToCart: "Ajouter au panier",
     buyNow: "Acheter maintenant",
+  },
+  guide: {
+    navLabel: "Questions fréquentes",
+    metaTitle: "Fruits lyophilisés au Cameroun : prix et conseils",
+    description: ({ price }) =>
+      "Tout savoir sur les fruits lyophilisés : différence avec les fruits séchés, " +
+      (price ? `prix (${price}), ` : "prix, ") +
+      "conservation et livraison partout au Cameroun en 2 à 5 jours.",
+    title: "Fruits lyophilisés au Cameroun : vos questions",
+    intro:
+      "Fruidry vend des fruits lyophilisés depuis Douala et livre partout au Cameroun. Voici les réponses aux questions qu'on nous pose le plus souvent.",
+    moreQuestions: "Une autre question ? Posez-la-nous sur WhatsApp.",
+    questions: [
+      {
+        q: "Qu'est-ce qu'un fruit lyophilisé ?",
+        a: [
+          "C'est un fruit frais, cueilli à maturité, que l'on congèle puis que l'on sèche sous vide : la glace passe directement à l'état de vapeur, sans forte chaleur. Le fruit garde son goût, sa couleur et ses nutriments, et devient léger et croquant.",
+        ],
+        link: { path: "/about", label: "Comment fonctionne la lyophilisation" },
+      },
+      {
+        q: "Quelle différence avec les fruits séchés ?",
+        a: [
+          "Les fruits séchés classiques sont séchés à la chaleur, au soleil ou au four : ils deviennent moelleux et plus foncés. Les fruits lyophilisés, eux, sont séchés à froid et sous vide : ils restent croquants et gardent leur couleur et leur goût.",
+        ],
+      },
+      {
+        q: "Combien coûtent les fruits lyophilisés Fruidry ?",
+        a: [
+          ({ name, price, weight }) =>
+            name
+              ? `Notre ${name} coûte ${price} le sachet de ${weight}.`
+              : "Nos prix sont indiqués dans la boutique.",
+          "Les frais de livraison dépendent de votre adresse : nous vous les confirmons sur WhatsApp.",
+        ],
+        link: { path: "/shop", label: "Voir la boutique" },
+      },
+      {
+        q: "Où acheter des fruits lyophilisés au Cameroun ?",
+        a: [
+          "Fruidry est basé à Douala. Pour l'instant, nos fruits sont vendus uniquement sur notre boutique en ligne : choisissez vos sachets, puis envoyez votre commande sur WhatsApp en un clic. Nous livrons partout au Cameroun.",
+        ],
+      },
+      {
+        q: "Livrez-vous dans ma ville, et en combien de temps ?",
+        a: [
+          "Oui, nous livrons partout au Cameroun, le plus souvent à Douala, Yaoundé, Buea, Limbé et Bamenda. La livraison prend 2 à 5 jours selon la distance.",
+        ],
+      },
+      {
+        q: "Combien de temps se conservent les fruits lyophilisés ?",
+        a: [
+          "Plusieurs mois, tant que le sachet reste bien fermé. Nos fruits sont emballés dans des sachets en aluminium scellés, qui résistent à l'humidité.",
+        ],
+      },
+      {
+        q: "Comment conserver un sachet ouvert ?",
+        a: [
+          "Chaque sachet a une fermeture zip : refermez-le bien après chaque utilisation et gardez-le au sec. À l'air libre ou à l'humidité, les fruits perdent leur croquant.",
+        ],
+      },
+      {
+        q: "Comment manger des fruits lyophilisés ?",
+        a: [
+          "Comme un snack, directement dans le sachet, ou avec un yaourt, du granola ou dans un parfait. Vous pouvez aussi les réhydrater dans de l'eau : ils retrouvent leur goût d'origine.",
+        ],
+      },
+      {
+        q: "Y a-t-il du sucre ajouté ?",
+        a: [
+          "Non. Nos fruits lyophilisés sont 100 % fruit, sans sucre ajouté et sans conservateurs.",
+        ],
+      },
+      {
+        q: "D'où viennent vos fruits ?",
+        a: [
+          "Pour l'instant, nos fruits sont lyophilisés par un producteur partenaire en Chine, puis importés au Cameroun par nos soins. Notre objectif : lyophiliser des fruits cultivés au Cameroun, ici même, dès que nous aurons notre propre machine de lyophilisation.",
+        ],
+      },
+    ],
+    flavours: {
+      q: "Quelles saveurs proposez-vous ?",
+      available: "Disponible maintenant :",
+      soon: "Bientôt disponible :",
+    },
   },
   about: {
     title: "Notre histoire",

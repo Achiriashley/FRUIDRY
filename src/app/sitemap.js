@@ -10,6 +10,7 @@ export default async function sitemap() {
     "/",
     "/shop",
     "/about",
+    "/guide",
     "/contact",
     "/privacy",
     ...products.map((p) => `/shop/${p.slug}`),

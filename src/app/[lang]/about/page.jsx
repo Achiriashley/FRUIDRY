@@ -35,6 +35,15 @@ export default async function AboutPage() {
         ))}
       </ol>
 
+      <p className="mt-8">
+        <Link
+          href={localePath(lang, "/guide")}
+          className="font-semibold text-brand hover:underline"
+        >
+          {t.guide.navLabel} →
+        </Link>
+      </p>
+
       <div className="mt-14 rounded-2xl bg-gradient-to-br from-sun-light to-brand-light p-8 text-center">
         <h2 className="text-2xl font-bold">{t.about.tasteTheDifference}</h2>
         <Link

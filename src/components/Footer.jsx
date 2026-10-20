@@ -48,6 +48,11 @@ export function Footer({ lang }) {
               </Link>
             </li>
             <li>
+              <Link href={localePath(lang, "/guide")} className="hover:text-white">
+                {t.guide.navLabel}
+              </Link>
+            </li>
+            <li>
               <Link href={localePath(lang, "/contact")} className="hover:text-white">
                 {t.nav.contact}
               </Link>

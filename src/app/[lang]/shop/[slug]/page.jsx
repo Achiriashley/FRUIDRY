@@ -201,12 +201,14 @@ export default async function ProductPage({ params }) {
               </li>
             ))}
           </ul>
-          <Link
-            href={localePath(lang, "/about")}
-            className="mt-4 self-start text-sm font-semibold text-brand hover:underline"
-          >
-            {t.about.howWeMakeIt} →
-          </Link>
+          <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-semibold">
+            <Link href={localePath(lang, "/about")} className="text-brand hover:underline">
+              {t.about.howWeMakeIt} →
+            </Link>
+            <Link href={localePath(lang, "/guide")} className="text-brand hover:underline">
+              {t.guide.navLabel} →
+            </Link>
+          </p>
           <div className="mt-8">
             {product.comingSoon ? (
               <div className="space-y-4">

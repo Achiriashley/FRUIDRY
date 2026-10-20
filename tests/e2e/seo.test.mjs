@@ -5,8 +5,9 @@ import { ADMIN_PASSWORD, BASE_URL as B, check, finish, launch } from "./lib.mjs"
 
 const html = async (path) => (await fetch(B + path)).text();
 const meta = (page, attr, name) =>
-  page.match(new RegExp(`<meta ${attr}="${name}" content="([^"]*)"`))?.[1];
-const title = (page) => page.match(/<title>([^<]*)<\/title>/)?.[1];
+  page.match(new RegExp(`<meta ${attr}="${name}" content="([^"]*)"`))?.[1]?.replace(/\s+/g, " ");
+// French puts a no-break space before ":" and "?": compared with plain spaces.
+const title = (page) => page.match(/<title>([^<]*)<\/title>/)?.[1]?.replace(/\s+/g, " ");
 
 // ---------- Titles and descriptions ----------
 
@@ -18,6 +19,8 @@ const expectedTitles = {
   "/fr/shop/mixed-fruit-pack": "Mélange de fruits lyophilisés 50 g | Fruidry",
   "/en/shop/mixed-fruit-pack": "Freeze-dried Mixed Fruit Pack 50 g | Fruidry",
   "/fr/shop/mango-pack": "Mangue lyophilisée 50 g | Fruidry",
+  "/fr/guide": "Fruits lyophilisés au Cameroun : prix et conseils | Fruidry",
+  "/en/guide": "Freeze-dried fruit in Cameroon: price and tips | Fruidry",
 };
 for (const [path, expected] of Object.entries(expectedTitles)) {
   const page = await html(path);
@@ -89,6 +92,36 @@ const jsonLd = (page) =>
     "a coming-soon product has no product data (it has no price yet)",
     !soon.some((d) => d["@type"] === "Product"),
   );
+}
+
+// ---------- Questions page ----------
+
+{
+  const page = await html("/fr/guide");
+  const faq = jsonLd(page).find((d) => d["@type"] === "FAQPage");
+  const answers = (faq?.mainEntity ?? []).map((q) => `${q.name} ${q.acceptedAnswer.text}`);
+  check(
+    "the questions page answers price, delivery, storage and flavours, with FAQ data",
+    answers.length === 11 &&
+      answers.some((a) => /Mélange de fruits coûte 2\s500\sFCFA le sachet de 50 g/.test(a)) &&
+      answers.some((a) => a.includes("Douala, Yaoundé, Buea, Limbé et Bamenda")) &&
+      answers.some((a) => a.includes("2 à 5 jours")) &&
+      answers.some((a) => a.includes("fermeture zip")) &&
+      answers.some((a) => a.includes("Bientôt disponible") && a.includes("Mangue")),
+    answers.length,
+  );
+  check(
+    "…with its heading, in the page itself",
+    /<h1[^>]*>Fruits lyophilisés au Cameroun/.test(page) && page.includes("Qu&#x27;est-ce qu"),
+  );
+  const sitemap = await html("/sitemap.xml");
+  check(
+    "the sitemap lists the questions page in both languages",
+    sitemap.includes("/fr/guide</loc>") && sitemap.includes("/en/guide</loc>"),
+  );
+  for (const path of ["/fr", "/fr/shop/mixed-fruit-pack", "/fr/about"]) {
+    check(`${path} links to the questions page`, (await html(path)).includes('href="/fr/guide"'));
+  }
 }
 
 // ---------- Product pages without JavaScript ----------

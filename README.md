@@ -41,7 +41,10 @@ Fruidry", "Fruidry | Snacks de fruits lyophilisés au Cameroun"); the page headi
 the short names. Starting products have a fuller name for search results (`searchName` in
 `src/lib/products.js`); a product renamed or added in the admin panel uses its name.
 Product pages are built ahead of time with all their text in the page, and also tell
-Google the price, currency and stock (structured data). Addresses that aren't pages get a
+Google the price, currency and stock (structured data). `/fr/guide` and `/en/guide`
+("Questions fréquentes") answer what people search about freeze-dried fruit in Cameroon:
+the difference with dried fruit, price, where to buy, delivery, storage and how to eat it.
+Its texts are in `src/lib/i18n.js` (`guide`); the price and flavours come from the shop. Addresses that aren't pages get a
 real 404, and `/FR/...` is sent to `/fr/...`. `/sitemap.xml` lists every page in both
 languages; the admin, cart, checkout and order pages are kept out of search results. Set
 `SITE_URL` once you have your own domain; on Vercel the production address is used until
