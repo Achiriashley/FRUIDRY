@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { formatPrice } from "@/lib/products";
 import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
 import { recordExpense, recordSale, recordStockArrival } from "../actions";
 
@@ -8,8 +9,8 @@ const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 // One of the forms on the Books page, folded away until opened. Once an entry is
-// saved, the form is emptied for the next one (the date stays at today) and a message
-// says what changed.
+// saved, the form is emptied for the next one, keeping the date (for entering several
+// sales of the same day), and a message says what was recorded, date included.
 function EntryForm({ title, action, fields, submit, onSaved, children }) {
   const uid = useId();
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
@@ -18,7 +19,10 @@ function EntryForm({ title, action, fields, submit, onSaved, children }) {
   useEffect(() => {
     if (state.status !== "success" || cleared.current === state) return;
     cleared.current = state;
-    formRef.current?.reset();
+    const form = formRef.current;
+    const date = form?.elements.namedItem("date")?.value;
+    form?.reset();
+    if (date) form.elements.namedItem("date").value = date;
     onSaved?.();
   }, [state, formRef, onSaved]);
 
@@ -100,6 +104,15 @@ export function BookForms({ products, payments, categories, today }) {
   const productOptions = Object.fromEntries(products.map((p) => [p.slug, p.name]));
   // The sale's price per pack starts at the product's shop price, and can be changed.
   const [price, setPrice] = useState("");
+  // A stock arrival's cost per pack, shown as it's typed (to catch a per-pack price
+  // typed where the total goes).
+  const [arrival, setArrival] = useState({ quantity: "", cost: "" });
+  // The value is read when typing, not later inside the state update.
+  const setArrivalField = (name, value) => setArrival((a) => ({ ...a, [name]: value }));
+  const perPack =
+    Number(arrival.quantity) > 0 && Number(arrival.cost) > 0
+      ? formatPrice(Math.round(Number(arrival.cost) / Number(arrival.quantity)))
+      : null;
   const date = (field) =>
     field("date", "Date", (props) => (
       <input type="date" max={today} defaultValue={today} {...props} />
@@ -153,19 +166,38 @@ export function BookForms({ products, payments, categories, today }) {
         action={recordStockArrival}
         fields={["date", "slug", "quantity", "cost", "note"]}
         submit="Record stock"
+        onSaved={() => setArrival({ quantity: "", cost: "" })}
       >
         {(field) => (
           <>
+            <p className="text-sm text-stone-600 sm:col-span-2">
+              The packs are added to the stock count, so don&apos;t also change Packs in stock on
+              the product page.
+            </p>
             {date(field)}
             {field("slug", "Product", (props) => (
               <Choices options={productOptions} {...props} />
             ))}
             {field("quantity", "Packs received", (props) => (
-              <input {...number(1)} {...props} />
+              <input
+                {...number(1)}
+                onInput={(e) => setArrivalField("quantity", e.currentTarget.value)}
+                {...props}
+              />
             ))}
             {field("cost", "What they cost you in all, FCFA (optional)", (props) => (
-              <input {...number(0)} {...props} />
+              <input
+                {...number(0)}
+                onInput={(e) => setArrivalField("cost", e.currentTarget.value)}
+                aria-describedby={perPack ? "per-pack" : undefined}
+                {...props}
+              />
             ))}
+            {perPack && (
+              <p id="per-pack" className="text-sm text-stone-600 sm:col-span-2">
+                That&apos;s {perPack} per pack.
+              </p>
+            )}
             {field("note", "Note, e.g. supplier (optional)", (props) => (
               <input maxLength={200} {...props} />
             ))}

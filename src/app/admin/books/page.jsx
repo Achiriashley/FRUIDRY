@@ -16,8 +16,8 @@ import { listOrders } from "@/lib/orders";
 import { formatPrice, stockLeft } from "@/lib/products";
 import { AdminPage, AdminShell } from "../AdminShell";
 import { BookForms } from "./BookForms";
-import { DeleteEntryButton } from "./DeleteEntryButton";
 import { DownloadButton } from "./DownloadButton";
+import { DeleteEntryButton, EditEntry } from "./EditEntry";
 
 export const metadata = { title: "Books", robots: { index: false } };
 
@@ -54,8 +54,14 @@ async function loadEntries() {
 const packs = (n) => `${n} ${n === 1 ? "pack" : "packs"}`;
 const paidOrders = (n) => `${n} paid ${n === 1 ? "order" : "orders"}`;
 
+// "12 Oct 2026"
+const dayText = (date) =>
+  new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(
+    new Date(`${date}T00:00:00Z`),
+  );
+
 function Line({ label, value, strong = false, indent = false }) {
-  const look = strong ? "font-bold" : indent ? "pl-4 text-stone-500" : "text-stone-700";
+  const look = strong ? "font-bold" : indent ? "pl-4 text-stone-600" : "text-stone-700";
   return (
     <div className={`flex justify-between gap-4 py-1 ${look}`}>
       <dt>{label}</dt>
@@ -64,7 +70,7 @@ function Line({ label, value, strong = false, indent = false }) {
   );
 }
 
-function Card({ title, children, highlight = false }) {
+function Card({ title, note, children, highlight = false }) {
   return (
     <section
       className={`rounded-2xl p-5 shadow-sm ${highlight ? "bg-brand-light" : "bg-white"}`}
@@ -72,11 +78,20 @@ function Card({ title, children, highlight = false }) {
     >
       <h2 className="text-lg font-bold">{title}</h2>
       <dl className="mt-2 text-sm">{children}</dl>
+      {note && <p className="mt-2 text-xs text-stone-700">{note}</p>}
     </section>
   );
 }
 
+// What an entry is, in a line, with its amount and what deleting it does to the stock.
 function describe(entry) {
+  const moved = Number.isInteger(entry.stockChange) ? entry.stockChange : null;
+  const undoNote = (change) =>
+    change > 0
+      ? `${packs(change)} will be taken off the stock count.`
+      : change < 0
+        ? `${packs(-change)} will be put back in the stock count.`
+        : "";
   if (entry.type === "sale") {
     return {
       kind: "Sale in person",
@@ -84,28 +99,40 @@ function describe(entry) {
         PAYMENT_METHODS[entry.payment] ?? entry.payment
       }`,
       amount: `+ ${formatPrice(entry.total)}`,
+      stockNote: undoNote(moved ?? -entry.quantity),
     };
   }
   if (entry.type === "stock") {
+    const perPack = entry.cost
+      ? ` (${formatPrice(Math.round(entry.cost / entry.quantity))} per pack)`
+      : "";
     return {
       kind: "Stock arrival",
-      text: `${packs(entry.quantity)} of ${entry.name}`,
+      text: `${packs(entry.quantity)} of ${entry.name}${perPack}`,
       amount: entry.cost === null ? "cost not given" : `− ${formatPrice(entry.cost)}`,
+      stockNote: undoNote(moved ?? entry.quantity),
     };
   }
   return {
     kind: "Expense",
     text: EXPENSE_CATEGORIES[entry.category] ?? entry.category,
     amount: `− ${formatPrice(entry.amount)}`,
+    stockNote: "",
   };
 }
 
+const navLink =
+  "rounded-full border border-stone-300 bg-white px-4 py-2 text-sm whitespace-nowrap hover:border-brand";
+
 function Books({ params, orders, products, entries, setupNeeded }) {
-  const thisMonth = cameroonDate().slice(0, 7);
+  const today = cameroonDate();
+  const thisMonth = today.slice(0, 7);
   const month = isMonth(params.month) && params.month <= thisMonth ? params.month : thisMonth;
   const report = monthReport({ month, orders, entries });
   const monthEntries = entries.filter((e) => e.date.startsWith(month));
   const counted = products.filter((p) => stockLeft(p) !== null);
+  const previous = shiftMonth(month, -1);
+  const next = shiftMonth(month, 1);
 
   return (
     <div className="space-y-8">
@@ -127,28 +154,22 @@ function Books({ params, orders, products, entries, setupNeeded }) {
         products={products.map((p) => ({ slug: p.slug, name: p.name, price: p.price }))}
         payments={PAYMENT_METHODS}
         categories={EXPENSE_CATEGORIES}
-        today={cameroonDate()}
+        today={today}
       />
 
-      <nav aria-label="Month" className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={`/admin/books?month=${shiftMonth(month, -1)}`}
-          className="rounded-full border border-stone-300 bg-white px-4 py-1.5 text-sm hover:border-brand"
-        >
-          ← {monthLabel(shiftMonth(month, -1))}
-        </Link>
-        <h2 className="text-2xl font-bold">{monthLabel(month)}</h2>
-        {month < thisMonth ? (
-          <Link
-            href={`/admin/books?month=${shiftMonth(month, 1)}`}
-            className="rounded-full border border-stone-300 bg-white px-4 py-1.5 text-sm hover:border-brand"
-          >
-            {monthLabel(shiftMonth(month, 1))} →
+      <div>
+        <h2 className="text-center text-2xl font-bold">{monthLabel(month)}</h2>
+        <nav aria-label="Other months" className="mt-3 flex justify-between gap-3">
+          <Link href={`/admin/books?month=${previous}`} className={navLink}>
+            ← {monthLabel(previous, "short")}
           </Link>
-        ) : (
-          <span className="w-24" />
-        )}
-      </nav>
+          {month < thisMonth && (
+            <Link href={`/admin/books?month=${next}`} className={navLink}>
+              {monthLabel(next, "short")} →
+            </Link>
+          )}
+        </nav>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card title="Sales">
@@ -190,25 +211,29 @@ function Books({ params, orders, products, entries, setupNeeded }) {
             strong
           />
         </Card>
-        <Card title="Money left this month" highlight>
+        <Card
+          title="Money left this month"
+          highlight
+          note="Everything that came in, minus everything you paid out this month. Buying a big stock delivery makes this low for that month."
+        >
           <Line label="Sales minus costs" value={formatPrice(report.balance)} strong />
-          <p className="mt-2 text-xs text-stone-600">
-            Everything that came in, minus everything you paid out this month. Buying a big stock
-            delivery makes this low for that month.
-          </p>
         </Card>
-        <Card title="Estimated profit" highlight>
+        <Card
+          title="Estimated profit"
+          highlight
+          note={
+            `Sales, minus what the packs sold cost you (${formatPrice(report.costOfPacksSold)}, ` +
+            "from the costs of your stock arrivals up to this month), minus expenses." +
+            (report.packsWithoutCost > 0
+              ? ` ${packs(report.packsWithoutCost)} sold have no purchase cost recorded yet, so this is too high: add the cost when you record stock arrivals.`
+              : "")
+          }
+        >
           <Line
             label="Profit on what you sold"
             value={formatPrice(report.estimatedProfit)}
             strong
           />
-          <p className="mt-2 text-xs text-stone-600">
-            Sales, minus what the packs sold cost you ({formatPrice(report.costOfPacksSold)}, from
-            the costs of your stock arrivals), minus expenses.
-            {report.packsWithoutCost > 0 &&
-              ` ${packs(report.packsWithoutCost)} sold have no purchase cost recorded yet, so this is too high: add the cost when you record stock arrivals.`}
-          </p>
         </Card>
       </div>
 
@@ -217,40 +242,55 @@ function Books({ params, orders, products, entries, setupNeeded }) {
       <section>
         <h2 className="mb-3 text-xl font-bold">
           Entries in {monthLabel(month)}{" "}
-          <span className="text-stone-400">({monthEntries.length})</span>
+          <span className="text-stone-600">({monthEntries.length})</span>
         </h2>
         {monthEntries.length === 0 ? (
-          <p className="text-sm text-stone-500">Nothing recorded this month.</p>
+          <p className="text-sm text-stone-600">Nothing recorded this month.</p>
         ) : (
           <ul className="divide-y divide-stone-100 rounded-2xl bg-white shadow-sm">
             {monthEntries.map((entry) => {
-              const { kind, text, amount } = describe(entry);
+              const { kind, text, amount, stockNote } = describe(entry);
               return (
-                <li
-                  key={entry.id}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3"
-                >
-                  <span className="w-24 text-sm text-stone-500">{entry.date}</span>
-                  <span className="flex-1 text-sm">
+                <li key={entry.id} className="px-5 py-3">
+                  <div className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="text-stone-600">{dayText(entry.date)}</span>
+                    <span className="font-semibold whitespace-nowrap">{amount}</span>
+                  </div>
+                  <p className="mt-1 text-sm">
                     <span className="font-semibold">{kind}</span>: {text}
-                    {entry.note && <span className="text-stone-500"> · {entry.note}</span>}
-                  </span>
-                  <span className="text-sm font-semibold whitespace-nowrap">{amount}</span>
-                  <DeleteEntryButton id={entry.id} what={kind.toLowerCase()} />
+                    {entry.note && <span className="text-stone-600"> · {entry.note}</span>}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-start gap-2">
+                    <DeleteEntryButton
+                      id={entry.id}
+                      what={kind.toLowerCase()}
+                      stockNote={stockNote}
+                    />
+                    <EditEntry
+                      entry={entry}
+                      payments={PAYMENT_METHODS}
+                      categories={EXPENSE_CATEGORIES}
+                      today={today}
+                    />
+                  </div>
                 </li>
               );
             })}
           </ul>
         )}
-        <p className="mt-2 text-xs text-stone-500">
-          Website orders aren&apos;t listed here: see <Link href="/admin/orders">Orders</Link>.
+        <p className="mt-2 text-xs text-stone-600">
+          Website orders aren&apos;t listed here: see{" "}
+          <Link href="/admin/orders" className="font-semibold text-brand hover:underline">
+            Orders
+          </Link>
+          .
         </p>
       </section>
 
       <section>
         <h2 className="mb-3 text-xl font-bold">Stock now</h2>
         {counted.length === 0 ? (
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-600">
             No product has its packs counted. Enter <strong>Packs in stock</strong> on a product
             page to count them.
           </p>

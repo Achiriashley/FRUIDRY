@@ -137,31 +137,33 @@ export async function updateProduct(slug, fields) {
   await writeStored(slug, { ...existing, ...pickEditable(fields) });
 }
 
-// Adds (sign 1) or takes off (sign -1) packs for products whose stock is counted, never
-// going below 0. Returns the new count of each product whose count changed.
-async function adjustStock(items, sign) {
+// Changes the stock count of each product whose packs are counted by `delta` packs,
+// never going below 0. Returns { slug: { before, after } } for those products.
+async function adjustStock(changes) {
   const stored = await readStored();
   const counts = {};
-  for (const { slug, quantity } of items) {
+  for (const { slug, delta } of changes) {
     const current = { ...STARTING.get(slug), ...pickEditable(stored[slug]) };
     if (stored[slug]?.deleted || !Number.isInteger(current.stock)) continue;
-    const stock = Math.max(0, current.stock + sign * quantity);
+    const stock = Math.max(0, current.stock + delta);
     stored[slug] = { ...stored[slug], stock };
     await writeStored(slug, stored[slug]);
-    counts[slug] = stock;
+    counts[slug] = { before: current.stock, after: stock };
   }
   return counts;
 }
 
 // Takes sold packs off the stock count. Returns the slugs whose count changed.
 export async function subtractStock(items) {
-  return Object.keys(await adjustStock(items, -1));
+  const counts = await adjustStock(items.map(({ slug, quantity }) => ({ slug, delta: -quantity })));
+  return Object.keys(counts);
 }
 
-// Packs taken off or put back by the bookkeeping page (in-person sales, stock arrivals,
-// and deleting either). Return { slug: new count } for counted products.
-export const takeStock = (items) => adjustStock(items, -1);
-export const addStock = (items) => adjustStock(items, 1);
+// Changes one product's counted stock by `delta` packs (the Books page). Returns
+// { before, after }, or null if its packs aren't counted.
+export async function changeStock(slug, delta) {
+  return (await adjustStock([{ slug, delta }]))[slug] ?? null;
+}
 
 // Hides the product from the shop. Past orders keep their own copy of its details.
 export async function deleteProduct(slug) {

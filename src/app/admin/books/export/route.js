@@ -78,7 +78,7 @@ export async function GET(request) {
       "Note",
     ],
     ...salesRows({ month, orders, entries }).map((r) => [
-      r.date,
+      { date: r.date },
       r.channel,
       r.reference,
       r.product,
@@ -94,13 +94,18 @@ export async function GET(request) {
     ["Date", "Product", "Item code", "Packs", "Cost (FCFA)", "Note"],
     ...inMonth("stock")
       .reverse()
-      .map((e) => [e.date, e.name, e.sku, e.quantity, e.cost ?? "", e.note]),
+      .map((e) => [{ date: e.date }, e.name, e.sku, e.quantity, e.cost ?? "", e.note]),
   ];
   const expenses = [
     ["Date", "For", "Amount (FCFA)", "Note"],
     ...inMonth("expense")
       .reverse()
-      .map((e) => [e.date, EXPENSE_CATEGORIES[e.category] ?? e.category, e.amount, e.note]),
+      .map((e) => [
+        { date: e.date },
+        EXPENSE_CATEGORIES[e.category] ?? e.category,
+        e.amount,
+        e.note,
+      ]),
   ];
 
   const file = buildXlsx([

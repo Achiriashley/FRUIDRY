@@ -72,7 +72,8 @@ async function submit(d, button) {
   const text = await submit(d, "Record stock");
   check(
     "stock for an uncounted product is recorded, and the page says the count didn't change",
-    text.includes("Stock recorded") && text.includes("aren't counted"),
+    text.includes("Stock arrival of 100 packs at 1 500 FCFA per pack recorded") &&
+      text.includes("aren't counted"),
     text.slice(-200),
   );
 }
@@ -131,13 +132,22 @@ await p.close();
   await d.getByLabel("Paid by").selectOption("cash");
   const future = await submit(d, "Record sale");
   check("a date in the future is refused", future.includes("This date is in the future."));
-  await d.getByLabel("Date").fill(new Date().toISOString().slice(0, 10));
+  // A sale from earlier in the month (today, on the 1st).
+  const today = new Date().toISOString().slice(0, 10);
+  const earlier = `${today.slice(0, 8)}01`;
+  await d.getByLabel("Date").fill(earlier);
   const text2 = await submit(d, "Record sale");
   check(
-    "a cash sale takes the packs off the count",
-    text2.includes("Sale recorded") && text2.includes("47 packs left"),
-    text2.slice(-120),
+    "a cash sale takes the packs off the count and says its amount and date",
+    text2.includes("Sale of 7 500 FCFA recorded for 1 ") && text2.includes("47 packs left"),
+    text2.slice(-160),
   );
+  check(
+    "…and the form keeps that date for the next sale",
+    (await d.getByLabel("Date").inputValue()) === earlier &&
+      (await d.getByLabel("Packs sold").inputValue()) === "",
+  );
+  await d.getByLabel("Date").fill(today);
 
   await d.getByLabel("Product").selectOption("mixed-fruit-pack");
   await d.getByLabel("Packs sold").fill("2");
@@ -147,8 +157,19 @@ await p.close();
   const text3 = await submit(d, "Record sale");
   check(
     "a MoMo sale at a lower price is recorded",
-    text3.includes("45 packs left"),
+    text3.includes("Sale of 4 000 FCFA recorded") && text3.includes("45 packs left"),
     text3.slice(-120),
+  );
+
+  // More packs than are counted is refused (usually a typo).
+  await d.getByLabel("Product").selectOption("mixed-fruit-pack");
+  await d.getByLabel("Packs sold").fill("60");
+  await d.getByLabel("Paid by").selectOption("cash");
+  const tooMany = await submit(d, "Record sale");
+  check(
+    "a sale of more packs than are counted is refused",
+    tooMany.includes("Only 45 packs of Mixed Fruit Pack are counted in stock"),
+    tooMany.slice(0, 300),
   );
 }
 
@@ -166,7 +187,7 @@ await p.close();
   const ok2 = await submit(d, "Record expense");
   check(
     "expenses are recorded",
-    ok1.includes("Expense recorded") && ok2.includes("Expense recorded"),
+    ok1.includes("Expense of 500 FCFA recorded") && ok2.includes("Expense of 3 000 FCFA recorded"),
   );
 }
 
@@ -263,6 +284,27 @@ function unzip(bytes) {
   check("the file can't be downloaded without signing in", anon.status === 401, anon.status);
 }
 
+// ---------- Editing an entry ----------
+
+{
+  const item = a.locator("li").filter({ hasText: "Supplier batch 1" });
+  await item.locator("summary", { hasText: "Edit" }).click();
+  await item.getByLabel(/What they cost you/).fill("120000");
+  await item.getByRole("button", { name: "Save changes" }).click();
+  await item.getByText("Changes saved.").waitFor();
+  await a.waitForTimeout(500);
+  const costs = await card("Costs");
+  const left = await card("Money left this month");
+  const stock = plain(
+    await a.getByRole("heading", { name: "Stock now" }).locator("..").innerText(),
+  );
+  check(
+    "editing a stock arrival's cost updates the figures but not the stock count",
+    fcfa(135000).test(costs) && fcfa(-124500).test(left) && stock.includes("45 packs"),
+    `${costs} | ${left} | ${stock}`,
+  );
+}
+
 // ---------- Deleting an entry ----------
 
 await a
@@ -281,6 +323,25 @@ await a.waitForTimeout(500);
     "deleting a sale removes it from the figures and puts its packs back",
     /In person \(3 packs\)/.test(sales) && stock.includes("Mixed Fruit Pack 47 packs"),
     `${sales} | ${stock}`,
+  );
+}
+// The first arrival was recorded while packs weren't counted: deleting it doesn't
+// touch today's count.
+await a
+  .locator("li")
+  .filter({ hasText: "Supplier batch 1" })
+  .getByRole("button", { name: "Delete" })
+  .click();
+await a.locator("li", { hasText: "Supplier batch 1" }).waitFor({ state: "detached" });
+await a.waitForTimeout(500);
+{
+  const stock = plain(
+    await a.getByRole("heading", { name: "Stock now" }).locator("..").innerText(),
+  );
+  check(
+    "deleting an entry made while packs weren't counted leaves the count alone",
+    stock.includes("Mixed Fruit Pack 47 packs"),
+    stock,
   );
 }
 

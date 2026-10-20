@@ -61,15 +61,35 @@ const supabaseStore = {
     );
     return rows?.[0]?.data ?? null;
   },
-  remove: (config, id) =>
-    supabaseRequest(config, "ledger", `?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" }),
+  update: (config, entry) =>
+    supabaseRequest(config, "ledger", `?id=eq.${encodeURIComponent(entry.id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ entry_date: entry.date, data: entry }),
+    }),
+  // Returns the deleted entry, or null if it was already gone.
+  async remove(config, id) {
+    const rows = await supabaseRequest(config, "ledger", `?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=representation" },
+    });
+    return rows?.[0]?.data ?? null;
+  },
 };
 
 const fileStore = {
   add: (entry) => ledgerFile.update((list) => [...list, entry]),
   list: () => ledgerFile.read(),
   get: async (id) => (await ledgerFile.read()).find((e) => e.id === id) ?? null,
-  remove: (id) => ledgerFile.update((list) => list.filter((e) => e.id !== id)),
+  update: (entry) => ledgerFile.update((list) => list.map((e) => (e.id === entry.id ? entry : e))),
+  async remove(id) {
+    let removed = null;
+    await ledgerFile.update((list) => {
+      removed = list.find((e) => e.id === id) ?? null;
+      return list.filter((e) => e.id !== id);
+    });
+    return removed;
+  },
 };
 
 export async function addEntry(fields) {
@@ -96,8 +116,16 @@ export async function getEntry(id) {
   return config ? supabaseStore.get(config, id) : fileStore.get(id);
 }
 
+// Saves changes to an existing entry (the same id).
+export async function updateEntry(entry) {
+  const config = supabaseConfig();
+  return config ? supabaseStore.update(config, entry) : fileStore.update(entry);
+}
+
+// Deletes an entry. Returns it, or null if it was already deleted (for example by a
+// second press of Delete), so its stock change is only undone once.
 export async function deleteEntry(id) {
-  if (!ENTRY_ID_PATTERN.test(id)) return;
+  if (!ENTRY_ID_PATTERN.test(id)) return null;
   const config = supabaseConfig();
   return config ? supabaseStore.remove(config, id) : fileStore.remove(id);
 }
@@ -128,11 +156,11 @@ export function shiftMonth(month, by) {
   return date.toISOString().slice(0, 7);
 }
 
-// "October 2026"
-export function monthLabel(month) {
+// "October 2026", or "Oct 2026" with style "short".
+export function monthLabel(month, style = "long") {
   const [year, m] = month.split("-").map(Number);
   return new Intl.DateTimeFormat("en-GB", {
-    month: "long",
+    month: style,
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, m - 1, 1)));
@@ -141,16 +169,26 @@ export function monthLabel(month) {
 // ---------- Reports ----------
 
 // What each pack of a product cost on average, from the stock arrivals recorded with a
-// cost (all months). Products with no recorded cost are left out.
-export function costPerPack(entries) {
-  const totals = {};
-  for (const e of entries) {
-    if (e.type !== "stock" || !Number.isInteger(e.cost) || e.quantity < 1) continue;
-    const t = (totals[e.slug] ??= { cost: 0, packs: 0 });
-    t.cost += e.cost;
-    t.packs += e.quantity;
-  }
-  return Object.fromEntries(Object.entries(totals).map(([slug, t]) => [slug, t.cost / t.packs]));
+// cost up to the end of the month. A later delivery at a new price doesn't change past
+// months. Products with no earlier costed arrival use their later ones; products with
+// none at all are left out.
+export function costPerPack(entries, month) {
+  const average = (arrivals) => {
+    const totals = {};
+    for (const e of arrivals) {
+      const t = (totals[e.slug] ??= { cost: 0, packs: 0 });
+      t.cost += e.cost;
+      t.packs += e.quantity;
+    }
+    return Object.fromEntries(Object.entries(totals).map(([slug, t]) => [slug, t.cost / t.packs]));
+  };
+  const costed = entries.filter(
+    (e) => e.type === "stock" && Number.isInteger(e.cost) && e.quantity > 0,
+  );
+  return {
+    ...average(costed),
+    ...average(costed.filter((e) => e.date.slice(0, 7) <= month)),
+  };
 }
 
 // Website orders paid in the month (by the day payment was confirmed, Cameroon time).
@@ -250,7 +288,7 @@ export function monthReport({ month, orders, entries }) {
   const totalSales = website.amount + inPerson.amount;
 
   // Estimated profit: sales, minus what the packs sold cost you, minus expenses.
-  const costs = costPerPack(entries);
+  const costs = costPerPack(entries, month);
   let costOfPacksSold = 0;
   let packsWithoutCost = 0;
   for (const row of salesRows({ month, orders, entries })) {

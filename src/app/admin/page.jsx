@@ -147,7 +147,11 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
         <section className="rounded-2xl bg-yellow-100 p-5 shadow-sm">
           <h2 className="text-xl font-bold">Running low</h2>
           <p className="mt-1 text-sm text-stone-700">
-            Time to reorder. Update the count on the product page when new stock arrives.
+            Time to reorder. When new stock arrives, record it under{" "}
+            <Link href="/admin/books" className="font-semibold text-brand hover:underline">
+              Books → Stock arrival
+            </Link>
+            : it adds the packs to the count.
           </p>
           <ul className="mt-3 space-y-1">
             {lowStock.map((product) => (

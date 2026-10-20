@@ -161,8 +161,12 @@ by payment method), costs (stock bought and expenses), the money left (sales min
 and an estimated profit (sales minus what the packs sold cost you, from the costs of your
 stock arrivals, minus expenses), plus the stock count of each product. **Download for
 Excel** gives the month as an .xlsx file with a summary and every sale, stock arrival and
-expense. Deleting an entry recorded by mistake puts the stock count back. The dashboard's
-sales include sales in person. With Supabase, run `supabase/schema.sql` again to create
+expense, with real dates. **Edit** corrects an entry's date, price, payment, cost, category,
+amount or note without touching the stock count; **Delete** removes an entry recorded by
+mistake and undoes exactly the stock change it made (none if the packs weren't counted at
+the time). A sale of more packs than are counted is refused, as it's usually a typo. Don't
+also change **Packs in stock** by hand when you record a stock arrival: it already adds
+the packs. The dashboard's sales include sales in person. With Supabase, run `supabase/schema.sql` again to create
 the `ledger` table.
 
 **Customer reviews**: on a product's shop page (not coming-soon ones), customers can leave

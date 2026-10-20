@@ -73,12 +73,19 @@ const supabaseStore = {
     );
     return rows[0]?.data ?? null;
   },
+  // Supabase returns at most "Max rows" (1,000 by default) per request: read page by
+  // page, so the books and sales totals include every order.
   async list(config) {
-    const rows = await supabaseRequest(
-      config,
-      "orders",
-      "?select=data&order=created_at.desc&limit=1000",
-    );
+    const rows = [];
+    for (;;) {
+      const page = await supabaseRequest(
+        config,
+        "orders",
+        `?select=data&order=created_at.desc,id.asc&limit=1000&offset=${rows.length}`,
+      );
+      if (!page?.length) break;
+      rows.push(...page);
+    }
     return rows.map((r) => r.data);
   },
   async save(config, order) {

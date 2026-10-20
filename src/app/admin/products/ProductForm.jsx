@@ -211,7 +211,8 @@ function ProductFormInner({ product = EMPTY_PRODUCT }) {
             className={inputClass}
           />
           <p className="mt-1 text-xs text-stone-500">
-            Marking an order as paid takes its packs off this count, and the product shows
+            Marking an order as paid takes its packs off this count, and so do sales in person
+            recorded under Books; stock arrivals recorded there add to it. The product shows
             &ldquo;Sold out&rdquo; at 0. Leave empty to not count stock.
           </p>
         </Field>
