@@ -9,7 +9,7 @@ import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i1
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
 import { getApprovedReviews, ratingSummary } from "@/lib/reviews";
-import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
+import { JsonLd, organizationId, pageMetadata, siteOrigin } from "@/lib/seo";
 import { DELIVERY_DAYS } from "@/lib/shop-config";
 import { NotifyForm } from "./NotifyForm";
 import { ProductReviews } from "./ProductReviews";
@@ -67,6 +67,8 @@ export default async function ProductPage({ params }) {
   if (!found) notFound();
   const product = localizeProduct(found, lang);
   const products = (await getProducts()).map((p) => localizeProduct(p, lang));
+  // The mix on sale, mentioned on coming-soon fruits that are already in it.
+  const mix = products.find((p) => p.category === "mixes" && isOrderable(p));
 
   const images = getProductImages();
   const categoryLabel = t.categories[product.category];
@@ -94,13 +96,15 @@ export default async function ProductPage({ params }) {
           data={{
             "@context": "https://schema.org",
             "@type": "Product",
-            name: product.name,
+            // The fuller name, as in the page title ("Mélange de fruits lyophilisés").
+            name: searchName(product),
             description: product.description,
             sku: product.sku,
             image: photo ? new URL(photo, origin).href : `${pageUrl}/opengraph-image`,
             brand: { "@type": "Brand", name: "Fruidry" },
             offers: {
               "@type": "Offer",
+              seller: { "@type": "OnlineStore", "@id": organizationId(origin), name: "Fruidry" },
               url: pageUrl,
               price: product.price,
               priceCurrency: "XAF",
@@ -187,7 +191,9 @@ export default async function ProductPage({ params }) {
           )}
           {product.sku && (
             <p className="mt-1 text-sm text-stone-600">
-              {t.product.itemCode} <span className="font-mono">{product.sku}</span>
+              {/* The phone's own monospace font: no extra font download for one code. */}
+              {t.product.itemCode}{" "}
+              <span className="[font-family:ui-monospace,monospace]">{product.sku}</span>
             </p>
           )}
           <p className="mt-6 text-stone-700">{product.description}</p>
@@ -206,19 +212,52 @@ export default async function ProductPage({ params }) {
               {t.about.howWeMakeIt} →
             </Link>
             <Link href={localePath(lang, "/guide")} className="text-brand hover:underline">
-              {t.guide.navLabel} →
+              {t.guide.linkLabel} →
             </Link>
           </p>
           <div className="mt-8">
             {product.comingSoon ? (
               <div className="space-y-4">
                 <p className="text-pretty text-stone-600">{t.comingSoon.notYet}</p>
+                {product.inMix && mix && (
+                  <p className="text-pretty text-stone-700">
+                    {t.comingSoon.inMixBefore}
+                    <Link
+                      href={localePath(lang, `/shop/${mix.slug}`)}
+                      className="font-semibold text-brand hover:underline"
+                    >
+                      {searchName(mix)}
+                    </Link>
+                    {t.comingSoon.inMixAfter}
+                  </p>
+                )}
                 <NotifyForm slug={product.slug} />
               </div>
             ) : (
               <AddToCartButton slug={product.slug} inStock={isInStock(product)} withQuantity />
             )}
           </div>
+          {!product.comingSoon && (
+            <section aria-labelledby="delivery-heading" className="mt-8">
+              <h2
+                id="delivery-heading"
+                className="text-sm font-semibold uppercase tracking-wider text-brand"
+              >
+                {t.product.deliveryHeading}
+              </h2>
+              <ul className="mt-2 space-y-1.5 text-sm text-stone-700">
+                {t.product.deliveryInfo.map(({ icon, text }) => {
+                  const line = typeof text === "function" ? text(DELIVERY_DAYS) : text;
+                  return (
+                    <li key={line} className="flex gap-2">
+                      <span aria-hidden>{icon}</span>
+                      <span>{line}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
 

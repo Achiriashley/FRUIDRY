@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/catalog";
-import { getDictionary, localePath, localizeProduct } from "@/lib/i18n";
+import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isOrderable } from "@/lib/products";
 import { JsonLd, pageMetadata } from "@/lib/seo";
@@ -15,13 +15,19 @@ async function loadProducts(lang) {
   const onSale = products.filter((p) => !p.comingSoon);
   const quoted = onSale.find(isOrderable) ?? onSale[0];
   const facts = quoted
-    ? { name: quoted.name, price: formatPrice(quoted.price), weight: quoted.weight }
+    ? {
+        name: quoted.name,
+        fullName: searchName(quoted),
+        slug: quoted.slug,
+        price: formatPrice(quoted.price),
+        weight: quoted.weight,
+      }
     : {};
   return { onSale, comingSoon: products.filter((p) => p.comingSoon), facts };
 }
 
-const answerText = (paragraph, facts) =>
-  typeof paragraph === "function" ? paragraph(facts) : paragraph;
+// Texts and links can depend on the quoted product (see i18n.js guide).
+const resolve = (value, facts) => (typeof value === "function" ? value(facts) : value);
 
 export async function generateMetadata() {
   const lang = await getLocale();
@@ -39,7 +45,8 @@ export default async function GuidePage() {
   const g = t.guide;
   const { onSale, comingSoon, facts } = await loadProducts(lang);
   const whatsApp = shopWhatsAppNumber();
-  const list = (products) => products.map((p) => p.name).join(", ");
+  // Flavours by their fuller names ("Mangue lyophilisée"), as people search them.
+  const list = (products) => products.map(searchName).join(", ");
   const flavoursText = [
     onSale.length > 0 && `${g.flavours.available} ${list(onSale)}.`,
     comingSoon.length > 0 && `${g.flavours.soon} ${list(comingSoon)}.`,
@@ -49,7 +56,11 @@ export default async function GuidePage() {
 
   const questions = g.questions.map((item) => ({
     ...item,
-    paragraphs: item.a.map((p) => answerText(p, facts)),
+    paragraphs: item.a.map((p) => resolve(p, facts)),
+    link: item.link && {
+      path: resolve(item.link.path, facts),
+      label: resolve(item.link.label, facts),
+    },
   }));
 
   return (
@@ -116,7 +127,7 @@ export default async function GuidePage() {
                         href={localePath(lang, `/shop/${p.slug}`)}
                         className="font-semibold text-brand hover:underline"
                       >
-                        {p.name}
+                        {searchName(p)}
                       </Link>
                     </span>
                   ))}

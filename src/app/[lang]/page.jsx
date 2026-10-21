@@ -9,8 +9,8 @@ import { getProducts } from "@/lib/catalog";
 import { getDictionary, localePath, localizeProduct, searchName } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { formatPrice, isInStock, isOrderable } from "@/lib/products";
-import { JsonLd, pageMetadata, siteOrigin } from "@/lib/seo";
-import { CONTACT, SOCIAL_LINKS } from "@/lib/shop-config";
+import { JsonLd, organizationId, pageMetadata, siteOrigin } from "@/lib/seo";
+import { CONTACT, DELIVERY_DAYS, SOCIAL_LINKS } from "@/lib/shop-config";
 
 export async function generateMetadata() {
   const lang = await getLocale();
@@ -29,28 +29,51 @@ export default async function Home() {
 
   return (
     <>
+      {/* Who Fruidry is (an online shop in Douala), and the site's name in search results.
+          Product pages refer to the shop by its @id. */}
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "Fruidry",
-          url: origin,
-          logo: `${origin}/brand/logo-lockup.png`,
-          description: t.meta.siteDescription,
-          // The city shown on the contact page and in the footer.
-          address: { "@type": "PostalAddress", addressLocality: "Douala", addressCountry: "CM" },
-          areaServed: { "@type": "Country", name: "Cameroon" },
-          telephone: CONTACT.phone,
-          sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
-        }}
-      />
-      {/* Tells Google to show "Fruidry" as the site's name in search results. */}
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Fruidry",
-          url: `${origin}/`,
+          "@graph": [
+            {
+              "@type": "OnlineStore",
+              "@id": organizationId(origin),
+              name: "Fruidry",
+              url: `${origin}/`,
+              logo: { "@type": "ImageObject", url: `${origin}/icon.png`, width: 512, height: 512 },
+              image: `${origin}/brand/logo-lockup.png`,
+              description: t.meta.siteDescription,
+              // The city shown on the contact page and in the footer.
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Douala",
+                addressCountry: "CM",
+              },
+              areaServed: { "@type": "Country", name: "Cameroon" },
+              telephone: CONTACT.phone,
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "customer service",
+                telephone: CONTACT.phone,
+                areaServed: "CM",
+              },
+              sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
+              // Same as on each product: returns only for a damaged or wrong pack.
+              hasMerchantReturnPolicy: {
+                "@type": "MerchantReturnPolicy",
+                applicableCountry: "CM",
+                returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+              },
+            },
+            {
+              "@type": "WebSite",
+              "@id": `${origin}/#website`,
+              name: "Fruidry",
+              url: `${origin}/`,
+              inLanguage: lang,
+              publisher: { "@id": organizationId(origin) },
+            },
+          ],
         }}
       />
       <Hero products={forSale} images={images} lang={lang} t={t} />
@@ -66,6 +89,16 @@ export default async function Home() {
               <p className="mt-1 text-sm text-stone-600">{v.text}</p>
             </div>
           ))}
+        </div>
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold">{t.home.local.heading}</h2>
+          <p className="mt-1 text-sm text-stone-600">{t.home.local.text}</p>
+          <Link
+            href={localePath(lang, "/guide")}
+            className="mt-3 inline-block text-sm font-semibold text-brand hover:underline"
+          >
+            {t.guide.linkLabel} →
+          </Link>
         </div>
       </section>
 
@@ -176,7 +209,7 @@ function Hero({ products, images, lang, t }) {
           {featured && (
             <p className="mt-4 flex items-center gap-2 text-sm text-stone-600">
               <span aria-hidden>💬</span>
-              {t.home.orderHint}
+              {t.home.orderHint(DELIVERY_DAYS)}
             </p>
           )}
         </div>
@@ -193,7 +226,10 @@ function Hero({ products, images, lang, t }) {
               width={557}
               height={900}
               preload
-              sizes="(min-width: 1024px) 320px, (min-width: 768px) 288px, (min-width: 640px) 240px, 192px"
+              fetchPriority="high"
+              // Same sizes as the "Our pack" photo further down, so phones download the
+              // file once (pack photos are about 560 px wide, smaller than either size).
+              sizes="(min-width: 768px) 50vw, 100vw"
               className="h-auto w-full -rotate-3 drop-shadow-2xl"
             />
           ) : (
@@ -203,6 +239,7 @@ function Hero({ products, images, lang, t }) {
               width={443}
               height={658}
               preload
+              fetchPriority="high"
               className="mx-auto h-auto w-3/4"
             />
           )}

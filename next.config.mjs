@@ -56,6 +56,12 @@ const nextConfig = {
     useOffline: true,
   },
   images: {
+    // AVIF first: about 45% smaller than WebP for the pack photos, so the main photo
+    // shows sooner on slow mobile data. Browsers without AVIF get WebP.
+    formats: ["image/avif", "image/webp"],
+    // Keep resized photos for a week in browsers instead of 4 hours (repeat visits).
+    // Photos uploaded in the admin panel get new names, so changes still show at once.
+    minimumCacheTTL: 7 * 24 * 60 * 60,
     remotePatterns: supabaseImagePattern(),
   },
   async headers() {

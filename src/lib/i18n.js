@@ -89,13 +89,20 @@ const en = {
     titleHighlight: "naturally",
     titleAfter: " delicious.",
     intro:
-      "Fruidry brings you ripe fruit, freeze-dried for real flavour and a satisfying crunch, with nothing added.",
+      "Fruidry brings you ripe fruit, freeze-dried for real flavour and a satisfying crunch, with nothing added. A healthy snack, 100% fruit.",
     eyebrow: "Founded in Cameroon",
     shopNow: "Shop now",
     orderNow: "Order now",
     ourStory: "Our story",
     priceFrom: (price) => `From ${price}`,
-    orderHint: "Order in a few taps on WhatsApp. We deliver across Cameroon.",
+    // ({ min, max }): delivery days (DELIVERY_DAYS in shop-config.js).
+    orderHint: ({ min, max }) =>
+      `Order in a few taps on WhatsApp. From Douala, we deliver across Cameroon in ${min} to ${max} days.`,
+    // Under the three cards: where Fruidry is and how it sells.
+    local: {
+      heading: "Freeze-dried fruit in Douala and across Cameroon",
+      text: "Fruidry is based in Bonabéri, Douala. We sell our freeze-dried fruit only online and deliver all over the country, most often to Douala, Yaoundé, Buea, Limbe and Bamenda.",
+    },
     values: [
       {
         icon: "❄️",
@@ -120,16 +127,21 @@ const en = {
     moreDetails: "More details →",
   },
   shop: {
-    title: "Shop",
-    // In Google results and link previews (the page heading stays "Shop").
+    // The shop page's heading (the menu says "Shop").
+    title: "Freeze-dried fruit shop",
+    // In Google results and link previews.
     metaTitle: "Shop freeze-dried fruit snacks",
     description:
       "Every Fruidry freeze-dried fruit snack: 100% fruit, no added sugar. Order on WhatsApp, delivered across Cameroon.",
-    intro: "Every pouch is just fruit, freeze-dried for crunch.",
+    intro: ({ min, max }) =>
+      `Every pouch is just fruit, freeze-dried for crunch, with no added sugar or preservatives. Choose your packs, send your order on WhatsApp and get it anywhere in Cameroon in ${min} to ${max} days, from Douala.`,
     all: "All",
     filterLabel: "Filter by category",
   },
   comingSoon: {
+    // On a coming-soon fruit that's already in the mix on sale: "…our <mix>."
+    inMixBefore: "Meanwhile, this fruit is already in our ",
+    inMixAfter: ".",
     badge: "Coming soon",
     heading: "More flavours on the way",
     intro: "New Fruidry flavours, arriving soon.",
@@ -184,6 +196,27 @@ const en = {
     itemCode: "Item code",
     // End of the product's description in Google results.
     metaPrice: (priceAndWeight) => `${priceAndWeight}, delivered across Cameroon.`,
+    // Under the highlights of a product on sale. Texts can use ({ min, max }) delivery days.
+    deliveryHeading: "Delivery and returns",
+    deliveryInfo: [
+      {
+        icon: "🚚",
+        text: ({ min, max }) =>
+          `Delivery anywhere in Cameroon from Douala, in ${min} to ${max} days depending on the distance.`,
+      },
+      {
+        icon: "💬",
+        text: "The delivery fee depends on your address: we confirm it with you on WhatsApp.",
+      },
+      {
+        icon: "📦",
+        text: "Sealed aluminium pouch with a zip: keeps for months while it stays closed.",
+      },
+      {
+        icon: "↩️",
+        text: "Returns only if a pack arrives damaged or isn't the one you ordered: we replace or refund it.",
+      },
+    ],
     related: "You might also like",
     soldOut: "Sold out",
     decrease: "Decrease quantity",
@@ -197,6 +230,8 @@ const en = {
   // Cameroon. Answers with ({ name, price, weight }) use the product on sale.
   guide: {
     navLabel: "Questions",
+    // Links to the guide from inside pages: says what's in it.
+    linkLabel: "Price, delivery, storage: your questions",
     metaTitle: "Freeze-dried fruit in Cameroon: price and tips",
     description: ({ price }) =>
       "Everything about freeze-dried fruit in Cameroon: how it differs from dried fruit, " +
@@ -215,9 +250,9 @@ const en = {
         link: { path: "/about", label: "How freeze-drying works" },
       },
       {
-        q: "How is it different from dried fruit?",
+        q: "How is it different from ordinary dried fruit?",
         a: [
-          "Ordinary dried fruit is dried with heat, in the sun or an oven, which makes it chewy and darker. Freeze-dried fruit is dried cold, under vacuum: it stays crunchy and keeps its colour and taste.",
+          "Ordinary dried (dehydrated) fruit is dried with heat, in the sun or an oven, which makes it chewy and darker. Freeze-drying dries fruit cold, under vacuum: it stays crunchy and keeps its colour and taste.",
         ],
       },
       {
@@ -227,18 +262,35 @@ const en = {
             name ? `Our ${name} costs ${price} (${weight}).` : "Our prices are shown in the shop.",
           "The delivery fee depends on your address: we confirm it with you on WhatsApp.",
         ],
-        link: { path: "/shop", label: "See the shop" },
+        // ({ slug, fullName }): the product whose price is quoted.
+        link: {
+          path: ({ slug }) => (slug ? `/shop/${slug}` : "/shop"),
+          label: ({ fullName }) => (fullName ? `Order: ${fullName}` : "See the shop"),
+        },
       },
       {
-        q: "Where can I buy freeze-dried fruit in Cameroon?",
+        q: "Where can I buy freeze-dried fruit in Douala and across Cameroon?",
         a: [
-          "Fruidry is based in Douala. For now, our fruit is sold only in our online shop: choose your packs, then send your order on WhatsApp in one tap. We deliver across Cameroon.",
+          "Fruidry is based in Bonabéri, Douala. For now, our fruit is sold only in our online shop: choose your packs, then send your order on WhatsApp in one tap. We deliver in Douala and across Cameroon.",
         ],
+        link: { path: "/shop", label: "Buy online" },
       },
       {
         q: "Do you deliver to my town, and how long does it take?",
         a: [
           "Yes, we deliver across Cameroon, most often to Douala, Yaoundé, Buea, Limbe and Bamenda. Delivery takes 2 to 5 days depending on the distance.",
+        ],
+      },
+      {
+        q: "How do I order and pay?",
+        a: [
+          "Choose your packs in the shop, then send your order on WhatsApp in one tap: the message is already filled in. We reply on WhatsApp to confirm the delivery fee and payment by MTN Mobile Money (MoMo).",
+        ],
+      },
+      {
+        q: "Can I return a pack?",
+        a: [
+          "Only if a pack arrives damaged or isn't the one you ordered: message us on WhatsApp and we'll replace or refund it.",
         ],
       },
       {
@@ -260,8 +312,10 @@ const en = {
         ],
       },
       {
-        q: "Is there added sugar?",
-        a: ["No. Our freeze-dried fruit is 100% fruit, with no added sugar and no preservatives."],
+        q: "Is it a healthy snack? Is there added sugar?",
+        a: [
+          "Our freeze-dried fruit is 100% fruit: no added sugar, no preservatives, never fried. A crunchy snack, straight from the pack or with yoghurt, granola or in a parfait.",
+        ],
       },
       {
         q: "Where does your fruit come from?",
@@ -284,6 +338,7 @@ const en = {
       "Fruidry was founded in Cameroon. Where our fruit comes from, and how freeze-drying keeps its taste, nutrients and crunch with no added sugar.",
     paragraphs: [
       "Fruidry was founded in Cameroon with a simple idea: make healthy, tasty fruit snacks easy to enjoy every day. No added sugar, no preservatives, just fruit.",
+      "We're based in Bonabéri, Douala. We sell only online: you choose your packs on our website, the order goes out on WhatsApp, and we deliver anywhere in Cameroon.",
       "For now, our fruit is freeze-dried by a partner producer in China and imported to Cameroon by us.",
       "Our goal is to freeze-dry fruit grown in Cameroon, right here at home, as soon as we have our own freeze-drying machine.",
     ],
@@ -429,6 +484,8 @@ const en = {
     paymentConfirmed: "Payment confirmed",
     thanksDelivered: (name, date) => `Thank you, ${name}! Your order was delivered on ${date}.`,
     thanks: (name) => `Thank you, ${name}! We'll call you to arrange delivery.`,
+    reviewPrompt: "Enjoyed it? Tell other customers what you think:",
+    reviewLink: (name) => `Review ${name} →`,
     brandLine: "Freeze-dried fruit",
     receipt: "Receipt",
     order: "Order",
@@ -568,13 +625,18 @@ const fr = {
     titleHighlight: "naturellement",
     titleAfter: " délicieux.",
     intro:
-      "Fruidry vous apporte des fruits mûrs, lyophilisés pour leur vraie saveur et un croquant irrésistible, sans rien d'ajouté.",
+      "Fruidry vous apporte des fruits mûrs, lyophilisés pour leur vraie saveur et un croquant irrésistible, sans rien d'ajouté. Un snack sain, 100 % fruit.",
     eyebrow: "Fondé au Cameroun",
     shopNow: "Acheter",
     orderNow: "Commander",
     ourStory: "Notre histoire",
     priceFrom: (price) => `À partir de ${price}`,
-    orderHint: "Commandez en quelques clics sur WhatsApp. Livraison partout au Cameroun.",
+    orderHint: ({ min, max }) =>
+      `Commandez en quelques clics sur WhatsApp. Depuis Douala, nous livrons partout au Cameroun en ${min} à ${max} jours.`,
+    local: {
+      heading: "Fruits lyophilisés à Douala et partout au Cameroun",
+      text: "Fruidry est basé à Bonabéri, à Douala. Nous vendons nos fruits lyophilisés uniquement en ligne et livrons dans tout le pays, le plus souvent à Douala, Yaoundé, Buea, Limbé et Bamenda.",
+    },
     values: [
       {
         icon: "❄️",
@@ -599,15 +661,18 @@ const fr = {
     moreDetails: "Plus de détails →",
   },
   shop: {
-    title: "Boutique",
+    title: "Boutique de fruits lyophilisés",
     metaTitle: "Boutique de fruits lyophilisés",
     description:
       "Tous les snacks de fruits lyophilisés Fruidry : 100 % fruit, sans sucre ajouté. Commandez sur WhatsApp, livraison partout au Cameroun.",
-    intro: "Chaque sachet, c'est juste du fruit, lyophilisé pour le croquant.",
+    intro: ({ min, max }) =>
+      `Chaque sachet, c'est juste du fruit, lyophilisé pour le croquant, sans sucre ajouté ni conservateurs. Choisissez vos sachets, envoyez votre commande sur WhatsApp et recevez-la partout au Cameroun en ${min} à ${max} jours, depuis Douala.`,
     all: "Tout",
     filterLabel: "Filtrer par catégorie",
   },
   comingSoon: {
+    inMixBefore: "En attendant, ce fruit fait déjà partie de notre ",
+    inMixAfter: ".",
     badge: "Bientôt disponible",
     heading: "D'autres saveurs arrivent",
     intro: "De nouvelles saveurs Fruidry, bientôt disponibles.",
@@ -665,6 +730,26 @@ const fr = {
     backToShop: "← Retour à la boutique",
     itemCode: "Code article",
     metaPrice: (priceAndWeight) => `${priceAndWeight}, livraison partout au Cameroun.`,
+    deliveryHeading: "Livraison et retours",
+    deliveryInfo: [
+      {
+        icon: "🚚",
+        text: ({ min, max }) =>
+          `Livraison partout au Cameroun depuis Douala, en ${min} à ${max} jours selon la distance.`,
+      },
+      {
+        icon: "💬",
+        text: "Les frais de livraison dépendent de votre adresse : nous vous les confirmons sur WhatsApp.",
+      },
+      {
+        icon: "📦",
+        text: "Sachet en aluminium scellé, refermable par zip : se conserve plusieurs mois tant qu'il reste fermé.",
+      },
+      {
+        icon: "↩️",
+        text: "Retour seulement si un sachet arrive abîmé ou si ce n'est pas celui commandé : nous le remplaçons ou vous remboursons.",
+      },
+    ],
     related: "Vous aimerez aussi",
     soldOut: "Épuisé",
     decrease: "Diminuer la quantité",
@@ -676,6 +761,7 @@ const fr = {
   },
   guide: {
     navLabel: "Questions fréquentes",
+    linkLabel: "Prix, livraison, conservation : vos questions",
     metaTitle: "Fruits lyophilisés au Cameroun : prix et conseils",
     description: ({ price }) =>
       "Tout savoir sur les fruits lyophilisés : différence avec les fruits séchés, " +
@@ -694,9 +780,9 @@ const fr = {
         link: { path: "/about", label: "Comment fonctionne la lyophilisation" },
       },
       {
-        q: "Quelle différence avec les fruits séchés ?",
+        q: "Quelle différence avec les fruits secs ou déshydratés ?",
         a: [
-          "Les fruits séchés classiques sont séchés à la chaleur, au soleil ou au four : ils deviennent moelleux et plus foncés. Les fruits lyophilisés, eux, sont séchés à froid et sous vide : ils restent croquants et gardent leur couleur et leur goût.",
+          "Les fruits secs ou déshydratés classiques sont séchés à la chaleur, au soleil ou au four : ils deviennent moelleux et plus foncés. La lyophilisation, elle, sèche les fruits à froid et sous vide : ils restent croquants et gardent leur couleur et leur goût.",
         ],
       },
       {
@@ -708,18 +794,34 @@ const fr = {
               : "Nos prix sont indiqués dans la boutique.",
           "Les frais de livraison dépendent de votre adresse : nous vous les confirmons sur WhatsApp.",
         ],
-        link: { path: "/shop", label: "Voir la boutique" },
+        link: {
+          path: ({ slug }) => (slug ? `/shop/${slug}` : "/shop"),
+          label: ({ fullName }) => (fullName ? `Commander : ${fullName}` : "Voir la boutique"),
+        },
       },
       {
-        q: "Où acheter des fruits lyophilisés au Cameroun ?",
+        q: "Où acheter des fruits lyophilisés à Douala et au Cameroun ?",
         a: [
-          "Fruidry est basé à Douala. Pour l'instant, nos fruits sont vendus uniquement sur notre boutique en ligne : choisissez vos sachets, puis envoyez votre commande sur WhatsApp en un clic. Nous livrons partout au Cameroun.",
+          "Fruidry est basé à Bonabéri, à Douala. Pour l'instant, nos fruits sont vendus uniquement sur notre boutique en ligne : choisissez vos sachets, puis envoyez votre commande sur WhatsApp en un clic. Nous livrons à Douala et partout au Cameroun.",
         ],
+        link: { path: "/shop", label: "Acheter en ligne" },
       },
       {
         q: "Livrez-vous dans ma ville, et en combien de temps ?",
         a: [
           "Oui, nous livrons partout au Cameroun, le plus souvent à Douala, Yaoundé, Buea, Limbé et Bamenda. La livraison prend 2 à 5 jours selon la distance.",
+        ],
+      },
+      {
+        q: "Comment commander et payer ?",
+        a: [
+          "Choisissez vos sachets dans la boutique, puis envoyez votre commande sur WhatsApp en un clic : le message est déjà rempli. Nous vous répondons sur WhatsApp pour confirmer les frais de livraison et le paiement par MTN Mobile Money (MoMo).",
+        ],
+      },
+      {
+        q: "Puis-je retourner un sachet ?",
+        a: [
+          "Seulement si un sachet arrive abîmé ou si ce n'est pas celui que vous avez commandé : écrivez-nous sur WhatsApp, nous le remplaçons ou vous remboursons.",
         ],
       },
       {
@@ -741,9 +843,9 @@ const fr = {
         ],
       },
       {
-        q: "Y a-t-il du sucre ajouté ?",
+        q: "Est-ce un snack sain ? Y a-t-il du sucre ajouté ?",
         a: [
-          "Non. Nos fruits lyophilisés sont 100 % fruit, sans sucre ajouté et sans conservateurs.",
+          "Nos fruits lyophilisés sont 100 % fruit : sans sucre ajouté, sans conservateurs et jamais frits. Un snack croquant, à manger directement dans le sachet ou avec un yaourt, du granola ou dans un parfait.",
         ],
       },
       {
@@ -766,6 +868,7 @@ const fr = {
       "Fruidry est né au Cameroun. D'où viennent nos fruits, et comment la lyophilisation préserve leur goût, leurs nutriments et leur croquant, sans sucre ajouté.",
     paragraphs: [
       "Fruidry a été fondé au Cameroun avec une idée simple : proposer des snacks aux fruits, sains et savoureux, à déguster au quotidien. Sans sucre ajouté, sans conservateurs, juste du fruit.",
+      "Nous sommes basés à Bonabéri, à Douala. Nous vendons uniquement en ligne : vous choisissez vos sachets sur notre site, la commande part sur WhatsApp, et nous livrons partout au Cameroun.",
       "Pour l'instant, nos fruits sont lyophilisés par un producteur partenaire en Chine, puis importés au Cameroun par nos soins.",
       "Notre objectif : lyophiliser des fruits cultivés au Cameroun, ici même, dès que nous aurons notre propre machine de lyophilisation.",
     ],
@@ -915,6 +1018,8 @@ const fr = {
     paymentConfirmed: "Paiement confirmé",
     thanksDelivered: (name, date) => `Merci, ${name} ! Votre commande a été livrée le ${date}.`,
     thanks: (name) => `Merci, ${name} ! Nous vous appellerons pour organiser la livraison.`,
+    reviewPrompt: "Vous avez aimé ? Donnez votre avis aux autres clients :",
+    reviewLink: (name) => `Donner mon avis : ${name} →`,
     brandLine: "Fruits lyophilisés",
     receipt: "Reçu",
     order: "Commande",

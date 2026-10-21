@@ -102,12 +102,15 @@ const jsonLd = (page) =>
   const answers = (faq?.mainEntity ?? []).map((q) => `${q.name} ${q.acceptedAnswer.text}`);
   check(
     "the questions page answers price, delivery, storage and flavours, with FAQ data",
-    answers.length === 11 &&
+    answers.length === 13 &&
+      answers.some((a) => a.includes("MTN Mobile Money")) &&
+      answers.some((a) => a.includes("remplaçons ou vous remboursons")) &&
+      answers.some((a) => a.includes("fruits secs ou déshydratés")) &&
       answers.some((a) => /Mélange de fruits coûte 2\s500\sFCFA le sachet de 50 g/.test(a)) &&
       answers.some((a) => a.includes("Douala, Yaoundé, Buea, Limbé et Bamenda")) &&
       answers.some((a) => a.includes("2 à 5 jours")) &&
       answers.some((a) => a.includes("fermeture zip")) &&
-      answers.some((a) => a.includes("Bientôt disponible") && a.includes("Mangue")),
+      answers.some((a) => a.includes("Bientôt disponible") && a.includes("Mangue lyophilisée")),
     answers.length,
   );
   check(
@@ -122,6 +125,96 @@ const jsonLd = (page) =>
   for (const path of ["/fr", "/fr/shop/mixed-fruit-pack", "/fr/about"]) {
     check(`${path} links to the questions page`, (await html(path)).includes('href="/fr/guide"'));
   }
+}
+
+// ---------- Pages say where Fruidry is and how it delivers ----------
+
+{
+  const text = (page) =>
+    page
+      .replace(/<script[\s\S]*?<\/script>/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ");
+  const main = (page) => text(page.slice(page.indexOf("<main"), page.indexOf("</main>")));
+  const home = main(await html("/fr"));
+  check(
+    "the home page body says Douala, the cities and the delivery time, and links to the guide",
+    home.includes("Fruits lyophilisés à Douala et partout au Cameroun") &&
+      home.includes("Bonabéri") &&
+      home.includes("en 2 à 5 jours") &&
+      (await html("/fr")).includes('href="/fr/guide"'),
+    home.slice(0, 300),
+  );
+  const product = main(await html("/fr/shop/mixed-fruit-pack"));
+  check(
+    "the product page shows delivery, storage and returns",
+    product.includes("Livraison et retours") &&
+      product.includes("en 2 à 5 jours selon la distance") &&
+      product.includes("refermable par zip") &&
+      product.includes("nous le remplaçons ou vous remboursons"),
+    product.slice(0, 300),
+  );
+  const shop = main(await html("/fr/shop"));
+  check(
+    "the shop page heading and intro say what and where",
+    shop.includes("Boutique de fruits lyophilisés") && shop.includes("en 2 à 5 jours"),
+  );
+  const mango = await html("/fr/shop/mango-pack");
+  check(
+    "a coming-soon fruit says it's already in the mix, with a link and no price",
+    /fait déjà partie de notre <a[^>]*href="\/fr\/shop\/mixed-fruit-pack"[^>]*>Mélange de fruits lyophilisés<\/a>/.test(
+      mango,
+    ),
+  );
+  const about = main(await html("/fr/about"));
+  check("the story page says where Fruidry is", about.includes("Bonabéri, à Douala"));
+}
+
+// ---------- Business and product data ----------
+
+{
+  const graph = jsonLd(await html("/fr")).find((d) => d["@graph"])?.["@graph"] ?? [];
+  const store = graph.find((d) => d["@type"] === "OnlineStore");
+  const site = graph.find((d) => d["@type"] === "WebSite");
+  check(
+    "the home page describes Fruidry as an online store in Douala, and names the site",
+    store?.["@id"]?.endsWith("/#organization") &&
+      store.address?.addressLocality === "Douala" &&
+      store.contactPoint?.telephone === "+237 671 820 032" &&
+      site?.name === "Fruidry" &&
+      site.publisher?.["@id"] === store["@id"],
+    JSON.stringify(graph).slice(0, 200),
+  );
+  const product = jsonLd(await html("/fr/shop/mixed-fruit-pack")).find(
+    (d) => d["@type"] === "Product",
+  );
+  check(
+    "the product data uses the fuller name and names the seller",
+    product?.name === "Mélange de fruits lyophilisés" &&
+      product.offers?.seller?.["@id"] === store?.["@id"],
+    product?.name,
+  );
+  const sitemap = await html("/sitemap.xml");
+  check(
+    "the sitemap lists product photos",
+    /<loc>[^<]*\/fr\/shop\/mixed-fruit-pack<\/loc>[\s\S]*?<image:loc>[^<]*\/products\/mixed-fruit-pack\.png<\/image:loc>/.test(
+      sitemap,
+    ),
+  );
+  const head = await html("/fr");
+  check(
+    "pages allow large image previews, while the cart stays noindex",
+    /<meta name="robots" content="max-image-preview:large"/.test(head) &&
+      /<meta name="robots" content="noindex/.test(await html("/fr/cart")),
+  );
+  const photo = await fetch(B + "/_next/image?url=%2Fproducts%2Fmixed-fruit-pack.png&w=640&q=75", {
+    headers: { Accept: "image/avif,image/webp,*/*" },
+  });
+  check(
+    "photos are served as AVIF to browsers that take it",
+    photo.headers.get("content-type") === "image/avif",
+    photo.headers.get("content-type"),
+  );
 }
 
 // ---------- Product pages without JavaScript ----------

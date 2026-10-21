@@ -40,7 +40,7 @@ export default async function AboutPage() {
           href={localePath(lang, "/guide")}
           className="font-semibold text-brand hover:underline"
         >
-          {t.guide.navLabel} →
+          {t.guide.linkLabel} →
         </Link>
       </p>
 

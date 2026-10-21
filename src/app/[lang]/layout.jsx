@@ -18,6 +18,9 @@ export async function generateMetadata() {
     description: t.meta.siteDescription,
     applicationName: "Fruidry",
     twitter: { card: "summary_large_image" },
+    // Lets Google show the product photos large (results, Discover). Pages that set
+    // their own robots (cart, checkout, orders: noindex) replace this.
+    robots: { "max-image-preview": "large" },
   };
 }
 

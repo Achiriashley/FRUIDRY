@@ -33,13 +33,15 @@ export const defaultProducts = [
     searchNameFr: "Mélange de fruits lyophilisés",
     taglineFr: "Un mélange croquant de fruits lyophilisés.",
     descriptionFr:
-      "Un délicieux mélange de fraise, mangue, pomme, ananas, banane, kiwi, fruit du dragon, fruit de la passion et bien plus encore, congelés à pleine maturité puis séchés jusqu'à devenir légers et croquants. À croquer directement dans le sachet, ou à parsemer sur un yaourt, des flocons d'avoine ou une glace.",
+      "Un délicieux mélange de fruits lyophilisés : fraise, mangue, pomme, ananas, banane, kiwi, fruit du dragon, fruit de la passion et bien plus encore, congelés à pleine maturité puis séchés sous vide jusqu'à devenir légers et croquants. À croquer directement dans le sachet, ou à parsemer sur un yaourt, des flocons d'avoine ou une glace.",
     highlightsFr: ["100 % fruit", "Sans sucre ajouté", "Sans conservateurs", "Léger et croquant"],
     inStock: true,
     comingSoon: false,
   },
   {
     slug: "mango-pack",
+    // Already in the Mixed Fruit Pack (its description lists it).
+    inMix: true,
     sku: "FD-MANGO-50",
     name: "Mango",
     searchName: "Freeze-dried Mango",
@@ -63,6 +65,8 @@ export const defaultProducts = [
   },
   {
     slug: "strawberry-pack",
+    // Already in the Mixed Fruit Pack (its description lists it).
+    inMix: true,
     sku: "FD-STRAW-50",
     name: "Strawberries",
     searchName: "Freeze-dried Strawberries",
@@ -86,6 +90,8 @@ export const defaultProducts = [
   },
   {
     slug: "pineapple-pack",
+    // Already in the Mixed Fruit Pack (its description lists it).
+    inMix: true,
     sku: "FD-PINE-50",
     name: "Pineapple",
     searchName: "Freeze-dried Pineapple",
@@ -109,6 +115,8 @@ export const defaultProducts = [
   },
   {
     slug: "apple-pack",
+    // Already in the Mixed Fruit Pack (its description lists it).
+    inMix: true,
     sku: "FD-APPLE-50",
     name: "Apple",
     searchName: "Freeze-dried Apple",

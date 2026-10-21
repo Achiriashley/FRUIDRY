@@ -1,4 +1,5 @@
-import { formatDate, getDictionary } from "@/lib/i18n";
+import Link from "next/link";
+import { formatDate, getDictionary, localePath } from "@/lib/i18n";
 import { formatPrice } from "@/lib/products";
 import { PrintButton } from "./PrintButton";
 
@@ -16,6 +17,25 @@ export function Receipt({ order, lang }) {
             ? t.thanksDelivered(order.customer.name, formatDate(order.delivery.deliveredAt, lang))
             : t.thanks(order.customer.name)}
         </p>
+        {/* Once delivered: a link to review each product (reviews are checked before
+            they're shown). */}
+        {order.delivery && (
+          <div className="mt-4 text-sm">
+            <p className="text-stone-700">{t.reviewPrompt}</p>
+            <ul className="mt-1 space-y-1">
+              {[...new Map(order.items.map((item) => [item.slug, item])).values()].map((item) => (
+                <li key={item.slug}>
+                  <Link
+                    href={`${localePath(lang, `/shop/${item.slug}`)}#reviews-heading`}
+                    className="font-semibold text-brand hover:underline"
+                  >
+                    {t.reviewLink(item.name)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <article className="rounded-2xl border border-stone-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none">

@@ -23,6 +23,8 @@ export function ProductImage({
           fill
           sizes={sizes}
           preload={preload}
+          // The largest thing on screen: fetched before the page's scripts.
+          fetchPriority={preload ? "high" : undefined}
           className="object-contain p-[7%] drop-shadow-xl"
         />
       ) : (

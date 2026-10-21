@@ -44,7 +44,12 @@ Product pages are built ahead of time with all their text in the page, and also 
 Google the price, currency and stock (structured data). `/fr/guide` and `/en/guide`
 ("Questions fréquentes") answer what people search about freeze-dried fruit in Cameroon:
 the difference with dried fruit, price, where to buy, delivery, storage and how to eat it.
-Its texts are in `src/lib/i18n.js` (`guide`); the price and flavours come from the shop. Addresses that aren't pages get a
+Its texts are in `src/lib/i18n.js` (`guide`); the price and flavours come from the shop.
+The home, shop, product and story pages also say in plain text where Fruidry is (Bonabéri,
+Douala), where it delivers and how fast (`DELIVERY_DAYS` in `src/lib/shop-config.js`), and
+product pages list delivery, storage and returns. The home page describes the shop as an
+`OnlineStore` for Google; product data names it as the seller. Photos are served as AVIF
+(WebP for older browsers) and listed in the sitemap. Addresses that aren't pages get a
 real 404, and `/FR/...` is sent to `/fr/...`. `/sitemap.xml` lists every page in both
 languages; the admin, cart, checkout and order pages are kept out of search results. Set
 `SITE_URL` once you have your own domain; on Vercel the production address is used until

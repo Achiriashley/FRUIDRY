@@ -10,6 +10,10 @@ export function siteOrigin() {
   return url.replace(/\/$/, "");
 }
 
+// The shop's identity in structured data: the home page describes it, product pages
+// refer to it.
+export const organizationId = (origin) => `${origin}/#organization`;
+
 // Links to the same page in every language, for search engines.
 export function languageAlternates(path) {
   return {
@@ -46,7 +50,7 @@ export function pageMetadata(lang, path, { title, description, ownOgImage = fals
                 width: 1200,
                 height: 630,
                 type: "image/jpeg",
-                alt: "Fruidry",
+                alt: title ? `${title} | Fruidry` : t.meta.siteTitle,
               },
             ],
           }),
