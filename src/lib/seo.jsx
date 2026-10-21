@@ -14,11 +14,14 @@ export function siteOrigin() {
 // refer to it.
 export const organizationId = (origin) => `${origin}/#organization`;
 
-// Links to the same page in every language, for search engines.
+// Links to the same page in every language, for search engines. x-default is the page
+// for visitors in other languages. For the home page that's the bare address
+// (www.fruidry.com/), which sends each visitor to their language, as Google advises for
+// home pages that redirect by language. Other pages use the French version.
 export function languageAlternates(path) {
   return {
     ...Object.fromEntries(LOCALES.map((l) => [l, localePath(l, path)])),
-    "x-default": localePath(DEFAULT_LOCALE, path),
+    "x-default": path === "/" ? "/" : localePath(DEFAULT_LOCALE, path),
   };
 }
 

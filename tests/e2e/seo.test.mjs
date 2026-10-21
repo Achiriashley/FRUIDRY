@@ -202,6 +202,18 @@ const jsonLd = (page) =>
     ),
   );
   const head = await html("/fr");
+  const xDefault = (page) =>
+    page.match(/<link rel="alternate" hrefLang="x-default" href="([^"]*)"/)?.[1];
+  const shopHead = await html("/en/shop");
+  check(
+    "the home page's x-default is the bare address (it redirects by language); other pages use French",
+    /^https?:\/\/[^/]+\/?$/.test(xDefault(head) ?? "") &&
+      /^https?:\/\/[^/]+\/?$/.test(xDefault(await html("/en")) ?? "") &&
+      /\/fr\/shop$/.test(xDefault(shopHead) ?? "") &&
+      /hreflang="x-default" href="[^"]*\/"\s*\/>/.test(sitemap) &&
+      /hreflang="x-default" href="[^"]*\/fr\/shop"\s*\/>/.test(sitemap),
+    `${xDefault(head)} | ${xDefault(shopHead)}`,
+  );
   check(
     "pages allow large image previews, while the cart stays noindex",
     /<meta name="robots" content="max-image-preview:large"/.test(head) &&

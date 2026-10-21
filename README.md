@@ -36,7 +36,9 @@ phone's language, or French. The admin panel stays in English.
 
 For search engines and link previews, each page has its own title and description in
 its language, links to its translation (`hreflang`), and a preview picture for WhatsApp
-and social media. Titles use the words people search for ("Mangue lyophilisée 50 g |
+and social media. For visitors in other languages (`x-default`) the home page points to
+the bare address, www.fruidry.com, which sends each visitor to French or English; other
+pages point to their French version. Titles use the words people search for ("Mangue lyophilisée 50 g |
 Fruidry", "Fruidry | Snacks de fruits lyophilisés au Cameroun"); the page headings keep
 the short names. Starting products have a fuller name for search results (`searchName` in
 `src/lib/products.js`); a product renamed or added in the admin panel uses its name.
