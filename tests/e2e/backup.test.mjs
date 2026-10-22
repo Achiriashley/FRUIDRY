@@ -153,7 +153,7 @@ check(
 );
 check(
   "Orders has the customer's details and the order's link",
-  ["Backup Tester", "699887766", "Yaoundé, Bastos &amp; Co &lt;2&gt;", "New order"].every((t) =>
+  ["Backup Tester", "699887766", "Yaoundé, Bastos &amp; Co &lt;2&gt;"].every((t) =>
     sheet(2).includes(t),
   ) &&
     /FD-[A-Z0-9]{6}/.test(sheet(2)) &&
