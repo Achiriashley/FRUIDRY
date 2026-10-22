@@ -113,7 +113,12 @@ await p4.waitForTimeout(900);
 const expired = nowS() - 40 * 60;
 await c4.addCookies([{ name: "fruidry_admin", value: signToken(expired), url: B }]);
 await p4.getByRole("button", { name: "Mark as paid" }).first().click();
-await p4.getByRole("button", { name: "Yes, mark as paid" }).click();
+// The tap itself usually brings the sign-in form (any tap checks the session); if the
+// question shows first, answering it must too.
+await p4
+  .getByRole("button", { name: "Yes, mark as paid" })
+  .click({ timeout: 3000 })
+  .catch(() => {});
 await p4.waitForTimeout(2000);
 check(
   "Mark as paid with an ended session shows the sign-in form",
