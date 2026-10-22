@@ -15,6 +15,7 @@ import {
   deleteProduct as removeProduct,
   getProduct,
   getProducts,
+  returnStock,
   subtractStock,
   updateProduct,
 } from "@/lib/catalog";
@@ -73,25 +74,77 @@ async function updateOrder(formData, change) {
   return updated;
 }
 
+// Runs a stock change for an order (subtractStock or returnStock). Returns the packs that
+// really moved, { slug: +added or -taken off }, or null if it failed (logged).
+async function moveOrderStock(change) {
+  try {
+    const counts = await change();
+    if (Object.keys(counts).length > 0) updateTag(PRODUCTS_TAG);
+    return Object.fromEntries(
+      Object.entries(counts).map(([slug, { before, after }]) => [slug, after - before]),
+    );
+  } catch (error) {
+    console.error("The stock count couldn't be updated for an order", error);
+    return null;
+  }
+}
+
+// A paid order takes its packs off the stock count. The order keeps how many really came
+// off (none for products whose packs aren't counted), so Undo puts back exactly those.
 export async function confirmPayment(formData) {
-  const confirmed = await updateOrder(formData, (order) =>
-    isPaid(order)
-      ? null
-      : {
-          ...order,
-          status: ORDER_STATUS.confirmed,
-          receipt: { number: newReceiptNumber(), confirmedAt: new Date().toISOString() },
-          rejection: null,
-        },
-  );
-  // A paid order takes its packs off the stock count.
-  if (confirmed) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  const order = await getOrder(String(formData.get("orderId") ?? ""));
+  if (!order) throw new Error("Order not found");
+  if (!isPaid(order)) {
+    const moved = await moveOrderStock(() => subtractStock(order.items));
+    const stockTaken = moved && Object.fromEntries(Object.entries(moved).map(([s, n]) => [s, -n]));
     try {
-      if ((await subtractStock(confirmed.items)).length > 0) updateTag(PRODUCTS_TAG);
+      await saveOrder({
+        ...order,
+        status: ORDER_STATUS.confirmed,
+        receipt: { number: newReceiptNumber(), confirmedAt: new Date().toISOString() },
+        rejection: null,
+        // null when the stock change failed: Undo then leaves the count alone.
+        stockTaken,
+      });
     } catch (error) {
-      console.error("Payment confirmed, but the stock count couldn't be updated", error);
+      if (stockTaken) await moveOrderStock(() => returnStock(stockTaken));
+      throw error;
     }
   }
+  refresh();
+}
+
+// Undo for "Mark as paid": the order goes back to New orders, its receipt is hidden and
+// the packs it took off the stock count are put back.
+export async function undoPayment(formData) {
+  if (!(await touchAdminSession())) redirect("/admin");
+  const order = await getOrder(String(formData.get("orderId") ?? ""));
+  if (!order) throw new Error("Order not found");
+  if (order.status === ORDER_STATUS.confirmed) {
+    const { stockTaken, ...rest } = order;
+    await saveOrder({ ...rest, status: ORDER_STATUS.awaitingPayment, receipt: null });
+    if (stockTaken) await moveOrderStock(() => returnStock(stockTaken));
+  }
+  refresh();
+}
+
+// Undo for "Mark as delivered": back to Paid, to deliver.
+export async function undoDelivered(formData) {
+  await updateOrder(formData, (order) => {
+    if (order.status !== ORDER_STATUS.delivered) return null;
+    const { delivery, ...rest } = order;
+    return { ...rest, status: ORDER_STATUS.confirmed };
+  });
+}
+
+// Undo for "Cancel order": back to New orders.
+export async function reopenOrder(formData) {
+  await updateOrder(formData, (order) =>
+    order.status !== ORDER_STATUS.rejected
+      ? null
+      : { ...order, status: ORDER_STATUS.awaitingPayment, rejection: null },
+  );
 }
 
 // Shown to the customer when no reason is typed, in the language they ordered in.

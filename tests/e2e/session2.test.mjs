@@ -113,6 +113,7 @@ await p4.waitForTimeout(900);
 const expired = nowS() - 40 * 60;
 await c4.addCookies([{ name: "fruidry_admin", value: signToken(expired), url: B }]);
 await p4.getByRole("button", { name: "Mark as paid" }).first().click();
+await p4.getByRole("button", { name: "Yes, mark as paid" }).click();
 await p4.waitForTimeout(2000);
 check(
   "Mark as paid with an ended session shows the sign-in form",

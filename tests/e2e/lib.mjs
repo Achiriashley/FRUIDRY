@@ -13,6 +13,7 @@ import { createHmac } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { inflateRawSync } from "node:zlib";
 import { chromium } from "@playwright/test";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -145,4 +146,20 @@ export function artifact(name) {
   const dir = path.join(HERE, ".artifacts");
   fs.mkdirSync(dir, { recursive: true });
   return path.join(dir, name);
+}
+
+/** The files inside an .xlsx (or other zip) download, as text: { "xl/workbook.xml": "..." }. */
+export function unzip(bytes) {
+  const files = {};
+  let at = 0;
+  while (bytes.readUInt32LE(at) === 0x04034b50) {
+    const size = bytes.readUInt32LE(at + 18);
+    const nameLength = bytes.readUInt16LE(at + 26);
+    const extra = bytes.readUInt16LE(at + 28);
+    const name = bytes.subarray(at + 30, at + 30 + nameLength).toString();
+    const start = at + 30 + nameLength + extra;
+    files[name] = inflateRawSync(bytes.subarray(start, start + size)).toString();
+    at = start + size;
+  }
+  return files;
 }

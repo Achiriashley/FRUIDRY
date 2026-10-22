@@ -7,6 +7,7 @@ import { formatPrice, isLowStock, stockLeft } from "@/lib/products";
 import { listReviews } from "@/lib/reviews";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "./AdminShell";
+import { BackupReminder, BackupSection } from "./BackupPanel";
 import { OrderCard } from "./OrderCard";
 
 export const metadata = { title: "Admin dashboard", robots: { index: false } };
@@ -129,6 +130,8 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
         />
       </div>
 
+      <BackupReminder />
+
       {reviewsWaiting > 0 && (
         <section className="rounded-2xl bg-yellow-100 p-5 shadow-sm">
           <h2 className="text-xl font-bold">
@@ -206,6 +209,8 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
           See all orders →
         </Link>
       </p>
+
+      <BackupSection />
     </div>
   );
 }

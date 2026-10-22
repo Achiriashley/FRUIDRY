@@ -115,6 +115,19 @@ Open [http://localhost:3000](http://localhost:3000).
    receipt, and you can send them the receipt link on WhatsApp.
 5. After delivery, click **Mark as delivered**.
 
+**Mark as paid**, **Cancel order** and **Mark as delivered** ask first ("Has the 5 000 FCFA
+for FD-… arrived?"), so one wrong tap on a phone changes nothing. Each can be undone:
+**Undo payment** puts the order back under New orders, hides the receipt and puts back
+exactly the packs it took off the stock count; **Undo delivery** puts it back under Paid,
+to deliver; **Undo cancel** reopens a cancelled order. (For orders marked paid before Undo
+existed, the stock count isn't changed: add the packs back on the product's page if needed.)
+
+**If WhatsApp doesn't open** (it sometimes fails inside the Instagram or TikTok apps), the
+"Almost done!" screen offers **Copy my order** (or shows the text to copy by hand), the
+shop's WhatsApp number, and, when the order was saved, tells the customer "We've received
+order FD-…, we'll contact you on 6XX XX XX XX". So when a new order shows up in the admin
+panel without a WhatsApp message, message the customer first.
+
 If saving the order fails (for example if Supabase isn't set up), the customer is still
 sent to WhatsApp, so no order is lost. The failure is written to the server logs.
 
@@ -129,6 +142,12 @@ reload it and after 30 minutes without activity (see Security below).
 
 - **Dashboard**: new orders, orders to deliver, sales this month and in total, and new
   reviews to check.
+- **Full copy**: **Download a full copy** (at the bottom of the dashboard) saves one Excel
+  file with every order (customer details included), every Books entry, the products,
+  reviews and the waiting list. Save one each month and keep it private (iCloud Drive or
+  the Files app); delete older copies, as the privacy page promises. When the last copy
+  saved on this phone is more than 30 days old, or there's none, a reminder shows at the
+  top of the dashboard. The date is remembered on the phone only.
 - **Orders**: every order, filterable by status and searchable by order number,
   customer name or phone.
 - **Products**: add new products (with a photo), edit any product's item code, name,
@@ -260,8 +279,9 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Tests
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
-panel (sign-in rules, orders, products, stock, books, waiting lists, reviews), both
-languages, what search engines see, accessibility basics and security protections (about 335 checks in
+panel (sign-in rules, orders and their Undo buttons, products, stock, books, the full
+copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, what
+search engines see, accessibility basics and security protections (about 400 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

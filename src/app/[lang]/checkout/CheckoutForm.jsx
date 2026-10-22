@@ -6,6 +6,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatPrice } from "@/lib/products";
+import { formatPhone } from "@/lib/shop-config";
 import { placeOrder } from "./actions";
 import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
 
@@ -223,6 +224,79 @@ function OrderSent({ state }) {
             {t.checkout.viewOrder}
           </Link>{" "}
           <span className="text-stone-500">{t.checkout.receiptHint}</span>
+        </p>
+      )}
+      {/* Orders kept from before this help existed have no message to copy. */}
+      {state.message && <WhatsAppHelp state={state} />}
+    </div>
+  );
+}
+
+// For when WhatsApp doesn't open (for example inside the Instagram or TikTok app): the
+// order to copy, the shop's number to send it to, and, if the order was saved, a promise
+// that the shop will contact the customer.
+function WhatsAppHelp({ state }) {
+  const { t } = useLocale();
+  const [copy, setCopy] = useState("idle");
+  const textRef = useRef(null);
+
+  async function copyOrder() {
+    try {
+      await navigator.clipboard.writeText(state.message);
+      setCopy("copied");
+    } catch {
+      // Copying isn't allowed here: show the text to copy by hand, already selected.
+      setCopy("byHand");
+    }
+  }
+
+  useEffect(() => {
+    if (copy === "byHand") textRef.current?.select();
+  }, [copy]);
+
+  return (
+    <div className="mt-8 border-t border-stone-100 pt-6">
+      <h3 className="font-semibold">{t.checkout.notOpened}</h3>
+      {state.shopNumber && (
+        <p className="mt-1 text-sm text-stone-600">
+          {t.checkout.sendToBefore}
+          <a
+            href={`tel:+${state.shopNumber}`}
+            className="font-semibold whitespace-nowrap text-brand hover:underline"
+          >
+            {formatPhone(state.shopNumber)}
+          </a>
+          {t.checkout.sendToAfter}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={copyOrder}
+        className="mt-4 rounded-full border border-brand px-5 py-2 text-sm font-semibold text-brand hover:bg-brand-light"
+      >
+        {t.checkout.copyOrder}
+      </button>
+      <p role="status" className="mt-2 min-h-5 text-sm font-medium text-green-700">
+        {copy === "copied" ? t.checkout.copied : ""}
+      </p>
+      {copy === "byHand" && (
+        <div className="mt-1 text-left">
+          <label htmlFor="order-text" className="text-sm text-stone-600">
+            {t.checkout.copyByHand}
+          </label>
+          <textarea
+            id="order-text"
+            ref={textRef}
+            readOnly
+            rows={8}
+            value={state.message}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-stone-50 p-3 font-mono text-xs"
+          />
+        </div>
+      )}
+      {state.phone && (
+        <p className="mt-4 text-sm text-stone-600">
+          {t.checkout.weHaveIt(state.reference, formatPhone(state.phone))}
         </p>
       )}
     </div>

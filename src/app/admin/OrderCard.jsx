@@ -2,7 +2,15 @@ import Link from "next/link";
 import { ORDER_STATUS, STATUS_LABELS, formatOrderDate, isPaid } from "@/lib/orders";
 import { momoPayCode, whatsAppLink } from "@/lib/shop-config";
 import { formatPrice } from "@/lib/products";
-import { confirmPayment, markDelivered, rejectPayment } from "./actions";
+import {
+  confirmPayment,
+  markDelivered,
+  rejectPayment,
+  reopenOrder,
+  undoDelivered,
+  undoPayment,
+} from "./actions";
+import { ConfirmButton } from "./ConfirmButton";
 
 const STATUS_STYLES = {
   awaiting_payment: "bg-stone-100 text-stone-700",
@@ -84,8 +92,40 @@ function customerMessage(order) {
     : `Hello ${name}, this is Fruidry about your order ${order.reference}.`;
 }
 
+const packsText = (n) => `${n} ${n === 1 ? "pack goes" : "packs go"}`;
+
+// What "Undo payment" does besides moving the order back to New orders. Orders marked
+// paid before Undo existed (or whose stock change failed) don't know what came off.
+function undoPaymentHint(order) {
+  if (!order.stockTaken) {
+    return (
+      "The customer's receipt is hidden. The stock count doesn't change: if you count " +
+      "this product's packs, add them back on its page."
+    );
+  }
+  const packs = Object.values(order.stockTaken).reduce((total, n) => total + n, 0);
+  return packs > 0
+    ? `The customer's receipt is hidden and ${packsText(packs)} back into stock.`
+    : "The customer's receipt is hidden.";
+}
+
+const UNDO_BUTTON = "text-sm font-semibold text-stone-600 underline hover:text-brand";
+const UNDO_YES =
+  "rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700";
+
+// A form whose only field is the order: its buttons sit directly in the card's row.
+function OrderForm({ action, order, children }) {
+  return (
+    <form action={action} className="contents">
+      <input type="hidden" name="orderId" value={order.id} />
+      {children}
+    </form>
+  );
+}
+
 export function OrderCard({ order, siteUrl }) {
   const canDecide = !isPaid(order);
+  const cancelled = order.status === ORDER_STATUS.rejected;
   return (
     <article className="rounded-2xl bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -139,43 +179,47 @@ export function OrderCard({ order, siteUrl }) {
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4">
         {canDecide && (
-          <>
-            <form action={confirmPayment}>
-              <input type="hidden" name="orderId" value={order.id} />
-              <button
-                type="submit"
-                className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-              >
-                Mark as paid
-              </button>
-            </form>
-            <form action={rejectPayment} className="flex flex-wrap items-center gap-2">
-              <input type="hidden" name="orderId" value={order.id} />
-              <input
-                name="reason"
-                aria-label="Reason for cancelling"
-                placeholder="Reason (optional)"
-                className="rounded-full border border-stone-300 px-3 py-1.5 text-sm"
-              />
-              <button
-                type="submit"
-                className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-              >
-                Cancel order
-              </button>
-            </form>
-          </>
+          <OrderForm action={confirmPayment} order={order}>
+            <ConfirmButton
+              label="Mark as paid"
+              question={`Has the ${formatPrice(order.total)} for ${order.reference} arrived?`}
+              hint="Check your MoMo account first: screenshots can be faked. The customer then sees their receipt."
+              yes="Yes, mark as paid"
+              no="Not yet"
+              className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            />
+          </OrderForm>
+        )}
+        {canDecide && !cancelled && (
+          <OrderForm action={rejectPayment} order={order}>
+            <input
+              name="reason"
+              aria-label="Reason for cancelling"
+              placeholder="Reason (optional)"
+              className="rounded-full border border-stone-300 px-3 py-1.5 text-sm"
+            />
+            <ConfirmButton
+              label="Cancel order"
+              question={`Cancel ${order.reference}?`}
+              hint="The customer's order page will say it's cancelled, with your reason if you typed one."
+              yes="Yes, cancel order"
+              no="Keep it"
+              className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+              yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            />
+          </OrderForm>
         )}
         {order.status === ORDER_STATUS.confirmed && (
-          <form action={markDelivered}>
-            <input type="hidden" name="orderId" value={order.id} />
-            <button
-              type="submit"
+          <OrderForm action={markDelivered} order={order}>
+            <ConfirmButton
+              label="Mark as delivered"
+              question={`Has ${order.reference} been delivered?`}
+              hint="The customer's receipt will then ask them to review what they bought."
+              yes="Yes, mark as delivered"
+              no="Not yet"
               className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700"
-            >
-              Mark as delivered
-            </button>
-          </form>
+            />
+          </OrderForm>
         )}
         <a
           href={whatsAppLink(`237${order.customer.phone}`, customerMessage(order))}
@@ -203,6 +247,46 @@ export function OrderCard({ order, siteUrl }) {
         >
           {isPaid(order) ? "View receipt" : "View customer page"}
         </Link>
+        {/* Undo for a wrong tap: one step back each time. */}
+        {order.status === ORDER_STATUS.confirmed && (
+          <OrderForm action={undoPayment} order={order}>
+            <ConfirmButton
+              label="Undo payment"
+              question={`Move ${order.reference} back to New orders?`}
+              hint={undoPaymentHint(order)}
+              yes="Yes, undo payment"
+              no="Keep it paid"
+              className={UNDO_BUTTON}
+              yesClassName={UNDO_YES}
+            />
+          </OrderForm>
+        )}
+        {order.status === ORDER_STATUS.delivered && (
+          <OrderForm action={undoDelivered} order={order}>
+            <ConfirmButton
+              label="Undo delivery"
+              question={`Move ${order.reference} back to Paid, to deliver?`}
+              hint="The customer's receipt stops asking them for a review."
+              yes="Yes, undo delivery"
+              no="Keep it delivered"
+              className={UNDO_BUTTON}
+              yesClassName={UNDO_YES}
+            />
+          </OrderForm>
+        )}
+        {cancelled && (
+          <OrderForm action={reopenOrder} order={order}>
+            <ConfirmButton
+              label="Undo cancel"
+              question={`Reopen ${order.reference}?`}
+              hint="It goes back to New orders, and the customer's page no longer says it's cancelled."
+              yes="Yes, reopen order"
+              no="Keep it cancelled"
+              className={UNDO_BUTTON}
+              yesClassName={UNDO_YES}
+            />
+          </OrderForm>
+        )}
       </div>
     </article>
   );

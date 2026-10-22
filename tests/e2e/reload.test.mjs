@@ -152,6 +152,7 @@ check("a typed address to a deep admin page asks for the password", await passwo
   await a.getByRole("button", { name: "Search" }).click();
   await a.waitForTimeout(1200);
   await a.getByRole("button", { name: "Mark as paid" }).first().click();
+  await a.getByRole("button", { name: "Yes, mark as paid" }).click();
   await a.waitForTimeout(2000);
   const stillIn = await signedIn(a);
   await a.getByRole("link", { name: /^All/ }).first().click();

@@ -15,8 +15,8 @@ import {
 import { listOrders } from "@/lib/orders";
 import { formatPrice, stockLeft } from "@/lib/products";
 import { AdminPage, AdminShell } from "../AdminShell";
+import { DownloadButton } from "../DownloadButton";
 import { BookForms } from "./BookForms";
-import { DownloadButton } from "./DownloadButton";
 import { DeleteEntryButton, EditEntry } from "./EditEntry";
 
 export const metadata = { title: "Books", robots: { index: false } };
@@ -237,7 +237,11 @@ function Books({ params, orders, products, entries, setupNeeded }) {
         </Card>
       </div>
 
-      <DownloadButton month={month} />
+      <DownloadButton
+        url={`/admin/books/export?month=${encodeURIComponent(month)}`}
+        label="⬇ Download for Excel"
+        fileName={`fruidry-books-${month}.xlsx`}
+      />
 
       <section>
         <h2 className="mb-3 text-xl font-bold">

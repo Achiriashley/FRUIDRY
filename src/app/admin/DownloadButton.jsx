@@ -2,26 +2,27 @@
 
 import { useState } from "react";
 
-// Downloads the month's books as an Excel file. Fetched by the page (instead of a plain
-// link) because opening an admin address directly asks for the password again.
-export function DownloadButton({ month }) {
+// Downloads a file from an admin address (a month of Books, the full copy). Fetched by
+// the page (instead of a plain link) because opening an admin address directly asks for
+// the password again. The file keeps the name the server gives it.
+export function DownloadButton({ url, label, fileName, onDownloaded }) {
   const [state, setState] = useState("idle");
   async function download() {
     setState("loading");
     try {
-      const response = await fetch(`/admin/books/export?month=${encodeURIComponent(month)}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) throw new Error(`Download failed (${response.status})`);
-      const url = URL.createObjectURL(await response.blob());
+      const disposition = response.headers.get("content-disposition") ?? "";
+      const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fileName;
       const link = document.createElement("a");
-      link.href = url;
-      link.download = `fruidry-books-${month}.xlsx`;
+      link.href = URL.createObjectURL(await response.blob());
+      link.download = name;
       document.body.append(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      setTimeout(() => URL.revokeObjectURL(link.href), 60_000);
       setState("idle");
+      onDownloaded?.();
     } catch {
       setState("error");
     }
@@ -34,7 +35,7 @@ export function DownloadButton({ month }) {
         disabled={state === "loading"}
         className="rounded-full border border-brand px-5 py-2 text-sm font-semibold text-brand hover:bg-brand-light disabled:opacity-60"
       >
-        {state === "loading" ? "Preparing…" : "⬇ Download for Excel"}
+        {state === "loading" ? "Preparing…" : label}
       </button>
       {state === "error" && (
         <p role="alert" className="mt-2 text-sm text-red-600">

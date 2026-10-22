@@ -1,8 +1,7 @@
 // The Books page: recording sales in person, stock arrivals and expenses, how they
 // change the stock count, the month's figures (website orders included), the dashboard
 // totals, the Excel download, and deleting an entry recorded by mistake.
-import { inflateRawSync } from "node:zlib";
-import { ADMIN_PASSWORD, BASE_URL as B, check, finish, launch } from "./lib.mjs";
+import { ADMIN_PASSWORD, BASE_URL as B, check, finish, launch, unzip } from "./lib.mjs";
 
 const b = await launch({ adminHarness: true });
 const errs = [];
@@ -40,6 +39,7 @@ await a.getByRole("button", { name: "Sign in" }).click();
 await a.getByRole("heading", { name: "Dashboard" }).waitFor();
 await a.waitForTimeout(800);
 await a.getByRole("button", { name: "Mark as paid" }).first().click();
+await a.getByRole("button", { name: "Yes, mark as paid" }).click();
 await a.getByRole("button", { name: "Mark as delivered" }).first().waitFor();
 
 // ---------- The Books page ----------
@@ -243,20 +243,6 @@ const card = async (title) => plain(await a.getByRole("region", { name: title })
 
 // ---------- Excel download ----------
 
-function unzip(bytes) {
-  const files = {};
-  let at = 0;
-  while (bytes.readUInt32LE(at) === 0x04034b50) {
-    const size = bytes.readUInt32LE(at + 18);
-    const nameLength = bytes.readUInt16LE(at + 26);
-    const extra = bytes.readUInt16LE(at + 28);
-    const name = bytes.subarray(at + 30, at + 30 + nameLength).toString();
-    const start = at + 30 + nameLength + extra;
-    files[name] = inflateRawSync(bytes.subarray(start, start + size)).toString();
-    at = start + size;
-  }
-  return files;
-}
 {
   const [download] = await Promise.all([
     a.waitForEvent("download"),

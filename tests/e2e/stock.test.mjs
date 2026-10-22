@@ -110,6 +110,7 @@ check(
 await admin.goto(B + "/admin/orders");
 await admin.waitForTimeout(900);
 await admin.getByRole("button", { name: "Mark as paid" }).first().click();
+await admin.getByRole("button", { name: "Yes, mark as paid" }).click();
 await admin.waitForTimeout(1500);
 await admin.goto(B + "/admin/products");
 await admin.waitForTimeout(700);
@@ -137,6 +138,7 @@ check("order the last 2", last.outcome === "sent");
 await admin.goto(B + "/admin/orders");
 await admin.waitForTimeout(900);
 await admin.getByRole("button", { name: "Mark as paid" }).first().click();
+await admin.getByRole("button", { name: "Yes, mark as paid" }).click();
 await admin.waitForTimeout(1500);
 await admin.goto(B + "/admin/products");
 await admin.waitForTimeout(700);

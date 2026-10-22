@@ -153,10 +153,20 @@ async function adjustStock(changes) {
   return counts;
 }
 
-// Takes sold packs off the stock count. Returns the slugs whose count changed.
+// Takes sold packs off the stock count. Returns { slug: { before, after } } for the
+// products whose packs are counted.
 export async function subtractStock(items) {
-  const counts = await adjustStock(items.map(({ slug, quantity }) => ({ slug, delta: -quantity })));
-  return Object.keys(counts);
+  return adjustStock(items.map(({ slug, quantity }) => ({ slug, delta: -quantity })));
+}
+
+// Puts packs back on the stock count, e.g. { "mixed-fruit-pack": 2 } (Undo on a paid
+// order). Returns the same as subtractStock.
+export async function returnStock(packs) {
+  return adjustStock(
+    Object.entries(packs ?? {})
+      .filter(([, n]) => Number.isInteger(n) && n > 0)
+      .map(([slug, n]) => ({ slug, delta: n })),
+  );
 }
 
 // Changes one product's counted stock by `delta` packs (the Books page). Returns

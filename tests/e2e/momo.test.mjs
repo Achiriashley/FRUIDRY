@@ -72,6 +72,7 @@ await a
   .first()
   .getByRole("button", { name: "Mark as paid" })
   .click();
+await a.getByRole("button", { name: "Yes, mark as paid" }).click();
 await a.waitForTimeout(2000);
 await a.getByRole("link", { name: /^All/ }).first().click();
 await a.waitForTimeout(1200);

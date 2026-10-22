@@ -70,3 +70,13 @@ export const SOCIAL_LINKS = [
 export function phoneLink(phone) {
   return `tel:${phone.replace(/[^\d+]/g, "")}`;
 }
+
+// A number as people write it: "671820032" -> "671 82 00 32",
+// "237671820032" -> "+237 671 82 00 32". Other numbers are left as they are.
+export function formatPhone(digits) {
+  const text = String(digits ?? "");
+  const group = (local) => local.replace(/^(\d{3})(\d{2})(\d{2})(\d{2})$/, "$1 $2 $3 $4");
+  if (/^6\d{8}$/.test(text)) return group(text);
+  if (/^2376\d{8}$/.test(text)) return `+237 ${group(text.slice(3))}`;
+  return text;
+}

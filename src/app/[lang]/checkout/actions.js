@@ -121,10 +121,16 @@ export async function placeOrder(_prev, formData) {
     console.error("Failed to save order (sent on WhatsApp anyway)", error);
   }
 
+  const message = orderMessage(order);
   return {
     status: "success",
     orderId: saved ? order.id : null,
     reference: order.reference,
-    whatsappUrl: whatsAppLink(shopNumber, orderMessage(order)),
+    whatsappUrl: whatsAppLink(shopNumber, message),
+    // For when WhatsApp doesn't open: the message to copy, the number to send it to and,
+    // if the order was saved, the customer's number (the shop can contact them).
+    message,
+    shopNumber,
+    phone: saved ? phone : null,
   };
 }

@@ -90,6 +90,7 @@ const orderLink = await a
   .first()
   .getAttribute("href");
 await a.getByRole("button", { name: "Mark as paid" }).first().click();
+await a.getByRole("button", { name: "Yes, mark as paid" }).click();
 await a.getByRole("button", { name: "Mark as delivered" }).first().waitFor();
 await p.goto(B + orderLink);
 await p.getByRole("heading", { name: "Payment confirmed" }).first().waitFor();

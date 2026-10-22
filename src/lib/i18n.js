@@ -442,6 +442,14 @@ const en = {
     openAgain: "Open WhatsApp again",
     viewOrder: "View your order",
     receiptHint: "(your receipt appears there once we confirm payment)",
+    notOpened: "WhatsApp didn't open?",
+    sendToBefore: "Copy your order and send it to us on WhatsApp at ",
+    sendToAfter: ".",
+    copyOrder: "Copy my order",
+    copied: "Copied! Paste it into a WhatsApp message to us.",
+    copyByHand: "Select the text below and copy it:",
+    weHaveIt: (reference, phone) =>
+      `We've received order ${reference}. If you can't send it, don't worry: we'll contact you on ${phone}.`,
     errors: {
       name: "Please enter your name.",
       nameTooLong: "Please keep your name under 100 characters.",
@@ -504,7 +512,7 @@ const en = {
   privacy: {
     title: "Privacy policy",
     description: "What information Fruidry collects, why, and how you stay in control of it.",
-    updated: "Last updated: 19 October 2026",
+    updated: "Last updated: 22 October 2026",
     sections: [
       {
         heading: "Who we are",
@@ -545,6 +553,7 @@ const en = {
         heading: "Where your information is kept",
         paragraphs: [
           "Orders, reviews and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
+          "So that nothing is lost if the database has a problem, we also keep a private backup copy of this information on our own phone. We keep only the latest copies and delete older ones.",
           "We don't sell your information or share it with anyone else, except the person delivering your order.",
         ],
       },
@@ -974,6 +983,14 @@ const fr = {
     openAgain: "Rouvrir WhatsApp",
     viewOrder: "Voir votre commande",
     receiptHint: "(votre reçu y apparaîtra dès que nous aurons confirmé le paiement)",
+    notOpened: "WhatsApp ne s'est pas ouvert ?",
+    sendToBefore: "Copiez votre commande et envoyez-la-nous sur WhatsApp au ",
+    sendToAfter: ".",
+    copyOrder: "Copier ma commande",
+    copied: "Copiée ! Collez-la dans un message WhatsApp à notre numéro.",
+    copyByHand: "Sélectionnez le texte ci-dessous et copiez-le :",
+    weHaveIt: (reference, phone) =>
+      `Nous avons bien reçu la commande ${reference}. Si vous n'arrivez pas à l'envoyer, pas d'inquiétude : nous vous contacterons au ${phone}.`,
     errors: {
       name: "Veuillez saisir votre nom.",
       nameTooLong: "Votre nom doit faire moins de 100 caractères.",
@@ -1039,7 +1056,7 @@ const fr = {
     title: "Politique de confidentialité",
     description:
       "Quelles informations Fruidry collecte, pourquoi, et comment vous gardez le contrôle.",
-    updated: "Dernière mise à jour : 19 octobre 2026",
+    updated: "Dernière mise à jour : 22 octobre 2026",
     sections: [
       {
         heading: "Qui sommes-nous",
@@ -1080,6 +1097,7 @@ const fr = {
         heading: "Où sont conservées vos informations",
         paragraphs: [
           "Les commandes, les avis et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
+          "Pour ne rien perdre en cas de problème avec la base de données, nous en gardons aussi une copie de sauvegarde privée sur notre propre téléphone. Nous ne gardons que les copies les plus récentes et supprimons les anciennes.",
           "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
         ],
       },

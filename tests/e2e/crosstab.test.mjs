@@ -41,8 +41,10 @@ for (const kind of ["check-in", "Mark as paid"]) {
   if (kind === "check-in") await Bp.mouse.click(5, 400);
   else {
     const paid = Bp.getByRole("button", { name: "Mark as paid" }).first();
-    if (await paid.count()) await paid.click();
-    else await Bp.mouse.click(5, 400);
+    if (await paid.count()) {
+      await paid.click();
+      await Bp.getByRole("button", { name: "Yes, mark as paid" }).click();
+    } else await Bp.mouse.click(5, 400);
   }
   await A.waitForTimeout(400);
   await A.bringToFront();
