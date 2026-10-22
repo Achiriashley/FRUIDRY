@@ -148,7 +148,8 @@ async function adjustStock(changes) {
     const stock = Math.max(0, current.stock + delta);
     stored[slug] = { ...stored[slug], stock };
     await writeStored(slug, stored[slug]);
-    counts[slug] = { before: current.stock, after: stock };
+    // A product listed twice keeps its first "before", so after - before is all that moved.
+    counts[slug] = { before: counts[slug]?.before ?? current.stock, after: stock };
   }
   return counts;
 }

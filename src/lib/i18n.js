@@ -553,7 +553,7 @@ const en = {
         heading: "Where your information is kept",
         paragraphs: [
           "Orders, reviews and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
-          "So that nothing is lost if the database has a problem, we also keep a private backup copy of this information on our own phone. We keep only the latest copies and delete older ones.",
+          "So that nothing is lost if the database has a problem, we also keep a private backup copy of this information on our own phone and in our private cloud storage. We keep only the latest copies and delete older ones.",
           "We don't sell your information or share it with anyone else, except the person delivering your order.",
         ],
       },
@@ -1097,7 +1097,7 @@ const fr = {
         heading: "Où sont conservées vos informations",
         paragraphs: [
           "Les commandes, les avis et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
-          "Pour ne rien perdre en cas de problème avec la base de données, nous en gardons aussi une copie de sauvegarde privée sur notre propre téléphone. Nous ne gardons que les copies les plus récentes et supprimons les anciennes.",
+          "Pour ne rien perdre en cas de problème avec la base de données, nous en gardons aussi une copie de sauvegarde privée sur notre propre téléphone et dans notre stockage en ligne privé. Nous ne gardons que les copies les plus récentes et supprimons les anciennes.",
           "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
         ],
       },

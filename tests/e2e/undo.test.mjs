@@ -3,7 +3,7 @@
 // and cancelling. The customer's order page follows.
 import fs from "node:fs";
 import path from "node:path";
-import { ADMIN_PASSWORD, BASE_URL as B, check, finish, launch } from "./lib.mjs";
+import { ADMIN_PASSWORD, BASE_URL as B, check, finish, launch, skip } from "./lib.mjs";
 
 const b = await launch({ adminHarness: true });
 const errs = [];
@@ -182,10 +182,54 @@ check(
   !(await customerSees(orderHref)).includes("Enjoyed it?"),
 );
 
+// ---------- Undo payment after Undo delivery still knows its packs ----------
+await admin.goto(B + "/admin");
+{
+  const question = await ask("Undo Test", "Undo payment");
+  check(
+    "after Undo delivery, Undo payment still knows its 2 packs",
+    question.includes("2 packs go back into stock."),
+    question,
+  );
+}
+await card("Undo Test").getByRole("button", { name: "Yes, undo payment" }).click();
+await card("Undo Test").getByRole("button", { name: "Mark as paid", exact: true }).waitFor();
+check("…and puts them back", (await stockLeft()) === 10);
+
+// ---------- Undo puts back what really came off, not what was ordered ----------
+await setStock(1);
+await admin.goto(B + "/admin");
+await ask("Undo Test", "Mark as paid");
+await card("Undo Test").getByRole("button", { name: "Yes, mark as paid" }).click();
+await card("Undo Test").getByRole("button", { name: "Mark as delivered" }).waitFor();
+check("with 1 pack left, paying for 2 leaves 0", (await stockLeft()) === 0);
+await admin.goto(B + "/admin");
+{
+  const question = await ask("Undo Test", "Undo payment");
+  check(
+    "Undo payment then puts back only the pack that came off",
+    question.includes("1 pack goes back into stock."),
+    question,
+  );
+}
+await card("Undo Test").getByRole("button", { name: "Yes, undo payment" }).click();
+await card("Undo Test").getByRole("button", { name: "Mark as paid", exact: true }).waitFor();
+check("…so the count is 1 again, not 2", (await stockLeft()) === 1);
+
 // ---------- Cancel, then Undo cancel ----------
 await order("Cancel Test", 1);
 await admin.goto(B + "/admin");
-await card("Cancel Test").getByLabel("Reason for cancelling").fill("Outside our delivery area");
+{
+  const reason = card("Cancel Test").getByLabel("Reason for cancelling");
+  await reason.fill("Outside our delivery area");
+  await reason.press("Enter"); // "Go" on a phone keyboard
+  await admin.waitForTimeout(1500);
+  check(
+    "pressing Enter in the reason box doesn't cancel without asking",
+    plain(await card("Cancel Test").innerText()).includes("New order") &&
+      (await card("Cancel Test").getByRole("group").count()) === 0,
+  );
+}
 {
   const question = await ask("Cancel Test", "Cancel order");
   check(
@@ -216,25 +260,45 @@ check(
   plain(await card("Cancel Test").innerText()).includes("New order") &&
     !(await customerSees(cancelHref)).includes("Outside our delivery area"),
 );
-check("cancelling never touched the stock count", (await stockLeft()) === 8);
+check("cancelling never touched the stock count", (await stockLeft()) === 1);
 
-// ---------- An order marked paid before Undo existed ----------
-{
+// ---------- Paid orders that don't know what came off the stock count ----------
+if (process.env.E2E_DATA_DIR) {
   const file = path.join(process.env.E2E_DATA_DIR, "orders.json");
-  const orders = JSON.parse(fs.readFileSync(file, "utf8"));
-  const paid = orders.find((o) => o.customer.name === "Undo Test");
-  delete paid.stockTaken;
-  fs.writeFileSync(file, JSON.stringify(orders, null, 2));
-  await admin.goto(B + "/admin");
-  const question = await ask("Undo Test", "Undo payment");
+  // Marks "Undo Test" paid, rewrites its record of the packs, then undoes the payment.
+  async function payAndUndo(stockTaken) {
+    await admin.goto(B + "/admin");
+    await ask("Undo Test", "Mark as paid");
+    await card("Undo Test").getByRole("button", { name: "Yes, mark as paid" }).click();
+    await card("Undo Test").getByRole("button", { name: "Mark as delivered" }).waitFor();
+    const orders = JSON.parse(fs.readFileSync(file, "utf8"));
+    const paid = orders.find((o) => o.customer.name === "Undo Test");
+    if (stockTaken === undefined) delete paid.stockTaken;
+    else paid.stockTaken = stockTaken;
+    fs.writeFileSync(file, JSON.stringify(orders, null, 2));
+    await admin.goto(B + "/admin");
+    const question = await ask("Undo Test", "Undo payment");
+    await card("Undo Test").getByRole("button", { name: "Yes, undo payment" }).click();
+    await card("Undo Test").getByRole("button", { name: "Mark as paid", exact: true }).waitFor();
+    return question;
+  }
+  await setStock(5);
+  const older = await payAndUndo(undefined); // marked paid before Undo existed
   check(
     "for an older paid order, Undo says the stock count won't change",
-    question.includes("The stock count doesn't change"),
-    question,
+    older.includes("The stock count doesn't change"),
+    older,
   );
-  await card("Undo Test").getByRole("button", { name: "Yes, undo payment" }).click();
-  await card("Undo Test").getByRole("button", { name: "Mark as paid", exact: true }).waitFor();
-  check("…and leaves the count alone", (await stockLeft()) === 8);
+  check("…and leaves the count alone", (await stockLeft()) === 3);
+  const failed = await payAndUndo(null); // the stock change failed when it was paid
+  check(
+    "when the stock change had failed, Undo says to check the count",
+    failed.includes("may not have changed when it was marked paid"),
+    failed,
+  );
+  check("…and leaves the count alone too", (await stockLeft()) === 1);
+} else {
+  skip("Undo on paid orders that don't know their packs", "needs E2E_DATA_DIR (tests/run.mjs)");
 }
 
 check("no page errors", errs.length === 0, errs.join(" | "));

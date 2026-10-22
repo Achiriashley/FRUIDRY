@@ -110,15 +110,18 @@ const p4 = await c4.newPage();
 p4.on("pageerror", (e) => errs.push(e.message));
 await p4.goto(B + "/admin/orders");
 await p4.waitForTimeout(900);
+// Open the question while signed in, and let that tap's session check-in come back (the
+// next one is 2 minutes away)...
+const checkIn = p4.waitForResponse(
+  (r) => r.url().endsWith("/admin/session") && r.request().postDataJSON()?.active === true,
+);
+await p4.getByRole("button", { name: "Mark as paid" }).first().click();
+await checkIn;
+await p4.getByRole("button", { name: "Yes, mark as paid" }).waitFor();
+// ...then the session ends before "Yes": the server refuses and shows the sign-in form.
 const expired = nowS() - 40 * 60;
 await c4.addCookies([{ name: "fruidry_admin", value: signToken(expired), url: B }]);
-await p4.getByRole("button", { name: "Mark as paid" }).first().click();
-// The tap itself usually brings the sign-in form (any tap checks the session); if the
-// question shows first, answering it must too.
-await p4
-  .getByRole("button", { name: "Yes, mark as paid" })
-  .click({ timeout: 3000 })
-  .catch(() => {});
+await p4.getByRole("button", { name: "Yes, mark as paid" }).click();
 await p4.waitForTimeout(2000);
 check(
   "Mark as paid with an ended session shows the sign-in form",

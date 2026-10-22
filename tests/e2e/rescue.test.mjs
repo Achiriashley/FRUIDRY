@@ -1,7 +1,9 @@
 // When WhatsApp doesn't open after "Order on WhatsApp" (for example inside the Instagram
 // or TikTok app): the "Almost done!" screen offers the order to copy, the shop's number,
-// and says the shop will get in touch, in English and French.
-import { BASE_URL as B, check, finish, launch } from "./lib.mjs";
+// and says the shop will get in touch (only if the order was saved), in English and French.
+import fs from "node:fs";
+import path from "node:path";
+import { BASE_URL as B, check, finish, launch, skip } from "./lib.mjs";
 
 const b = await launch();
 const errs = [];
@@ -124,6 +126,39 @@ async function order(page, lang, labels) {
       selected === (await box.inputValue()).length,
     `${text} | selected ${selected}`,
   );
+}
+
+// ---------- An order the shop couldn't save ----------
+// The help is still there, but no promise to get in touch: the shop doesn't have the order.
+if (process.env.E2E_DATA_DIR) {
+  const file = path.join(process.env.E2E_DATA_DIR, "orders.json");
+  const kept = `${file}.kept`;
+  const had = fs.existsSync(file);
+  if (had) fs.renameSync(file, kept);
+  fs.mkdirSync(file); // a folder can't be read as the order list, so saving fails
+  try {
+    const page = await phone({ locale: "en-GB" });
+    const main = await order(page, "en", {
+      name: "Full name",
+      phone: "Phone number",
+      address: "Delivery address",
+      send: "Order on WhatsApp",
+      notOpened: "WhatsApp didn't open?",
+    });
+    check(
+      "when the order couldn't be saved, the copy and number are there but no promise",
+      (await page.getByRole("button", { name: "Copy my order" }).count()) === 1 &&
+        main.includes("+237 600 00 00 00") &&
+        !main.includes("We've received order") &&
+        (await page.getByRole("link", { name: "View your order" }).count()) === 0,
+      main,
+    );
+  } finally {
+    fs.rmSync(file, { recursive: true });
+    if (had) fs.renameSync(kept, file);
+  }
+} else {
+  skip("an order the shop couldn't save", "needs E2E_DATA_DIR (tests/run.mjs)");
 }
 
 check("no page errors", errs.length === 0, errs.join(" | "));

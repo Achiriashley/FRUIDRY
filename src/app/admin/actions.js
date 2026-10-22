@@ -123,11 +123,23 @@ export async function undoPayment(formData) {
   if (!order) throw new Error("Order not found");
   if (order.status === ORDER_STATUS.confirmed) {
     const { stockTaken, ...rest } = order;
-    await saveOrder({ ...rest, status: ORDER_STATUS.awaitingPayment, receipt: null });
-    if (stockTaken) await moveOrderStock(() => returnStock(stockTaken));
+    // The packs go back first: if that fails, the order stays paid and keeps its record of
+    // them, so Undo can be tried again.
+    const returned = stockTaken ? await moveOrderStock(() => returnStock(stockTaken)) : {};
+    if (!returned) throw new Error("The packs couldn't be put back in stock. Please try again.");
+    try {
+      await saveOrder({ ...rest, status: ORDER_STATUS.awaitingPayment, receipt: null });
+    } catch (error) {
+      if (Object.keys(returned).length > 0) {
+        await moveOrderStock(() => subtractStock(Object.entries(returned).map(toItem)));
+      }
+      throw error;
+    }
   }
   refresh();
 }
+
+const toItem = ([slug, quantity]) => ({ slug, quantity });
 
 // Undo for "Mark as delivered": back to Paid, to deliver.
 export async function undoDelivered(formData) {

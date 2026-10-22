@@ -95,8 +95,14 @@ function customerMessage(order) {
 const packsText = (n) => `${n} ${n === 1 ? "pack goes" : "packs go"}`;
 
 // What "Undo payment" does besides moving the order back to New orders. Orders marked
-// paid before Undo existed (or whose stock change failed) don't know what came off.
+// paid before Undo existed have no stockTaken; null means the stock change failed then.
 function undoPaymentHint(order) {
+  if (order.stockTaken === null) {
+    return (
+      "The customer's receipt is hidden. The stock count may not have changed when it was " +
+      "marked paid, so it isn't changed now: check each product's count on its page."
+    );
+  }
   if (!order.stockTaken) {
     return (
       "The customer's receipt is hidden. The stock count doesn't change: if you count " +
@@ -191,7 +197,14 @@ export function OrderCard({ order, siteUrl }) {
           </OrderForm>
         )}
         {canDecide && !cancelled && (
-          <OrderForm action={rejectPayment} order={order}>
+          <form
+            action={rejectPayment}
+            className="flex w-full flex-wrap items-center gap-2 sm:w-auto"
+          >
+            {/* Pressing Enter (or Go on a phone) in the reason box would send the form
+                without the question: a disabled first button stops that. */}
+            <button type="submit" disabled hidden aria-hidden="true" tabIndex={-1} />
+            <input type="hidden" name="orderId" value={order.id} />
             <input
               name="reason"
               aria-label="Reason for cancelling"
@@ -207,7 +220,7 @@ export function OrderCard({ order, siteUrl }) {
               className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
               yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             />
-          </OrderForm>
+          </form>
         )}
         {order.status === ORDER_STATUS.confirmed && (
           <OrderForm action={markDelivered} order={order}>

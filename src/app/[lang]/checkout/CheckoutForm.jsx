@@ -197,18 +197,21 @@ function CheckoutFormInner() {
 function OrderSent({ state }) {
   const { t, href } = useLocale();
   return (
-    <div className="rounded-2xl bg-white p-8 text-center shadow-sm" role="status">
-      <p className="text-5xl" aria-hidden>
-        💬
-      </p>
-      <h2 className="mt-4 text-2xl font-bold">{t.checkout.almostDone}</h2>
-      <p className="mt-2 text-stone-600">
-        {t.checkout.readyBefore}
-        <span className="font-mono font-semibold">{state.reference}</span>
-        {t.checkout.readyMiddle}
-        <strong>{t.checkout.readySend}</strong>
-        {t.checkout.readyAfter}
-      </p>
+    <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+      {/* Announced once; the help below changes without being read out again. */}
+      <div role="status">
+        <p className="text-5xl" aria-hidden>
+          💬
+        </p>
+        <h2 className="mt-4 text-2xl font-bold">{t.checkout.almostDone}</h2>
+        <p className="mt-2 text-stone-600">
+          {t.checkout.readyBefore}
+          <span className="font-mono font-semibold">{state.reference}</span>
+          {t.checkout.readyMiddle}
+          <strong>{t.checkout.readySend}</strong>
+          {t.checkout.readyAfter}
+        </p>
+      </div>
       <a
         href={state.whatsappUrl}
         className="mt-6 inline-block rounded-full btn-whatsapp px-6 py-3 font-semibold"

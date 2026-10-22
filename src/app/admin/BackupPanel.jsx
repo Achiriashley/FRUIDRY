@@ -62,7 +62,8 @@ export function BackupReminder() {
   if (!isDue(days)) {
     return saved ? (
       <p role="status" className="rounded-2xl bg-green-50 p-5 text-sm text-green-800 shadow-sm">
-        Full copy saved. {KEEP_PRIVATE}
+        Your full copy is downloading. On an iPhone it goes to Files → Downloads (tap Download if
+        asked). {KEEP_PRIVATE}
       </p>
     ) : null;
   }
