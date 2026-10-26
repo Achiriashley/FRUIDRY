@@ -22,6 +22,7 @@ import {
   createInvoice,
   getInvoice,
   getInvoiceSettings,
+  listInvoices,
   saveInvoice,
   saveInvoiceSettings,
 } from "@/lib/invoices";
@@ -183,12 +184,33 @@ export async function saveInvoiceAction(_prev, formData) {
   const issueDate = String(formData.get("issueDate") ?? "");
   const dueDate = String(formData.get("dueDate") ?? "");
   if (!isDay(issueDate) || issueDate < "2020-01-01") errors.issueDate = "Choose the date.";
+  // Numbers follow on within a year: an invoice can't move to another year.
+  else if (existing && issueDate.slice(0, 4) !== existing.issueDate.slice(0, 4)) {
+    errors.issueDate =
+      `Keep a date in ${existing.issueDate.slice(0, 4)}: ${existing.number} belongs to that ` +
+      "year. For another year, make a new invoice.";
+  }
   if (!isDay(dueDate)) errors.dueDate = "Choose the date.";
   else if (!errors.issueDate && dueDate < issueDate) {
     errors.dueDate = "This date can't be before the invoice date.";
   }
 
-  const vatRate = existing ? existing.vatRate : (await getInvoiceSettings()).vat ? VAT_RATE : 0;
+  // A website order's invoice: only once the order is paid, and only one per order. Its
+  // prices are the order's, which already include any tax, so no TVA is added.
+  const order =
+    existing || kind !== "invoice" ? null : await getOrder(String(formData.get("orderId") ?? ""));
+  if (order) {
+    const other = (await listInvoices()).find((i) => i.orderId === order.id && !i.cancelled);
+    if (other) errors.form = `Order ${order.reference} already has invoice ${other.number}.`;
+    else if (!isPaid(order)) {
+      errors.form = `Mark order ${order.reference} as paid first, then make its invoice.`;
+    }
+  }
+  const vatRate = existing
+    ? existing.vatRate
+    : !order && (await getInvoiceSettings()).vat
+      ? VAT_RATE
+      : 0;
   const subtotal = invoiceTotals({ items }).subtotal;
   const typedDiscount = wholeNumber(formData.get("discount"), 0, MAX_AMOUNT);
   const discount = typedDiscount === null ? 0 : typedDiscount;
@@ -198,8 +220,9 @@ export async function saveInvoiceAction(_prev, formData) {
   const notes = text(formData, "notes", 1000, errors, { label: "the notes" });
   const totals = invoiceTotals({ items, discount: discount || 0, vatRate });
   if (!errors.items && totals.total <= 0) errors.items = "The total must be more than 0 FCFA.";
-
-  const order = existing ? null : await getOrder(String(formData.get("orderId") ?? ""));
+  else if (!errors.items && totals.total > MAX_AMOUNT) {
+    errors.items = `The total can't be more than ${formatPrice(MAX_AMOUNT)}: check the quantities and prices.`;
+  }
   if (Object.keys(errors).length > 0) return { status: "error", errors };
 
   // A new client is added to the list when asked; a chosen one keeps its details
@@ -232,24 +255,22 @@ export async function saveInvoiceAction(_prev, formData) {
     saved = await createInvoice({
       kind,
       ...content,
-      // Made from a website order: it's already counted in Books and the stock, and
-      // a paid order arrives already paid.
+      // Made from a paid website order: it's already counted in Books and the stock
+      // through the order, and arrives with the order's payment (which stays).
       ...(order
         ? {
             orderId: order.id,
             orderReference: order.reference,
-            payments:
-              kind === "invoice" && isPaid(order) && order.receipt
-                ? [
-                    {
-                      id: randomBytes(6).toString("base64url"),
-                      date: todayInCameroon(new Date(order.receipt.confirmedAt)),
-                      amount: Math.min(order.total, totals.total),
-                      method: "momo",
-                      note: `Website order ${order.reference}`,
-                    },
-                  ]
-                : [],
+            payments: [
+              {
+                id: randomBytes(6).toString("base64url"),
+                date: todayInCameroon(new Date(order.receipt?.confirmedAt ?? Date.now())),
+                amount: Math.min(order.total, totals.total),
+                method: "momo",
+                note: `Website order ${order.reference}`,
+                fromOrder: true,
+              },
+            ],
           }
         : {}),
     });
@@ -357,7 +378,8 @@ export async function deletePaymentAction(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   const invoice = await getInvoice(String(formData.get("id") ?? ""));
   const paymentId = String(formData.get("paymentId") ?? "");
-  if (invoice?.payments.some((p) => p.id === paymentId)) {
+  // The payment of the website order an invoice was made from stays: it's the order's.
+  if (invoice?.payments.some((p) => p.id === paymentId && !p.fromOrder)) {
     await saveWithBooks({
       ...invoice,
       payments: invoice.payments.filter((p) => p.id !== paymentId),
@@ -371,8 +393,14 @@ export async function deletePaymentAction(formData) {
 export async function cancelInvoiceAction(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   const invoice = await getInvoice(String(formData.get("id") ?? ""));
-  // An invoice with payments isn't cancelled: delete its payments first.
-  if (invoice && !invoice.cancelled && !invoice.convertedTo && invoice.payments.length === 0) {
+  // An invoice with payments isn't cancelled (delete its payments first), except a
+  // website order's invoice, which never counts in Books by itself.
+  if (
+    invoice &&
+    !invoice.cancelled &&
+    !invoice.convertedTo &&
+    (invoice.payments.length === 0 || invoice.orderId)
+  ) {
     const reason = String(formData.get("reason") ?? "")
       .trim()
       .slice(0, 300);
@@ -384,11 +412,19 @@ export async function cancelInvoiceAction(formData) {
 export async function reopenInvoiceAction(formData) {
   if (!(await touchAdminSession())) redirect("/admin");
   const invoice = await getInvoice(String(formData.get("id") ?? ""));
-  if (invoice?.cancelled) {
+  if (invoice?.cancelled && !(await orderHasOtherInvoice(invoice))) {
     const { cancelled, ...rest } = invoice;
     await saveInvoice(rest);
   }
   refresh();
+}
+
+// A website order has one invoice at a time: true if another (not cancelled) has it.
+async function orderHasOtherInvoice(invoice) {
+  if (!invoice.orderId) return false;
+  return (await listInvoices()).some(
+    (i) => i.orderId === invoice.orderId && i.id !== invoice.id && !i.cancelled,
+  );
 }
 
 export async function convertProformaAction(formData) {

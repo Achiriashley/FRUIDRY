@@ -110,7 +110,7 @@ export function SettingsForm({ settings }) {
         {checkbox(
           "vat",
           "Add TVA (19.25%) to new invoices",
-          "Only if you're registered to collect VAT. Invoices then show the total excluding VAT, the TVA and the total including VAT. Invoices already made don't change.",
+          "Only if you're registered to collect VAT. Prices on invoices then count as before TVA, and 19.25% is added on top: invoices show the total excluding VAT, the TVA and the total including VAT. Invoices already made, and invoices for website orders, don't change.",
         )}
         {field(
           "footer",

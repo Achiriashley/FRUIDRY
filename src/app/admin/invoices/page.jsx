@@ -1,6 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
+import { formatDay } from "@/lib/i18n";
 import { amountDue, invoiceStatus, todayInCameroon } from "@/lib/invoice-math";
 import { listInvoices } from "@/lib/invoices";
 import { formatPrice } from "@/lib/products";
@@ -82,8 +83,10 @@ function InvoiceList({ params, invoices, setupNeeded }) {
   const filter = FILTERS.find((f) => f.id === params.status) ?? FILTERS[0];
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const needle = q.toLowerCase().replace(/\s/g, "");
+  const clientId = typeof params.client === "string" ? params.client : "";
   const visible = withStatus.filter(({ invoice, status }) => {
     if (!filter.keep(invoice, status)) return false;
+    if (clientId && invoice.client.id !== clientId) return false;
     if (!needle) return true;
     return [invoice.number, invoice.client.name, invoice.client.contact, invoice.client.phone]
       .filter(Boolean)
@@ -95,8 +98,10 @@ function InvoiceList({ params, invoices, setupNeeded }) {
   );
   const overdue = toBePaid.filter(({ status }) => status === "overdue");
   const month = today.slice(0, 7);
+  // Payments of website orders' invoices are left out: Books count them with the order.
   const received = invoices
     .flatMap((invoice) => (invoice.cancelled ? [] : invoice.payments))
+    .filter((p) => !p.fromOrder)
     .filter((p) => p.date.startsWith(month))
     .reduce((total, p) => total + p.amount, 0);
   const due = (list) => list.reduce((total, { invoice }) => total + amountDue(invoice), 0);
@@ -156,7 +161,7 @@ function InvoiceList({ params, invoices, setupNeeded }) {
               defaultValue={q}
               aria-label="Search invoices"
               placeholder="Number or client"
-              className="min-w-0 flex-1 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-full border border-stone-300 bg-white px-4 py-2 text-base"
             />
             <button
               type="submit"
@@ -205,8 +210,9 @@ function InvoiceList({ params, invoices, setupNeeded }) {
                       </span>
                       <span className="mt-1 block truncate font-medium">{invoice.client.name}</span>
                       <span className="block text-xs text-stone-500">
-                        {invoice.issueDate} · {invoice.kind === "proforma" ? "valid until" : "due"}{" "}
-                        {invoice.dueDate}
+                        {formatDay(invoice.issueDate, "en")} ·{" "}
+                        {invoice.kind === "proforma" ? "valid until" : "due"}{" "}
+                        {formatDay(invoice.dueDate, "en")}
                       </span>
                     </span>
                     <span className="text-right">

@@ -220,7 +220,9 @@ cafés, offices) and for any website order on request, in French or English.
   a gift box…), a discount, the dates and notes; the total updates as you type. Numbers
   follow on each year: `FAC-2026-0001` for invoices, `PRO-2026-0001` for proformas. A
   number is never reused: cancel an invoice made by mistake (it can be undone) rather than
-  delete it. Invoices state the total in words ("Arrêtée la présente facture à la somme
+  delete it. Once cancelled, its link only says it was cancelled, without the client's
+  details (useful if it was sent to the wrong number). An invoice keeps its year: to
+  date it in another year, make a new one. Invoices state the total in words ("Arrêtée la présente facture à la somme
   de …").
 - **Send on WhatsApp** opens a message to the client with the invoice's private link,
   where they see it, print it or save it as a PDF. **Remind on WhatsApp** (unpaid
@@ -233,9 +235,11 @@ cafés, offices) and for any website order on request, in French or English.
   mistake undoes both.
 - A proforma is a quote: **Turn into an invoice** makes the invoice in one tap.
 - **Edit** works until a payment is recorded. **New invoice like this** copies one.
-- On a website order, **Make an invoice** starts one from the customer and what they
-  ordered (already paid if the order is). It doesn't count again in Books or the stock:
-  the order already does.
+- On a **paid** website order, **Make an invoice** starts one from the customer and what
+  they ordered, already paid, with no TVA added (the order's prices are final). It
+  doesn't count again in Books or the stock: the order already does. An order has one
+  invoice at a time: to correct it, cancel it and make a new one from the order. To bill a
+  business before it pays, use **New invoice** instead.
 - **Clients**: saved business clients (name, contact person, phone, email, address, NIU,
   a private note), with one tap to invoice them.
 

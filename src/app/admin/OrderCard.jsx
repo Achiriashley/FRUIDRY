@@ -269,7 +269,8 @@ export function OrderCard({ order, siteUrl, invoice }) {
             Invoice {invoice.number}
           </Link>
         ) : (
-          !cancelled && (
+          // Once paid: an invoice stands for money received (see Invoices).
+          isPaid(order) && (
             <Link
               href={`/admin/invoices/new?order=${order.id}`}
               className="text-sm text-stone-600 underline hover:text-brand"

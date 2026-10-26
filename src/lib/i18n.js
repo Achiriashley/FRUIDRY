@@ -44,11 +44,13 @@ export function searchName(product) {
 }
 
 // "26 October 2026" / "26 octobre 2026" for a day written "2026-10-26".
+// The first of the month is "1er" in French.
 export function formatDay(day, lang) {
-  return new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
+  const text = new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
     dateStyle: "long",
     timeZone: "UTC",
   }).format(new Date(`${day}T00:00:00Z`));
+  return lang === "fr" ? text.replace(/^1 /, "1er ") : text;
 }
 
 export function formatDate(iso, lang) {
@@ -551,6 +553,7 @@ const en = {
     fromOrder: (reference) => `Website order ${reference}`,
     stampPaid: "Paid",
     stampCancelled: "Cancelled",
+    cancelledNote: "This document was cancelled. Contact us if you have any questions.",
     proformaNote:
       "This proforma is a quote, valid until the date above. It isn't a request for payment.",
     thanks: "Thank you for your business.",
@@ -599,7 +602,7 @@ const en = {
       {
         heading: "If you buy from us as a business",
         paragraphs: [
-          "When we make an invoice or a proforma for you, we keep the business name, contact person, phone number, email, address and taxpayer number (NIU) you give us, what you bought and what you've paid. We use them only for your invoices and their payment, and to send them to you on WhatsApp. We may also keep your details as a client so we don't have to ask again: you can ask us to remove them at any time. The invoices themselves are kept as long as accounting rules require.",
+          "When we make an invoice or a proforma for you, we keep the business name, contact person, phone number, email, address and taxpayer number (NIU) you give us, what you bought and what you've paid. We use them only for your invoices and their payment, and to send them to you on WhatsApp. We may also keep your details as a client so we don't have to ask again, with any note we write about you as a client: you can ask us to remove them at any time. The invoices themselves are kept as long as accounting rules require.",
         ],
       },
       {
@@ -1139,6 +1142,7 @@ const fr = {
     fromOrder: (reference) => `Commande en ligne ${reference}`,
     stampPaid: "Payée",
     stampCancelled: "Annulée",
+    cancelledNote: "Ce document a été annulé. Contactez-nous si vous avez des questions.",
     proformaNote:
       "Cette facture proforma est un devis, valable jusqu'à la date indiquée. Elle ne vaut pas demande de paiement.",
     thanks: "Merci pour votre confiance.",
@@ -1188,7 +1192,7 @@ const fr = {
       {
         heading: "Si vous achetez pour une entreprise",
         paragraphs: [
-          "Quand nous établissons une facture ou une facture proforma à votre nom, nous conservons le nom de l'entreprise, la personne à contacter, le téléphone, l'e-mail, l'adresse et le numéro de contribuable (NIU) que vous nous donnez, ce que vous avez acheté et ce que vous avez payé. Nous les utilisons uniquement pour vos factures et leur paiement, et pour vous les envoyer sur WhatsApp. Nous pouvons aussi garder vos coordonnées de client pour ne pas vous les redemander : vous pouvez nous demander de les supprimer à tout moment. Les factures elles-mêmes sont conservées aussi longtemps que les règles comptables l'exigent.",
+          "Quand nous établissons une facture ou une facture proforma à votre nom, nous conservons le nom de l'entreprise, la personne à contacter, le téléphone, l'e-mail, l'adresse et le numéro de contribuable (NIU) que vous nous donnez, ce que vous avez acheté et ce que vous avez payé. Nous les utilisons uniquement pour vos factures et leur paiement, et pour vous les envoyer sur WhatsApp. Nous pouvons aussi garder vos coordonnées de client pour ne pas vous les redemander, ainsi que les remarques que nous notons sur vous en tant que client : vous pouvez nous demander de les supprimer à tout moment. Les factures elles-mêmes sont conservées aussi longtemps que les règles comptables l'exigent.",
         ],
       },
       {

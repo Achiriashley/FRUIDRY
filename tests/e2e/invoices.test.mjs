@@ -237,8 +237,16 @@ await label("Saved client").selectOption({ label: "Café Akwa SARL" });
 check(
   "choosing a saved client fills in their details",
   (await label("Contact person (optional)").inputValue()) === "Mme Ngo" &&
-    (await label("Client's NIU (optional)").inputValue()) === "P098765432101Y",
+    (await label("Client's NIU (optional)").inputValue()) === "P098765432101Y" &&
+    (await main(a)).includes("Changes typed here also update this client"),
 );
+await label("Saved client").selectOption("");
+check(
+  "going back to New client empties the client's details",
+  (await label("Client name").inputValue()) === "" &&
+    (await label("Client's NIU (optional)").inputValue()) === "",
+);
+await label("Saved client").selectOption({ label: "Café Akwa SARL" });
 await label("Date", { exact: true }).fill(`${year}-01-05`);
 await label("Pay by").fill(`${year}-01-20`);
 await line(1).getByLabel("Product").selectOption("mixed-fruit-pack");
@@ -267,7 +275,17 @@ await confirm("Cancel invoice", "Yes, cancel invoice");
 await visible(a.getByText("Cancelled: Mauvais client")).waitFor();
 await client.goto(B + `/fr/invoice/${overdueId}`);
 await visible(client.locator("article h1")).waitFor();
-check("a cancelled invoice says so on the client's page", /Annulée/i.test(await main(client)));
+{
+  const text = await main(client);
+  check(
+    "a cancelled invoice's link says so, without the client's details",
+    /Annulée/i.test(text) &&
+      text.includes("Ce document a été annulé") &&
+      !text.includes("Café Akwa SARL") &&
+      !text.includes("P098765432101Y"),
+    text.slice(0, 300),
+  );
+}
 await confirm("Undo cancel", "Yes, reopen");
 await button("Cancel invoice").waitFor();
 check("Undo cancel reopens it", (await main(a)).includes("Overdue"));
@@ -322,6 +340,14 @@ check(
 
 // ---------- Editing an unpaid invoice ----------
 await visit(`/admin/invoices/${fromProformaId}/edit`, () => button("Save changes"));
+{
+  const date = await label("Date", { exact: true }).inputValue();
+  await label("Date", { exact: true }).fill(`${Number(year) - 1}-12-28`);
+  await button("Save changes").click();
+  await visible(a.getByText(`Keep a date in ${year}`)).waitFor();
+  check("an invoice can't move to another year (its number belongs to its year)", true);
+  await label("Date", { exact: true }).fill(date);
+}
 await line(1).getByLabel("Quantity").fill("6");
 await button("Save changes").click();
 await a.waitForURL((url) => url.pathname.endsWith(fromProformaId));
@@ -370,6 +396,12 @@ await saved();
       text.includes("Commande en ligne FD-"),
     text.slice(0, 500),
   );
+  check(
+    "its order payment can't be deleted, it can be cancelled, and it isn't copied",
+    (await button("Delete").count()) === 0 &&
+      (await button("Cancel invoice").count()) === 1 &&
+      (await link("New invoice like this").count()) === 0,
+  );
   const sales = await booksSales();
   check(
     "it isn't counted twice: Books has the order and the first invoice only",
@@ -379,8 +411,34 @@ await saved();
     sales,
   );
 }
-await visit("/admin/orders", () => visible(a.getByText("Paul Ekane")));
+// An unpaid order: no invoice yet.
+await client.goto(B + "/fr/shop/mixed-fruit-pack");
+await client.waitForLoadState("networkidle");
+await client.evaluate(() =>
+  localStorage.setItem("fruidry-cart", JSON.stringify([{ slug: "mixed-fruit-pack", quantity: 1 }])),
+);
+await client.goto(B + "/fr/checkout");
+await client.getByLabel("Nom complet").fill("Unpaid Buyer");
+await client.getByLabel("Numéro de téléphone").fill("699 33 44 55");
+await client.getByLabel("Adresse de livraison").fill("Limbé");
+await client.getByRole("button", { name: "Commander sur WhatsApp" }).click();
+await client.waitForURL("https://wa.me/**");
+await visit("/admin/orders", () => visible(a.getByText("Unpaid Buyer")));
 check("the order now links to its invoice", (await link(`Invoice FAC-${year}-0004`).count()) === 1);
+{
+  const unpaid = visible(a.locator("article", { hasText: "Unpaid Buyer" })).first();
+  const orderId = (
+    await unpaid.getByRole("link", { name: "View customer page" }).getAttribute("href")
+  )
+    .split("/")
+    .at(-1);
+  check(
+    "an unpaid order has no Make an invoice link",
+    (await unpaid.getByRole("link", { name: "Make an invoice" }).count()) === 0,
+  );
+  await visit(`/admin/invoices/new?order=${orderId}`, () => visible(a.getByText(/isn't paid yet/)));
+  check("…and its invoice page says to mark it as paid first", true);
+}
 
 // ---------- The list, clients, dashboard and backup ----------
 await visit("/admin/invoices", () => visible(a.getByText("Received this month")));

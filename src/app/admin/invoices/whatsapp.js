@@ -1,4 +1,4 @@
-import { formatDay } from "@/lib/i18n";
+import { formatDay, frenchSpacing } from "@/lib/i18n";
 import { amountDue, todayInCameroon } from "@/lib/invoice-math";
 import { formatPrice } from "@/lib/products";
 import { momoPayCode, whatsAppLink } from "@/lib/shop-config";
@@ -41,11 +41,15 @@ export function sendInvoiceMessage(invoice, siteUrl) {
       : `Hello ${greeting(invoice)}, here is your Fruidry invoice ${invoice.number} for ` +
           `${total}, to pay by ${date}: ${link}\nThank you for your business!`;
   }
-  return proforma
-    ? `Bonjour ${greeting(invoice)}, voici votre facture proforma Fruidry ${invoice.number} ` +
-        `d'un montant de ${total}, valable jusqu'au ${date} : ${link}`
-    : `Bonjour ${greeting(invoice)}, voici votre facture Fruidry ${invoice.number} d'un montant ` +
-        `de ${total}, à régler avant le ${date} : ${link}\nMerci pour votre confiance !`;
+  // French puts a no-break space before ":" and "!" (frenchSpacing).
+  return frenchSpacing(
+    proforma
+      ? `Bonjour ${greeting(invoice)}, voici votre facture proforma Fruidry ${invoice.number} ` +
+          `d'un montant de ${total}, valable jusqu'au ${date} : ${link}`
+      : `Bonjour ${greeting(invoice)}, voici votre facture Fruidry ${invoice.number} d'un ` +
+          `montant de ${total}, à régler au plus tard le ${date} : ${link}\n` +
+          "Merci pour votre confiance !",
+  );
 }
 
 // The MoMo code is between ``` so WhatsApp shows its * as typed (not as bold).
@@ -66,12 +70,15 @@ export function reminderMessage(invoice, siteUrl) {
       "Thank you!",
     ].join("\n");
   }
-  return [
-    `Bonjour ${greeting(invoice)}, petit rappel au sujet de la facture Fruidry ` +
-      `${invoice.number} : il reste ${due} à payer${late ? ` (échéance le ${date})` : `, avant le ${date}`}.`,
-    `Votre facture : ${link}`,
-    ...(momo ? ["", "Payez par MTN Mobile Money en composant :", code] : []),
-    "",
-    "Merci !",
-  ].join("\n");
+  return frenchSpacing(
+    [
+      `Bonjour ${greeting(invoice)}, petit rappel au sujet de la facture Fruidry ` +
+        `${invoice.number} : il reste ${due} à payer` +
+        (late ? ` (échue depuis le ${date}).` : `, au plus tard le ${date}.`),
+      `Votre facture : ${link}`,
+      ...(momo ? ["", "Payez par MTN Mobile Money en composant :", code] : []),
+      "",
+      "Merci !",
+    ].join("\n"),
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { addDays, invoiceTotals } from "@/lib/invoice-math";
 import { formatPrice } from "@/lib/products";
 import { submitKeepingInput, useFieldErrors } from "@/lib/use-keep-form";
@@ -63,7 +63,30 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
   function chooseClient(id) {
     setClientId(id);
     const saved = clients.find((c) => c.id === id);
-    if (saved) setClient(Object.fromEntries(CLIENT_KEYS.map((key) => [key, saved[key] ?? ""])));
+    setClient(
+      saved ? Object.fromEntries(CLIENT_KEYS.map((key) => [key, saved[key] ?? ""])) : EMPTY_CLIENT,
+    );
+  }
+
+  // After adding a line, the cursor goes to its product; after removing one, to the
+  // "+ Add a line" button (the removed button is gone).
+  const addButton = useRef(null);
+  const [focusLine, setFocusLine] = useState(null);
+  useEffect(() => {
+    if (focusLine === null) return;
+    if (focusLine === "add") addButton.current?.focus();
+    else document.getElementById(`${uid}-product-${focusLine}`)?.focus();
+  }, [focusLine, uid]);
+
+  function addLine() {
+    const line = newLine();
+    setLines((list) => [...list, line]);
+    setFocusLine(line.key);
+  }
+
+  function removeLine(key) {
+    setLines((list) => list.filter((l) => l.key !== key));
+    setFocusLine("add");
   }
 
   function changeLine(key, change) {
@@ -189,7 +212,11 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
             "Their taxpayer number",
           )}
         </div>
-        {!clientId && (
+        {clientId ? (
+          <p className="text-sm text-stone-500">
+            Changes typed here also update this client in your clients.
+          </p>
+        ) : (
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="saveClient" defaultChecked={!initial.orderId} />
             Save to my clients
@@ -298,7 +325,7 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor={`${uid}-price-${line.key}`} className="text-sm font-medium">
-                    Unit price (FCFA)
+                    {vatRate > 0 ? "Unit price before TVA (FCFA)" : "Unit price (FCFA)"}
                   </label>
                   <input
                     id={`${uid}-price-${line.key}`}
@@ -315,7 +342,7 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
                   {lines.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => setLines((list) => list.filter((l) => l.key !== line.key))}
+                      onClick={() => removeLine(line.key)}
                       className="text-sm font-semibold text-red-700 underline"
                     >
                       Remove line {index + 1}
@@ -326,14 +353,11 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
             </li>
           ))}
         </ol>
-        {state.errors?.items && (
-          <p role="alert" className="text-sm text-red-600">
-            {state.errors.items}
-          </p>
-        )}
+        {state.errors?.items && <p className="text-sm text-red-600">{state.errors.items}</p>}
         <button
+          ref={addButton}
           type="button"
-          onClick={() => setLines((list) => [...list, newLine()])}
+          onClick={addLine}
           className="rounded-full border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand-light"
         >
           + Add a line
@@ -369,9 +393,7 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
               </>
             )}
             <dt className="text-base font-bold">Total</dt>
-            <dd className="text-right text-base font-bold" aria-live="polite">
-              {formatPrice(totals.total)}
-            </dd>
+            <dd className="text-right text-base font-bold">{formatPrice(totals.total)}</dd>
           </dl>
         </div>
       </section>
@@ -387,9 +409,10 @@ export function InvoiceForm({ kind, initial, clients, products, dueDays, vatRate
         )}
       </section>
 
-      {state.errors?.form && (
+      {/* Line errors show here too: the lines can be far above this button on a phone. */}
+      {(state.errors?.form || state.errors?.items) && (
         <p role="alert" className="text-sm text-red-600">
-          {state.errors.form}
+          {state.errors.form ?? state.errors.items}
         </p>
       )}
       <button

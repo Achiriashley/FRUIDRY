@@ -29,11 +29,16 @@ async function InvoiceDetails({ params }) {
   const invoice = await getInvoice(id);
   if (!invoice) notFound();
   const t = getDictionary(invoice.lang === "en" ? "en" : "fr").invoice;
+  if (invoice.cancelled) return <InvoiceDocument invoice={invoice} hideIfCancelled />;
   return (
     <div className="space-y-6">
       <InvoiceDocument invoice={invoice} />
       <div className="text-center">
-        <PrintButton label={t.print} />
+        {/* Named after the invoice, which also names the PDF it's saved as. */}
+        <PrintButton
+          label={t.print}
+          documentTitle={`${invoice.kind === "proforma" ? t.proforma : t.invoice} ${invoice.number}`}
+        />
       </div>
     </div>
   );

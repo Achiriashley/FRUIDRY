@@ -93,7 +93,7 @@ function Clients({ clients = [], invoices = [], setupNeeded = false }) {
                       </Link>
                       {count > 0 && (
                         <Link
-                          href={`/admin/invoices?q=${encodeURIComponent(client.name)}`}
+                          href={`/admin/invoices?client=${client.id}`}
                           className="text-stone-600 hover:text-brand"
                         >
                           {count} {count === 1 ? "invoice" : "invoices"}

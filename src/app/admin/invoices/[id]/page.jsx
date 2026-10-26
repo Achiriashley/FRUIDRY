@@ -10,7 +10,8 @@ import {
   paidAmount,
   todayInCameroon,
 } from "@/lib/invoice-math";
-import { getInvoice } from "@/lib/invoices";
+import { formatDay } from "@/lib/i18n";
+import { getInvoice, listInvoices } from "@/lib/invoices";
 import { formatPrice } from "@/lib/products";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "../../AdminShell";
@@ -40,9 +41,22 @@ export default function InvoiceAdminPage({ params }) {
         <AdminShell active="invoices">
           {async () => {
             const { id } = await params;
-            const [invoice, siteUrl] = await Promise.all([getInvoice(id), getSiteUrl()]);
+            const [invoice, siteUrl, invoices] = await Promise.all([
+              getInvoice(id),
+              getSiteUrl(),
+              listInvoices(),
+            ]);
             if (!invoice) notFound();
-            return <InvoiceDetails invoice={invoice} siteUrl={siteUrl} />;
+            // A website order has one invoice at a time.
+            const orderHasOther = Boolean(
+              invoice.orderId &&
+              invoices.some(
+                (i) => i.orderId === invoice.orderId && i.id !== invoice.id && !i.cancelled,
+              ),
+            );
+            return (
+              <InvoiceDetails invoice={invoice} siteUrl={siteUrl} orderHasOther={orderHasOther} />
+            );
           }}
         </AdminShell>
       </Suspense>
@@ -62,7 +76,7 @@ function InvoiceForm({ action, invoice, children }) {
 
 const packsText = (n) => `${n} ${n === 1 ? "pack" : "packs"}`;
 
-function InvoiceDetails({ invoice, siteUrl }) {
+function InvoiceDetails({ invoice, siteUrl, orderHasOther }) {
   const today = todayInCameroon();
   const status = invoiceStatus(invoice, today);
   const proforma = invoice.kind === "proforma";
@@ -149,9 +163,12 @@ function InvoiceDetails({ invoice, siteUrl }) {
             Edit
           </Link>
         )}
-        <Link href={copyHref} className={BUTTON}>
-          New {label} like this
-        </Link>
+        {/* A website order's invoice is remade from its order (cancel this one first). */}
+        {!invoice.orderId && (
+          <Link href={copyHref} className={BUTTON}>
+            New {label} like this
+          </Link>
+        )}
         {proforma && !invoice.cancelled && !invoice.convertedTo && (
           <InvoiceForm action={convertProformaAction} invoice={invoice}>
             <ConfirmButton
@@ -164,29 +181,31 @@ function InvoiceDetails({ invoice, siteUrl }) {
             />
           </InvoiceForm>
         )}
-        {!invoice.cancelled && !invoice.convertedTo && invoice.payments.length === 0 && (
-          <form action={cancelInvoiceAction} className="flex w-full flex-wrap items-center gap-2">
-            {/* Enter in the reason box mustn't cancel without the question. */}
-            <button type="submit" disabled hidden aria-hidden="true" tabIndex={-1} />
-            <input type="hidden" name="id" value={invoice.id} />
-            <input
-              name="reason"
-              aria-label="Reason for cancelling"
-              placeholder="Reason (optional)"
-              className="rounded-full border border-stone-300 px-3 py-1.5 text-sm"
-            />
-            <ConfirmButton
-              label={`Cancel ${label}`}
-              question={`Cancel ${invoice.number}?`}
-              hint={`Its number stays used, and the client's page shows it as cancelled. You can undo this.`}
-              yes={`Yes, cancel ${label}`}
-              no="Keep it"
-              className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-              yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-            />
-          </form>
-        )}
-        {invoice.cancelled && (
+        {!invoice.cancelled &&
+          !invoice.convertedTo &&
+          (invoice.payments.length === 0 || invoice.orderId) && (
+            <form action={cancelInvoiceAction} className="flex w-full flex-wrap items-center gap-2">
+              {/* Enter in the reason box mustn't cancel without the question. */}
+              <button type="submit" disabled hidden aria-hidden="true" tabIndex={-1} />
+              <input type="hidden" name="id" value={invoice.id} />
+              <input
+                name="reason"
+                aria-label="Reason for cancelling"
+                placeholder="Reason (optional)"
+                className="rounded-full border border-stone-300 px-3 py-1.5 text-base"
+              />
+              <ConfirmButton
+                label={`Cancel ${label}`}
+                question={`Cancel ${invoice.number}?`}
+                hint={`Its number stays used, and the client's page shows it as cancelled. You can undo this.`}
+                yes={`Yes, cancel ${label}`}
+                no="Keep it"
+                className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              />
+            </form>
+          )}
+        {invoice.cancelled && !orderHasOther && (
           <InvoiceForm action={reopenInvoiceAction} invoice={invoice}>
             <ConfirmButton
               label="Undo cancel"
@@ -234,22 +253,25 @@ function InvoiceDetails({ invoice, siteUrl }) {
                 <li key={payment.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
                   <span className="font-semibold">{formatPrice(payment.amount)}</span>
                   <span className="text-stone-600">
-                    {payment.date} · {INVOICE_PAYMENT_METHODS[payment.method] ?? payment.method}
+                    {formatDay(payment.date, "en")} ·{" "}
+                    {INVOICE_PAYMENT_METHODS[payment.method] ?? payment.method}
                     {payment.note ? ` · ${payment.note}` : ""}
                   </span>
-                  <form action={deletePaymentAction} className="contents">
-                    <input type="hidden" name="id" value={invoice.id} />
-                    <input type="hidden" name="paymentId" value={payment.id} />
-                    <ConfirmButton
-                      label="Delete"
-                      question={`Delete this payment of ${formatPrice(payment.amount)}?`}
-                      hint="Only if it was recorded by mistake."
-                      yes="Yes, delete it"
-                      no="Keep it"
-                      className="text-sm font-semibold text-red-700 underline"
-                      yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                    />
-                  </form>
+                  {!payment.fromOrder && (
+                    <form action={deletePaymentAction} className="contents">
+                      <input type="hidden" name="id" value={invoice.id} />
+                      <input type="hidden" name="paymentId" value={payment.id} />
+                      <ConfirmButton
+                        label="Delete"
+                        question={`Delete this payment of ${formatPrice(payment.amount)}?`}
+                        hint="Only if it was recorded by mistake."
+                        yes="Yes, delete it"
+                        no="Keep it"
+                        className="text-sm font-semibold text-red-700 underline"
+                        yesClassName="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                      />
+                    </form>
+                  )}
                 </li>
               ))}
             </ul>
@@ -257,11 +279,12 @@ function InvoiceDetails({ invoice, siteUrl }) {
           {invoice.orderId ? (
             <p className="text-sm text-stone-500">
               Made from website order {invoice.orderReference}: its sale and stock are counted
-              through the order, so payments here don&apos;t change Books or the stock count.
+              through the order, so payments here don&apos;t change Books or the stock count. To
+              correct it, cancel it and make a new one from the order.
             </p>
           ) : invoice.paidAt ? (
             <p className="text-sm text-stone-500">
-              Counted in Books on {invoice.paidAt}
+              Counted in Books on {formatDay(invoice.paidAt, "en")}
               {packsTaken > 0 ? `, and ${packsText(packsTaken)} came off the stock count` : ""}.
             </p>
           ) : (
@@ -276,7 +299,7 @@ function InvoiceDetails({ invoice, siteUrl }) {
         </section>
       )}
 
-      <InvoiceDocument invoice={invoice} />
+      <InvoiceDocument invoice={invoice} heading={2} />
     </div>
   );
 }

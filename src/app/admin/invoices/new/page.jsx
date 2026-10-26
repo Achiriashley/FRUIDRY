@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { addDays, todayInCameroon, VAT_RATE } from "@/lib/invoice-math";
 import { getInvoice, listInvoicesIfSetUp } from "@/lib/invoices";
-import { getOrder } from "@/lib/orders";
+import { getOrder, isPaid } from "@/lib/orders";
 import { AdminPage, AdminShell } from "../../AdminShell";
 import { InvoiceForm } from "../InvoiceForm";
 import { SetupNeeded } from "../InvoicesNav";
@@ -24,19 +24,34 @@ export default function NewInvoicePage({ searchParams }) {
           {async () => {
             const params = await searchParams;
             const kind = params.kind === "proforma" ? "proforma" : "invoice";
-            const [data, order, copy] = await Promise.all([
+            const [data, foundOrder, foundCopy] = await Promise.all([
               loadFormData(),
-              params.order ? getOrder(String(params.order)) : null,
+              params.order && kind === "invoice" ? getOrder(String(params.order)) : null,
               params.copy ? getInvoice(String(params.copy)) : null,
             ]);
             if (data.setupNeeded) return <SetupNeeded />;
+            // A website order's invoice isn't copied: make it again from the order.
+            const copy = foundCopy?.orderId ? null : foundCopy;
 
-            // An order gets one invoice: open it if it already has one.
-            if (order && kind === "invoice") {
+            // An order gets one invoice, once it's paid: open it if it already has one.
+            const order = foundOrder;
+            if (order) {
               const existing = (await listInvoicesIfSetUp()).find(
-                (i) => i.orderId === order.id && i.kind === "invoice" && !i.cancelled,
+                (i) => i.orderId === order.id && !i.cancelled,
               );
               if (existing) redirect(`/admin/invoices/${existing.id}`);
+              if (!isPaid(order)) {
+                return (
+                  <p className="rounded-2xl bg-white p-6 text-stone-700 shadow-sm">
+                    Order {order.reference} isn&apos;t paid yet. Mark it as paid first, then make
+                    its invoice. To send a business an invoice before it pays, use{" "}
+                    <Link href="/admin/invoices/new" className="font-semibold text-brand underline">
+                      New invoice
+                    </Link>{" "}
+                    instead.
+                  </p>
+                );
+              }
             }
 
             const today = todayInCameroon();

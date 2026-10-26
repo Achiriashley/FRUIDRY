@@ -4,8 +4,11 @@ import { formatPrice } from "@/lib/products";
 import { momoPayCode } from "@/lib/shop-config";
 
 // An invoice or proforma as the client sees it (and prints it), always in the invoice's
-// own language. Used on the client's page (/invoice/...) and in the admin panel.
-export function InvoiceDocument({ invoice }) {
+// own language. Used on the client's page (/invoice/...) and in the admin panel, where
+// its title is a level-2 heading (`heading={2}`). On the client's page, a cancelled
+// invoice (`hideIfCancelled`) only says so: a link sent to the wrong person by mistake
+// stops showing the client's details once the invoice is cancelled.
+export function InvoiceDocument({ invoice, heading = 1, hideIfCancelled = false }) {
   const lang = invoice.lang === "en" ? "en" : "fr";
   const { invoice: t, colon } = getDictionary(lang);
   const proforma = invoice.kind === "proforma";
@@ -19,22 +22,53 @@ export function InvoiceDocument({ invoice }) {
     maximumFractionDigits: 2,
   }).format(invoice.vatRate ?? 0);
   const asksForPayment = !proforma && !invoice.cancelled && due > 0;
+  const Title = heading === 2 ? "h2" : "h1";
+  // "deux millions de francs CFA": "de" after a round number of millions or billions.
+  const words = numberInWords(totals.total, lang);
+  const amountInWords =
+    lang === "fr" && /(million|milliard)s?$/.test(words) ? `${words} de` : words;
+
+  const title = (
+    <>
+      <Title className="text-2xl font-extrabold tracking-tight uppercase">
+        {proforma ? t.proforma : t.invoice}
+      </Title>
+      <p className="mt-1 font-mono text-base font-semibold">
+        {t.number} {invoice.number}
+      </p>
+    </>
+  );
+  const stamp = (status === "paid" || status === "cancelled") && (
+    <p
+      className={`mt-3 inline-block rotate-[-6deg] rounded-lg border-4 px-3 py-0.5 text-xl font-extrabold tracking-widest uppercase opacity-80 ${
+        status === "paid" ? "border-green-600 text-green-700" : "border-red-500 text-red-600"
+      }`}
+    >
+      {status === "paid" ? t.stampPaid : t.stampCancelled}
+    </p>
+  );
+
+  if (hideIfCancelled && invoice.cancelled) {
+    return (
+      <article
+        lang={lang}
+        className="rounded-2xl border border-stone-200 bg-white p-6 text-sm shadow-sm sm:p-10"
+      >
+        <p className="font-bold">{business.name}</p>
+        <div className="mt-4">
+          {title}
+          {stamp}
+        </div>
+        <p className="mt-4 text-stone-600">{t.cancelledNote}</p>
+      </article>
+    );
+  }
 
   return (
     <article
       lang={lang}
-      className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 text-sm shadow-sm sm:p-10 print:border-0 print:p-0 print:shadow-none"
+      className="rounded-2xl border border-stone-200 bg-white p-6 text-sm shadow-sm sm:p-10 print:border-0 print:p-0 print:shadow-none"
     >
-      {(status === "paid" || status === "cancelled") && (
-        <p
-          className={`pointer-events-none absolute top-24 right-4 rotate-[-12deg] rounded-lg border-4 px-4 py-1 text-2xl font-extrabold uppercase tracking-widest opacity-70 sm:right-10 ${
-            status === "paid" ? "border-green-600 text-green-700" : "border-red-500 text-red-600"
-          }`}
-        >
-          {status === "paid" ? t.stampPaid : t.stampCancelled}
-        </p>
-      )}
-
       <header className="grid gap-6 border-b border-stone-200 pb-6 sm:grid-cols-2">
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -71,13 +105,9 @@ export function InvoiceDocument({ invoice }) {
           )}
         </div>
         <div className="sm:text-right">
-          <h1 className="text-2xl font-extrabold tracking-tight uppercase">
-            {proforma ? t.proforma : t.invoice}
-          </h1>
-          <p className="mt-1 font-mono text-base font-semibold">
-            {t.number} {invoice.number}
-          </p>
-          <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 sm:justify-end">
+          {title}
+          {stamp}
+          <dl className="mt-3 grid grid-cols-[auto_auto] justify-start gap-x-4 gap-y-1 sm:justify-end">
             <dt className="text-stone-500">{t.issued}</dt>
             <dd>{formatDay(invoice.issueDate, lang)}</dd>
             <dt className="text-stone-500">{proforma ? t.validUntil : t.dueDate}</dt>
@@ -201,9 +231,7 @@ export function InvoiceDocument({ invoice }) {
         )}
       </dl>
 
-      <p className="mt-4 text-stone-600 italic">
-        {t.inWords(numberInWords(totals.total, lang), proforma)}
-      </p>
+      <p className="mt-4 text-stone-600 italic">{t.inWords(amountInWords, proforma)}</p>
 
       {asksForPayment && (business.showMomo || business.paymentInfo) && (
         <section className="mt-6 rounded-xl bg-stone-50 p-4 print:border print:border-stone-200">
