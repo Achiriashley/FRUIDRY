@@ -99,18 +99,26 @@ export async function adminHarness(context) {
  * Starts Chromium (CHROMIUM_PATH picks a specific executable).
  * With { adminHarness: true }, every context the browser opens gets adminHarness().
  */
-export async function launch({ adminHarness: withHarness = false } = {}) {
+export async function launch({ adminHarness: withHarness = false, cookieNotice = false } = {}) {
   const executablePath = process.env.CHROMIUM_PATH || undefined;
   const browser = await chromium.launch(executablePath ? { executablePath } : {});
-  if (withHarness) {
-    const newContext = browser.newContext.bind(browser);
-    browser.newContext = async (...args) => {
-      const context = await newContext(...args);
-      await adminHarness(context);
-      return context;
-    };
-    browser.newPage = async (...args) => (await browser.newContext(...args)).newPage();
-  }
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async (...args) => {
+    const context = await newContext(...args);
+    if (withHarness) await adminHarness(context);
+    // The cookie notice at the bottom of the shop would cover buttons: closed unless asked.
+    if (!cookieNotice) {
+      await context.addInitScript(() => {
+        try {
+          localStorage.setItem("fruidry-cookie-notice", "test");
+        } catch {
+          // about:blank has no storage.
+        }
+      });
+    }
+    return context;
+  };
+  browser.newPage = async (...args) => (await browser.newContext(...args)).newPage();
   return browser;
 }
 

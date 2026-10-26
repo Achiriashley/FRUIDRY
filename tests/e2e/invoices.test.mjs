@@ -462,8 +462,31 @@ check(
   "the client saved from the first invoice is in Clients, with 4 invoices",
   (await main(a)).includes("Café Akwa SARL") && (await main(a)).includes("4 invoices"),
 );
+{
+  await visible(a.getByText("Add a client")).click();
+  const form = visible(a.locator("form", { has: a.getByLabel("Name (business or person)") }));
+  await form.getByLabel("Name (business or person)").fill("Gym Bonapriso");
+  await form.getByLabel("Contact person (optional)").fill("+237 699 00 11 22");
+  await form.getByRole("button", { name: "Add client" }).click();
+  const hint = visible(a.getByText(/looks like a phone number/));
+  await hint.waitFor();
+  check(
+    "a phone number typed in Contact person is refused with a hint",
+    (await hint.innerText()).includes("put it in Phone / WhatsApp") &&
+      !(await main(a)).includes("Gym Bonapriso saved"),
+  );
+}
 await visit("/admin", () => visible(a.getByText("Sales this month")));
 check("the dashboard's sales include the paid invoice", (await main(a)).includes("1 invoice"));
+{
+  const box = await visible(a.getByText("Sales this month")).first().locator("..").boundingBox();
+  check(
+    "on a phone, the sales boxes take the whole row and nothing sticks out",
+    box.width > 300 &&
+      (await a.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)),
+    `${box.width}px`,
+  );
+}
 {
   const files = unzip(Buffer.from(await (await a.request.get(B + "/admin/backup")).body()));
   check(

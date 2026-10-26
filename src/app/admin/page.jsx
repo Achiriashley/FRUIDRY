@@ -72,19 +72,28 @@ function monthKey(iso) {
   }).format(new Date(iso));
 }
 
-function Stat({ label, value, hint, href, highlight = false }) {
+// A box on the dashboard. Amounts of money are `wide`: they take the whole row on
+// phones, where half a row is too narrow for "1 262 500 FCFA".
+function Stat({ label, value, hint, href, highlight = false, wide = false }) {
+  const place = `min-w-0 ${wide ? "col-span-2 lg:col-span-1" : ""}`;
   const body = (
     <div
       className={`h-full rounded-2xl p-5 shadow-sm ${highlight ? "bg-yellow-100" : "bg-white"} ${
-        href ? "transition hover:shadow-md" : ""
+        href ? "transition hover:shadow-md" : place
       }`}
     >
       <p className="text-sm text-stone-600">{label}</p>
-      <p className="mt-1 text-2xl font-extrabold">{value}</p>
-      {hint && <p className="mt-1 text-xs text-stone-500">{hint}</p>}
+      <p className="mt-1 text-2xl font-extrabold break-words">{value}</p>
+      {hint && <p className="mt-1 text-xs break-words text-stone-500">{hint}</p>}
     </div>
   );
-  return href ? <Link href={href}>{body}</Link> : body;
+  return href ? (
+    <Link href={href} className={`block ${place}`}>
+      {body}
+    </Link>
+  ) : (
+    body
+  );
 }
 
 function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales, invoices }) {
@@ -137,12 +146,14 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales, i
         />
         <Stat
           label="Sales this month"
+          wide
           value={formatPrice(sum(paidThisMonth) + sum(soldThisMonth) + invoiced(invoicesThisMonth))}
           hint={salesHint(paidThisMonth, soldThisMonth, invoicesThisMonth)}
           href="/admin/books"
         />
         <Stat
           label="Total sales"
+          wide
           value={formatPrice(sum(paid) + sum(inPersonSales) + invoiced(paidInvoices))}
           hint={salesHint(paid, inPersonSales, paidInvoices)}
         />

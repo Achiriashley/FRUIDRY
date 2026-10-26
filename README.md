@@ -81,8 +81,12 @@ record); it covers `www` too.
   (`privacy`); update the date there when you change them. Checkout and the contact
   form link to it.
 - The only cookies are the language choice and, for you, the admin sign-in. The cart
-  stays in the visitor's browser. There are no tracking or advertising cookies, so no
-  cookie banner is needed.
+  stays in the visitor's browser. There are no tracking or advertising cookies, so the
+  law doesn't require a cookie banner; the shop still shows a short note at the bottom
+  on a first visit ("We only keep what the site needs… No ads, no tracking", with a link
+  to the privacy policy) until the visitor taps **Got it**. That choice is kept on their
+  device. It isn't shown in the admin panel. The texts are in `src/lib/i18n.js`
+  (`cookieNotice`).
 - **Visitor statistics** use Vercel Web Analytics, which uses no cookies. It only runs on
   Vercel and not on admin pages, and order links are reported as `/order/[id]` so
   they stay private. To turn it on: Vercel → your project → **Analytics** → **Enable**,
@@ -214,7 +218,12 @@ cafés, offices) and for any website order on request, in French or English.
   and **RCCM**), whether to show the MTN MoMo code to dial (with the amount still to pay),
   other ways to pay (e.g. your bank account), how many days clients have to pay and how
   long a proforma is valid, a message at the bottom, and **TVA** (19.25%): off unless
-  you're registered to collect VAT. Invoices keep the details they were made with.
+  you're registered to collect VAT. Invoices keep the details they were made with; a
+  detail that was empty then (say the NIU, added later) is filled in from Settings, so
+  older invoices show it too. An invoice shows a reminder while the NIU or RCCM is
+  missing.
+- Invoices have a letterhead: your logo, name, address, phone, email and website, with
+  the NIU and RCCM on a strip below.
 - **New invoice / New proforma**: pick a saved client or type a new one (tick "Save to my
   clients"), choose products (their price is filled in) or write your own lines (delivery,
   a gift box…), a discount, the dates and notes; the total updates as you type. Numbers
@@ -241,7 +250,9 @@ cafés, offices) and for any website order on request, in French or English.
   invoice at a time: to correct it, cancel it and make a new one from the order. To bill a
   business before it pays, use **New invoice** instead.
 - **Clients**: saved business clients (name, contact person, phone, email, address, NIU,
-  a private note), with one tap to invoice them.
+  a private note), with one tap to invoice them. **Contact person** is the name of the
+  person to ask for (printed "Attn:"); a phone number typed there is refused with a hint
+  to put it in **Phone / WhatsApp**.
 
 With Supabase, run `supabase/schema.sql` again to create the `invoices`, `clients` and
 `settings` tables (it only adds what's missing).
@@ -319,8 +330,8 @@ filesystem is read-only, so set up Supabase before deploying there.
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
 panel (sign-in rules, orders and their Undo buttons, products, stock, books, invoices, the
-full copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, what
-search engines see, accessibility basics and security protections (about 450 checks in
+full copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, the
+cookie notice, what search engines see, accessibility basics and security protections (about 450 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

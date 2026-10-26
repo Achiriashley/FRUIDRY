@@ -92,6 +92,13 @@ const en = {
     rights: "All rights reserved.",
     privacy: "Privacy policy",
   },
+  cookieNotice: {
+    label: "Cookies",
+    message:
+      "We only keep what the site needs: a cookie to remember your language, and your cart saved on your device. No ads, no tracking.",
+    privacy: "Privacy policy",
+    ok: "Got it",
+  },
   categories: { mixes: "Mixes", fruits: "Fruits" },
   home: {
     badge: "100% fruit · 0% fuss",
@@ -522,6 +529,7 @@ const en = {
   // Invoices and proformas made in the admin panel (/invoice/... page).
   invoice: {
     pageTitle: "Invoice",
+    tagline: "Freeze-dried fruit · 100% fruit",
     invoice: "Invoice",
     proforma: "Proforma invoice",
     number: "No.",
@@ -631,6 +639,7 @@ const en = {
         items: [
           "A cookie that remembers whether you chose French or English (only if you switch language).",
           "Your cart, saved in the browser on your own device so it's still there when you come back. It isn't sent to us until you order.",
+          "Whether you've closed the note about cookies at the bottom of the page, also saved on your own device.",
           "Anonymous visit statistics (Vercel Web Analytics), such as which pages are viewed and from which country. They use no cookies and can't identify you.",
           "To protect the site from abuse, a scrambled code of your network address is kept for about a day to limit repeated attempts. Our hosting provider also keeps short-lived technical logs.",
         ],
@@ -682,6 +691,13 @@ const fr = {
     ],
     rights: "Tous droits réservés.",
     privacy: "Confidentialité",
+  },
+  cookieNotice: {
+    label: "Cookies",
+    message:
+      "Nous ne gardons que l'essentiel : un cookie pour retenir votre langue, et votre panier enregistré sur votre appareil. Ni publicité, ni suivi.",
+    privacy: "Politique de confidentialité",
+    ok: "J'ai compris",
   },
   categories: { mixes: "Mélanges", fruits: "Fruits" },
   home: {
@@ -1110,6 +1126,7 @@ const fr = {
   },
   invoice: {
     pageTitle: "Facture",
+    tagline: "Fruits lyophilisés · 100 % fruit",
     invoice: "Facture",
     proforma: "Facture proforma",
     number: "N°",
@@ -1222,6 +1239,7 @@ const fr = {
         items: [
           "Un cookie qui retient si vous avez choisi le français ou l'anglais (seulement si vous changez de langue).",
           "Votre panier, enregistré dans le navigateur de votre propre appareil pour le retrouver à votre retour. Il ne nous est envoyé que lorsque vous commandez.",
+          "Si vous avez fermé le message sur les cookies en bas de la page, enregistré lui aussi sur votre propre appareil.",
           "Des statistiques de visite anonymes (Vercel Web Analytics), comme les pages consultées et le pays des visiteurs. Elles n'utilisent aucun cookie et ne permettent pas de vous identifier.",
           "Pour protéger le site contre les abus, un code brouillé de votre adresse réseau est conservé environ une journée afin de limiter les tentatives répétées. Notre hébergeur conserve aussi des journaux techniques pendant une courte durée.",
         ],

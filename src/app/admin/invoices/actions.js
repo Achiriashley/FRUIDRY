@@ -19,6 +19,7 @@ import {
 } from "@/lib/invoice-math";
 import {
   INVOICE_SETTINGS_DEFAULTS,
+  businessFromSettings,
   createInvoice,
   getInvoice,
   getInvoiceSettings,
@@ -73,6 +74,11 @@ function clientDetails(formData, errors) {
     address: text(formData, "address", 300, errors, { label: "the address" }),
     niu: text(formData, "niu", 30, errors, { label: "the NIU" }),
   };
+  // A phone number typed in "Contact person" would print as "Attn: +237…".
+  if (client.contact && !errors.contact && /^[+\d\s().-]{6,}$/.test(client.contact)) {
+    errors.contact =
+      "This looks like a phone number: put it in Phone / WhatsApp, and the person's name here (or leave it empty).";
+  }
   if (client.phone && !errors.phone && !invoiceWhatsAppNumber(client.phone)) {
     errors.phone = "Enter a phone number, e.g. 6XX XX XX XX or +237 6XX XX XX XX.";
   }
@@ -145,19 +151,6 @@ function parseLines(raw, products, errors) {
   }
   return items;
 }
-
-// What the invoice shows of the shop, copied from the settings when it's made.
-const businessSnapshot = (s) => ({
-  name: s.businessName,
-  address: s.address,
-  phone: s.phone,
-  email: s.email,
-  niu: s.niu,
-  rccm: s.rccm,
-  showMomo: s.showMomo,
-  paymentInfo: s.paymentInfo,
-  footer: s.footer,
-});
 
 // Creates (no id) or updates an invoice or proforma from the invoice form.
 export async function saveInvoiceAction(_prev, formData) {
@@ -245,7 +238,7 @@ export async function saveInvoiceAction(_prev, formData) {
     vatRate,
     totals,
     notes,
-    business: businessSnapshot(await getInvoiceSettings()),
+    business: businessFromSettings(await getInvoiceSettings()),
   };
 
   let saved;
@@ -445,7 +438,7 @@ export async function convertProformaAction(formData) {
     vatRate: proforma.vatRate,
     totals: proforma.totals,
     notes: proforma.notes,
-    business: businessSnapshot(settings),
+    business: businessFromSettings(settings),
     fromProforma: { id: proforma.id, number: proforma.number },
   });
   await saveInvoice({ ...proforma, convertedTo: { id: invoice.id, number: invoice.number } });

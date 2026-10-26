@@ -1,6 +1,7 @@
 import { formatDay, getDictionary } from "@/lib/i18n";
 import { amountDue, invoiceStatus, numberInWords, paidAmount } from "@/lib/invoice-math";
 import { formatPrice } from "@/lib/products";
+import { siteOrigin } from "@/lib/seo";
 import { momoPayCode } from "@/lib/shop-config";
 
 // An invoice or proforma as the client sees it (and prints it), always in the invoice's
@@ -22,6 +23,9 @@ export function InvoiceDocument({ invoice, heading = 1, hideIfCancelled = false 
     maximumFractionDigits: 2,
   }).format(invoice.vatRate ?? 0);
   const asksForPayment = !proforma && !invoice.cancelled && due > 0;
+  // "www.fruidry.com" (left out on a copy of the site running on a computer).
+  const origin = siteOrigin();
+  const website = /localhost|127\.0\.0\.1/.test(origin) ? "" : origin.replace(/^https?:\/\//, "");
   const Title = heading === 2 ? "h2" : "h1";
   // "deux millions de francs CFA": "de" after a round number of millions or billions.
   const words = numberInWords(totals.total, lang);
@@ -48,18 +52,59 @@ export function InvoiceDocument({ invoice, heading = 1, hideIfCancelled = false 
     </p>
   );
 
+  // The letterhead: the shop's logo, name and contact details, then its registration
+  // numbers (NIU, RCCM). Light, so it prints the same on any printer.
+  const legal = [
+    business.niu && `${t.niu}${colon} ${business.niu}`,
+    business.rccm && `${t.rccm}${colon} ${business.rccm}`,
+  ].filter(Boolean);
+  const letterhead = (
+    <header>
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-b-4 border-brand px-6 pt-6 pb-5 sm:px-10 sm:pt-8">
+        <div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/logo-lockup.png"
+            alt={business.name || "Fruidry"}
+            className="h-14 w-auto"
+          />
+          <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-brand uppercase">
+            {t.tagline}
+          </p>
+        </div>
+        <address className="text-xs leading-5 text-stone-600 not-italic sm:text-right">
+          <p className="text-sm font-bold text-brand-deep">{business.name}</p>
+          {business.address && <p className="whitespace-pre-line">{business.address}</p>}
+          {business.phone && (
+            <p>
+              {t.phone}
+              {colon} {business.phone}
+            </p>
+          )}
+          {business.email && <p>{business.email}</p>}
+          {website && <p>{website}</p>}
+        </address>
+      </div>
+      {legal.length > 0 && (
+        <p className="border-b border-stone-200 bg-cream px-6 py-2 text-[11px] tracking-wide text-stone-700 sm:px-10">
+          {legal.join("  ·  ")}
+        </p>
+      )}
+    </header>
+  );
+
   if (hideIfCancelled && invoice.cancelled) {
     return (
       <article
         lang={lang}
-        className="rounded-2xl border border-stone-200 bg-white p-6 text-sm shadow-sm sm:p-10"
+        className="overflow-hidden rounded-2xl border border-stone-200 bg-white text-sm shadow-sm"
       >
-        <p className="font-bold">{business.name}</p>
-        <div className="mt-4">
+        {letterhead}
+        <div className="px-6 py-6 sm:px-10">
           {title}
           {stamp}
+          <p className="mt-4 text-stone-600">{t.cancelledNote}</p>
         </div>
-        <p className="mt-4 text-stone-600">{t.cancelledNote}</p>
       </article>
     );
   }
@@ -67,206 +112,177 @@ export function InvoiceDocument({ invoice, heading = 1, hideIfCancelled = false 
   return (
     <article
       lang={lang}
-      className="rounded-2xl border border-stone-200 bg-white p-6 text-sm shadow-sm sm:p-10 print:border-0 print:p-0 print:shadow-none"
+      className="overflow-hidden rounded-2xl border border-stone-200 bg-white text-sm shadow-sm print:rounded-none print:border-0 print:shadow-none"
     >
-      <header className="grid gap-6 border-b border-stone-200 pb-6 sm:grid-cols-2">
-        <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/logo-lockup.png"
-            alt={business.name || "Fruidry"}
-            className="h-10 w-auto"
-          />
-          <p className="mt-3 font-bold">{business.name}</p>
-          <p className="whitespace-pre-line text-stone-600">{business.address}</p>
-          {business.phone && (
-            <p className="text-stone-600">
-              {t.phone}
-              {colon} {business.phone}
-            </p>
-          )}
-          {business.email && (
-            <p className="text-stone-600">
-              {t.email}
-              {colon} {business.email}
-            </p>
-          )}
-          {business.niu && (
-            <p className="text-stone-600">
-              {t.niu}
-              {colon} {business.niu}
-            </p>
-          )}
-          {business.rccm && (
-            <p className="text-stone-600">
-              {t.rccm}
-              {colon} {business.rccm}
-            </p>
-          )}
-        </div>
-        <div className="sm:text-right">
-          {title}
-          {stamp}
-          <dl className="mt-3 grid grid-cols-[auto_auto] justify-start gap-x-4 gap-y-1 sm:justify-end">
-            <dt className="text-stone-500">{t.issued}</dt>
-            <dd>{formatDay(invoice.issueDate, lang)}</dd>
-            <dt className="text-stone-500">{proforma ? t.validUntil : t.dueDate}</dt>
-            <dd>{formatDay(invoice.dueDate, lang)}</dd>
-          </dl>
-          {invoice.orderReference && (
-            <p className="mt-2 text-stone-600">{t.fromOrder(invoice.orderReference)}</p>
-          )}
-        </div>
-      </header>
+      {letterhead}
+      <div className="px-6 pt-6 pb-8 sm:px-10">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            {title}
+            {stamp}
+            <dl className="mt-3 grid grid-cols-[auto_auto] justify-start gap-x-4 gap-y-1">
+              <dt className="text-stone-500">{t.issued}</dt>
+              <dd>{formatDay(invoice.issueDate, lang)}</dd>
+              <dt className="text-stone-500">{proforma ? t.validUntil : t.dueDate}</dt>
+              <dd>{formatDay(invoice.dueDate, lang)}</dd>
+            </dl>
+            {invoice.orderReference && (
+              <p className="mt-2 text-stone-600">{t.fromOrder(invoice.orderReference)}</p>
+            )}
+          </div>
 
-      <section className="mt-6">
-        <h2 className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
-          {t.billTo}
-        </h2>
-        <p className="mt-1 text-base font-bold">{invoice.client.name}</p>
-        {invoice.client.contact && (
-          <p>
-            {t.attention} {invoice.client.contact}
-          </p>
-        )}
-        {invoice.client.address && (
-          <p className="whitespace-pre-line text-stone-600">{invoice.client.address}</p>
-        )}
-        {invoice.client.phone && (
-          <p className="text-stone-600">
-            {t.phone}
-            {colon} {invoice.client.phone}
-          </p>
-        )}
-        {invoice.client.email && (
-          <p className="text-stone-600">
-            {t.email}
-            {colon} {invoice.client.email}
-          </p>
-        )}
-        {invoice.client.niu && (
-          <p className="text-stone-600">
-            {t.niu}
-            {colon} {invoice.client.niu}
-          </p>
-        )}
-      </section>
+          <section className="rounded-xl border border-stone-200 p-4">
+            <h2 className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
+              {t.billTo}
+            </h2>
+            <p className="mt-1 text-base font-bold">{invoice.client.name}</p>
+            {invoice.client.contact && (
+              <p>
+                {t.attention} {invoice.client.contact}
+              </p>
+            )}
+            {invoice.client.address && (
+              <p className="whitespace-pre-line text-stone-600">{invoice.client.address}</p>
+            )}
+            {invoice.client.phone && (
+              <p className="text-stone-600">
+                {t.phone}
+                {colon} {invoice.client.phone}
+              </p>
+            )}
+            {invoice.client.email && (
+              <p className="text-stone-600">
+                {t.email}
+                {colon} {invoice.client.email}
+              </p>
+            )}
+            {invoice.client.niu && (
+              <p className="text-stone-600">
+                {t.niu}
+                {colon} {invoice.client.niu}
+              </p>
+            )}
+          </section>
+        </div>
 
-      {/* On a phone, quantity × unit price go under each line, so the amount stays in view. */}
-      <table className="mt-6 w-full">
-        <thead>
-          <tr className="border-b-2 border-stone-200 text-left text-stone-500">
-            <th scope="col" className="py-2 pr-2 font-medium">
-              {t.description}
-            </th>
-            <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">
-              {t.qty}
-            </th>
-            <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">
-              {t.unitPrice}
-            </th>
-            <th scope="col" className="py-2 pl-2 text-right font-medium">
-              {t.amount}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoice.items.map((item, i) => (
-            <tr key={i} className="border-b border-stone-100 align-top">
-              <td className="py-2 pr-2">
-                {item.description}
-                {item.sku && (
-                  <span className="block font-mono text-xs text-stone-500">{item.sku}</span>
-                )}
-                <span className="block text-stone-600 sm:hidden">
-                  {item.quantity} × {formatPrice(item.price)}
-                </span>
-              </td>
-              <td className="hidden px-2 py-2 text-right sm:table-cell">{item.quantity}</td>
-              <td className="hidden px-2 py-2 text-right whitespace-nowrap sm:table-cell">
-                {formatPrice(item.price)}
-              </td>
-              <td className="py-2 pl-2 text-right whitespace-nowrap">
-                {formatPrice(item.price * item.quantity)}
-              </td>
+        {/* On a phone, quantity × unit price go under each line, so the amount stays in view. */}
+        <table className="mt-6 w-full">
+          <thead>
+            <tr className="border-b-2 border-stone-200 text-left text-stone-500">
+              <th scope="col" className="py-2 pr-2 font-medium">
+                {t.description}
+              </th>
+              <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">
+                {t.qty}
+              </th>
+              <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">
+                {t.unitPrice}
+              </th>
+              <th scope="col" className="py-2 pl-2 text-right font-medium">
+                {t.amount}
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {invoice.items.map((item, i) => (
+              <tr key={i} className="border-b border-stone-100 align-top">
+                <td className="py-2 pr-2">
+                  {item.description}
+                  {item.sku && (
+                    <span className="block font-mono text-xs text-stone-500">{item.sku}</span>
+                  )}
+                  <span className="block text-stone-600 sm:hidden">
+                    {item.quantity} × {formatPrice(item.price)}
+                  </span>
+                </td>
+                <td className="hidden px-2 py-2 text-right sm:table-cell">{item.quantity}</td>
+                <td className="hidden px-2 py-2 text-right whitespace-nowrap sm:table-cell">
+                  {formatPrice(item.price)}
+                </td>
+                <td className="py-2 pl-2 text-right whitespace-nowrap">
+                  {formatPrice(item.price * item.quantity)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <dl className="mt-4 ml-auto grid max-w-xs grid-cols-[1fr_auto] gap-y-1 [&>dt]:pr-6">
-        {(totals.discount > 0 || totals.vat > 0) && (
-          <>
-            <dt className="text-stone-600">{t.subtotal}</dt>
-            <dd className="text-right whitespace-nowrap">{formatPrice(totals.subtotal)}</dd>
-          </>
-        )}
-        {totals.discount > 0 && (
-          <>
-            <dt className="text-stone-600">{t.discount}</dt>
-            <dd className="text-right whitespace-nowrap">−{formatPrice(totals.discount)}</dd>
-          </>
-        )}
-        {invoice.vatRate > 0 && (
-          <>
-            <dt className="text-stone-600">{t.totalExclVat}</dt>
-            <dd className="text-right whitespace-nowrap">{formatPrice(totals.taxable)}</dd>
-            <dt className="text-stone-600">{t.vat(vatRate)}</dt>
-            <dd className="text-right whitespace-nowrap">{formatPrice(totals.vat)}</dd>
-          </>
-        )}
-        <dt className="mt-1 border-t border-stone-200 pt-2 pr-6 text-base font-bold">
-          {invoice.vatRate > 0 ? t.totalInclVat : t.total}
-        </dt>
-        <dd className="mt-1 border-t border-stone-200 pt-2 text-right text-base font-bold whitespace-nowrap">
-          {formatPrice(totals.total)}
-        </dd>
-        {!proforma && paid > 0 && (
-          <>
-            <dt className="text-stone-600">{t.paid}</dt>
-            <dd className="text-right whitespace-nowrap">{formatPrice(paid)}</dd>
-            <dt className="font-semibold">{t.amountDue}</dt>
-            <dd className="text-right font-semibold whitespace-nowrap">{formatPrice(due)}</dd>
-          </>
-        )}
-      </dl>
-
-      <p className="mt-4 text-stone-600 italic">{t.inWords(amountInWords, proforma)}</p>
-
-      {asksForPayment && (business.showMomo || business.paymentInfo) && (
-        <section className="mt-6 rounded-xl bg-stone-50 p-4 print:border print:border-stone-200">
-          {business.showMomo && (
-            <p>
-              {t.payWithMomo}{" "}
-              <span className="font-mono font-semibold whitespace-nowrap">{momoPayCode(due)}</span>
-            </p>
+        <dl className="mt-4 ml-auto grid max-w-xs grid-cols-[1fr_auto] gap-y-1 [&>dt]:pr-6">
+          {(totals.discount > 0 || totals.vat > 0) && (
+            <>
+              <dt className="text-stone-600">{t.subtotal}</dt>
+              <dd className="text-right whitespace-nowrap">{formatPrice(totals.subtotal)}</dd>
+            </>
           )}
-          {business.paymentInfo && (
-            <p className="mt-1 whitespace-pre-line">
-              <span className="font-semibold">
-                {t.otherPayment}
-                {colon}{" "}
-              </span>
-              {business.paymentInfo}
-            </p>
+          {totals.discount > 0 && (
+            <>
+              <dt className="text-stone-600">{t.discount}</dt>
+              <dd className="text-right whitespace-nowrap">−{formatPrice(totals.discount)}</dd>
+            </>
           )}
-        </section>
-      )}
+          {invoice.vatRate > 0 && (
+            <>
+              <dt className="text-stone-600">{t.totalExclVat}</dt>
+              <dd className="text-right whitespace-nowrap">{formatPrice(totals.taxable)}</dd>
+              <dt className="text-stone-600">{t.vat(vatRate)}</dt>
+              <dd className="text-right whitespace-nowrap">{formatPrice(totals.vat)}</dd>
+            </>
+          )}
+          <dt className="mt-1 border-t border-stone-200 pt-2 pr-6 text-base font-bold">
+            {invoice.vatRate > 0 ? t.totalInclVat : t.total}
+          </dt>
+          <dd className="mt-1 border-t border-stone-200 pt-2 text-right text-base font-bold whitespace-nowrap">
+            {formatPrice(totals.total)}
+          </dd>
+          {!proforma && paid > 0 && (
+            <>
+              <dt className="text-stone-600">{t.paid}</dt>
+              <dd className="text-right whitespace-nowrap">{formatPrice(paid)}</dd>
+              <dt className="font-semibold">{t.amountDue}</dt>
+              <dd className="text-right font-semibold whitespace-nowrap">{formatPrice(due)}</dd>
+            </>
+          )}
+        </dl>
 
-      {proforma && !invoice.cancelled && <p className="mt-6 text-stone-600">{t.proformaNote}</p>}
+        <p className="mt-4 text-stone-600 italic">{t.inWords(amountInWords, proforma)}</p>
 
-      {invoice.notes && (
-        <section className="mt-6">
-          <h2 className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
-            {t.notes}
-          </h2>
-          <p className="mt-1 whitespace-pre-line">{invoice.notes}</p>
-        </section>
-      )}
+        {asksForPayment && (business.showMomo || business.paymentInfo) && (
+          <section className="mt-6 rounded-xl bg-stone-50 p-4 print:border print:border-stone-200">
+            {business.showMomo && (
+              <p>
+                {t.payWithMomo}{" "}
+                <span className="font-mono font-semibold whitespace-nowrap">
+                  {momoPayCode(due)}
+                </span>
+              </p>
+            )}
+            {business.paymentInfo && (
+              <p className="mt-1 whitespace-pre-line">
+                <span className="font-semibold">
+                  {t.otherPayment}
+                  {colon}{" "}
+                </span>
+                {business.paymentInfo}
+              </p>
+            )}
+          </section>
+        )}
 
-      <p className="mt-8 border-t border-stone-200 pt-4 text-center text-xs whitespace-pre-line text-stone-500">
-        {business.footer || t.thanks}
-      </p>
+        {proforma && !invoice.cancelled && <p className="mt-6 text-stone-600">{t.proformaNote}</p>}
+
+        {invoice.notes && (
+          <section className="mt-6">
+            <h2 className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
+              {t.notes}
+            </h2>
+            <p className="mt-1 whitespace-pre-line">{invoice.notes}</p>
+          </section>
+        )}
+
+        <p className="mt-8 border-t border-stone-200 pt-4 text-center text-xs whitespace-pre-line text-stone-500">
+          {business.footer || t.thanks}
+        </p>
+      </div>
     </article>
   );
 }

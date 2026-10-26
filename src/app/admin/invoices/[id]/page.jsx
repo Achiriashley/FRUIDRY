@@ -11,7 +11,7 @@ import {
   todayInCameroon,
 } from "@/lib/invoice-math";
 import { formatDay } from "@/lib/i18n";
-import { getInvoice, listInvoices } from "@/lib/invoices";
+import { getInvoice, getInvoiceSettings, listInvoices, withShopDetails } from "@/lib/invoices";
 import { formatPrice } from "@/lib/products";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "../../AdminShell";
@@ -41,12 +41,14 @@ export default function InvoiceAdminPage({ params }) {
         <AdminShell active="invoices">
           {async () => {
             const { id } = await params;
-            const [invoice, siteUrl, invoices] = await Promise.all([
+            const [found, siteUrl, invoices, settings] = await Promise.all([
               getInvoice(id),
               getSiteUrl(),
               listInvoices(),
+              getInvoiceSettings(),
             ]);
-            if (!invoice) notFound();
+            if (!found) notFound();
+            const invoice = withShopDetails(found, settings);
             // A website order has one invoice at a time.
             const orderHasOther = Boolean(
               invoice.orderId &&
@@ -85,6 +87,10 @@ function InvoiceDetails({ invoice, siteUrl, orderHasOther }) {
   const toPay = ["unpaid", "part_paid", "overdue"].includes(status);
   const label = proforma ? "proforma" : "invoice";
   const copyHref = `/admin/invoices/new?${proforma ? "kind=proforma&" : ""}copy=${invoice.id}`;
+  // Registration numbers not on the invoice yet (they're added in the settings).
+  const missing = [!invoice.business.niu && "NIU", !invoice.business.rccm && "RCCM"].filter(
+    Boolean,
+  );
   const packsTaken = Object.values(invoice.stockTaken ?? {}).reduce((t, n) => t + n, 0);
 
   return (
@@ -219,6 +225,16 @@ function InvoiceDetails({ invoice, siteUrl, orderHasOther }) {
           </InvoiceForm>
         )}
       </div>
+      {missing.length > 0 && (
+        <p className="rounded-xl bg-yellow-100 p-4 text-sm text-stone-800">
+          Your {missing.join(" and ")} {missing.length > 1 ? "aren't" : "isn't"} on this {label}{" "}
+          yet. Add {missing.length > 1 ? "them" : "it"} in{" "}
+          <Link href="/admin/invoices/settings" className="font-semibold text-brand underline">
+            Invoices → Settings
+          </Link>{" "}
+          and {missing.length > 1 ? "they" : "it"} will show on this {label} too.
+        </p>
+      )}
       {!invoice.client.phone && !invoice.cancelled && (
         <p className="text-sm text-stone-500">
           No phone number on this {label}: WhatsApp will ask you who to send it to.

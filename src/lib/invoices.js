@@ -186,6 +186,33 @@ export const INVOICE_SETTINGS_DEFAULTS = {
   footer: "",
 };
 
+// What an invoice shows of the shop, copied from the settings when it's made.
+export const businessFromSettings = (s) => ({
+  name: s.businessName,
+  address: s.address,
+  phone: s.phone,
+  email: s.email,
+  niu: s.niu,
+  rccm: s.rccm,
+  showMomo: s.showMomo,
+  paymentInfo: s.paymentInfo,
+  footer: s.footer,
+});
+
+// An invoice with the shop's details it was made with, completed from today's settings
+// where it had none: NIU, RCCM or bank details added after it was made then show on it.
+// Details it already had (a former address, say) stay as they were.
+export function withShopDetails(invoice, settings) {
+  const current = businessFromSettings(settings);
+  const business = { ...invoice.business };
+  for (const [key, value] of Object.entries(current)) {
+    if (typeof value === "string" ? !business[key] && value : business[key] === undefined) {
+      business[key] = value;
+    }
+  }
+  return { ...invoice, business };
+}
+
 export async function getInvoiceSettings() {
   return { ...INVOICE_SETTINGS_DEFAULTS, ...(await readSettings("invoices")) };
 }

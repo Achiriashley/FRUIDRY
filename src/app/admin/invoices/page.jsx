@@ -61,12 +61,12 @@ function Stat({ label, value, hint, href, highlight }) {
   return (
     <Link
       href={href}
-      className={`block rounded-2xl p-5 shadow-sm transition hover:shadow-md ${
+      className={`block min-w-0 rounded-2xl p-5 shadow-sm transition hover:shadow-md ${
         highlight ? "bg-yellow-100" : "bg-white"
       }`}
     >
       <p className="text-sm text-stone-600">{label}</p>
-      <p className="mt-1 text-2xl font-extrabold">{value}</p>
+      <p className="mt-1 text-2xl font-extrabold break-words">{value}</p>
       <p className="mt-1 text-xs text-stone-500">{hint}</p>
     </Link>
   );

@@ -9,7 +9,7 @@ export const metadata = {
 // The admin panel is in English and has its own address outside /fr and /en.
 export default function AdminLayout({ children }) {
   return (
-    <SiteFrame lang="en" languageSwitch={false} analytics={false}>
+    <SiteFrame lang="en" languageSwitch={false} analytics={false} cookieNotice={false}>
       {children}
     </SiteFrame>
   );

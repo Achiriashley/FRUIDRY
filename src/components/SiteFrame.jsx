@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/components/CartProvider";
+import { CookieNotice } from "@/components/CookieNotice";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { SiteAnalytics } from "@/components/SiteAnalytics";
@@ -23,7 +24,13 @@ const geistMono = Geist_Mono({
 // Visitor statistics (Vercel Web Analytics) use no cookies and only run on Vercel.
 const analyticsEnabled = Boolean(process.env.VERCEL);
 
-export async function SiteFrame({ lang, languageSwitch = true, analytics = true, children }) {
+export async function SiteFrame({
+  lang,
+  languageSwitch = true,
+  analytics = true,
+  cookieNotice = true,
+  children,
+}) {
   const products = (await getProducts()).map((p) => localizeProduct(p, lang));
   return (
     <html lang={lang} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
@@ -34,6 +41,7 @@ export async function SiteFrame({ lang, languageSwitch = true, analytics = true,
             <main className="flex-1">{children}</main>
             <Footer lang={lang} />
           </CartProvider>
+          {cookieNotice && <CookieNotice />}
         </LocaleProvider>
         {analytics && analyticsEnabled && <SiteAnalytics />}
       </body>

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { InvoiceDocument } from "@/components/InvoiceDocument";
 import { PrintButton } from "@/components/PrintButton";
 import { getDictionary } from "@/lib/i18n";
-import { getInvoice } from "@/lib/invoices";
+import { getInvoice, getInvoiceSettings, withShopDetails } from "@/lib/invoices";
 import { getLocale } from "@/lib/locale";
 
 // An invoice or proforma sent to a client: its private address is the only way to see
@@ -26,8 +26,9 @@ export default async function InvoicePage({ params }) {
 
 async function InvoiceDetails({ params }) {
   const { id } = await params;
-  const invoice = await getInvoice(id);
-  if (!invoice) notFound();
+  const [found, settings] = await Promise.all([getInvoice(id), getInvoiceSettings()]);
+  if (!found) notFound();
+  const invoice = withShopDetails(found, settings);
   const t = getDictionary(invoice.lang === "en" ? "en" : "fr").invoice;
   if (invoice.cancelled) return <InvoiceDocument invoice={invoice} hideIfCancelled />;
   return (
