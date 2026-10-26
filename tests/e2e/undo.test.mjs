@@ -26,6 +26,12 @@ async function setStock(stock) {
 }
 async function stockLeft() {
   await admin.goto(B + "/admin/products");
+  // The list streams in after "Loading…".
+  await admin
+    .getByText(/\d+ left/)
+    .filter({ visible: true })
+    .first()
+    .waitFor();
   const text = plain(await admin.locator("main").innerText());
   return Number(text.match(/(\d+) left/)?.[1]);
 }
