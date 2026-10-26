@@ -129,7 +129,8 @@ function OrderForm({ action, order, children }) {
   );
 }
 
-export function OrderCard({ order, siteUrl }) {
+// `invoice`: the order's invoice, if one was made (Invoices).
+export function OrderCard({ order, siteUrl, invoice }) {
   const canDecide = !isPaid(order);
   const cancelled = order.status === ORDER_STATUS.rejected;
   return (
@@ -260,6 +261,23 @@ export function OrderCard({ order, siteUrl }) {
         >
           {isPaid(order) ? "View receipt" : "View customer page"}
         </Link>
+        {invoice ? (
+          <Link
+            href={`/admin/invoices/${invoice.id}`}
+            className="text-sm text-stone-600 underline hover:text-brand"
+          >
+            Invoice {invoice.number}
+          </Link>
+        ) : (
+          !cancelled && (
+            <Link
+              href={`/admin/invoices/new?order=${order.id}`}
+              className="text-sm text-stone-600 underline hover:text-brand"
+            >
+              Make an invoice
+            </Link>
+          )
+        )}
         {/* Undo for a wrong tap: one step back each time. */}
         {order.status === ORDER_STATUS.confirmed && (
           <OrderForm action={undoPayment} order={order}>

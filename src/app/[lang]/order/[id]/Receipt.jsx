@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatDate, getDictionary, localePath } from "@/lib/i18n";
 import { formatPrice } from "@/lib/products";
-import { PrintButton } from "./PrintButton";
+import { PrintButton } from "@/components/PrintButton";
 
 export function Receipt({ order, lang }) {
   const t = getDictionary(lang).receipt;

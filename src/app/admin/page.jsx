@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ORDER_STATUS, isNew, isPaid, listOrders } from "@/lib/orders";
 import { getProducts } from "@/lib/catalog";
-import { listEntries } from "@/lib/ledger";
+import { invoicesByOrder, listInvoicesIfSetUp } from "@/lib/invoices";
+import { listEntries, paidInvoicesIn } from "@/lib/ledger";
 import { formatPrice, isLowStock, stockLeft } from "@/lib/products";
 import { listReviews } from "@/lib/reviews";
 import { getSiteUrl } from "@/lib/site-url";
@@ -18,13 +19,15 @@ export default function DashboardPage() {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="dashboard" autoRefresh>
           {async () => {
-            const [orders, siteUrl, products, reviewsWaiting, inPersonSales] = await Promise.all([
-              listOrders(),
-              getSiteUrl(),
-              getProducts(),
-              countReviewsWaiting(),
-              loadInPersonSales(),
-            ]);
+            const [orders, siteUrl, products, reviewsWaiting, inPersonSales, invoices] =
+              await Promise.all([
+                listOrders(),
+                getSiteUrl(),
+                getProducts(),
+                countReviewsWaiting(),
+                loadInPersonSales(),
+                listInvoicesIfSetUp(),
+              ]);
             return (
               <Dashboard
                 orders={orders}
@@ -32,6 +35,7 @@ export default function DashboardPage() {
                 lowStock={products.filter(isLowStock)}
                 reviewsWaiting={reviewsWaiting}
                 inPersonSales={inPersonSales}
+                invoices={invoices}
               />
             );
           }}
@@ -83,7 +87,7 @@ function Stat({ label, value, hint, href, highlight = false }) {
   return href ? <Link href={href}>{body}</Link> : body;
 }
 
-function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales }) {
+function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales, invoices }) {
   const paid = orders.filter(isPaid);
   const thisMonth = monthKey(new Date().toISOString());
   const paidThisMonth = paid.filter((o) => monthKey(o.receipt.confirmedAt) === thisMonth);
@@ -92,12 +96,26 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
   const packs = (list) =>
     list.reduce((total, o) => total + o.items.reduce((n, item) => n + item.quantity, 0), 0);
   const inPersonPacks = (list) => list.reduce((total, e) => total + e.quantity, 0);
-  // Website orders, plus sales in person recorded on the Books page.
-  const salesHint = (orderList, saleList) =>
-    `${packs(orderList) + inPersonPacks(saleList)} packs · ${orderList.length} website ` +
-    (orderList.length === 1 ? "order" : "orders") +
-    (saleList.length > 0 ? `, ${saleList.length} in person` : "");
+  // Invoices paid in full (not those made from a website order: the order counts).
+  const paidInvoices = paidInvoicesIn(invoices, "");
+  const invoicesThisMonth = paidInvoicesIn(invoices, thisMonth);
+  const invoiced = (list) => list.reduce((total, i) => total + i.totals.taxable, 0);
+  const invoicePacks = (list) =>
+    list.reduce(
+      (total, i) =>
+        total + i.items.filter((item) => item.slug).reduce((n, item) => n + item.quantity, 0),
+      0,
+    );
+  // Website orders, plus sales in person recorded on the Books page and paid invoices.
+  const salesHint = (orderList, saleList, invoiceList) =>
+    `${packs(orderList) + inPersonPacks(saleList) + invoicePacks(invoiceList)} packs · ` +
+    `${orderList.length} website ${orderList.length === 1 ? "order" : "orders"}` +
+    (saleList.length > 0 ? `, ${saleList.length} in person` : "") +
+    (invoiceList.length > 0
+      ? `, ${invoiceList.length} ${invoiceList.length === 1 ? "invoice" : "invoices"}`
+      : "");
 
+  const orderInvoices = invoicesByOrder(invoices);
   const toCheck = orders.filter(isNew);
   const toDeliver = orders.filter((o) => o.status === ORDER_STATUS.confirmed);
 
@@ -119,14 +137,14 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
         />
         <Stat
           label="Sales this month"
-          value={formatPrice(sum(paidThisMonth) + sum(soldThisMonth))}
-          hint={salesHint(paidThisMonth, soldThisMonth)}
+          value={formatPrice(sum(paidThisMonth) + sum(soldThisMonth) + invoiced(invoicesThisMonth))}
+          hint={salesHint(paidThisMonth, soldThisMonth, invoicesThisMonth)}
           href="/admin/books"
         />
         <Stat
           label="Total sales"
-          value={formatPrice(sum(paid) + sum(inPersonSales))}
-          hint={salesHint(paid, inPersonSales)}
+          value={formatPrice(sum(paid) + sum(inPersonSales) + invoiced(paidInvoices))}
+          hint={salesHint(paid, inPersonSales, paidInvoices)}
         />
       </div>
 
@@ -183,7 +201,12 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
         ) : (
           <div className="space-y-4">
             {toCheck.map((order) => (
-              <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                siteUrl={siteUrl}
+                invoice={orderInvoices[order.id]}
+              />
             ))}
           </div>
         )}
@@ -198,7 +221,12 @@ function Dashboard({ orders, siteUrl, lowStock, reviewsWaiting, inPersonSales })
         ) : (
           <div className="space-y-4">
             {toDeliver.map((order) => (
-              <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                siteUrl={siteUrl}
+                invoice={orderInvoices[order.id]}
+              />
             ))}
           </div>
         )}

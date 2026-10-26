@@ -43,6 +43,14 @@ export function searchName(product) {
   return product.searchName || product.name;
 }
 
+// "26 October 2026" / "26 octobre 2026" for a day written "2026-10-26".
+export function formatDay(day, lang) {
+  return new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${day}T00:00:00Z`));
+}
+
 export function formatDate(iso, lang) {
   return new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
     dateStyle: "medium",
@@ -509,10 +517,49 @@ const en = {
     transactionId: "Transaction ID",
     print: "Print or save as PDF",
   },
+  // Invoices and proformas made in the admin panel (/invoice/... page).
+  invoice: {
+    pageTitle: "Invoice",
+    invoice: "Invoice",
+    proforma: "Proforma invoice",
+    number: "No.",
+    issued: "Date",
+    dueDate: "Due date",
+    validUntil: "Valid until",
+    billTo: "Billed to",
+    attention: "Attn:",
+    phone: "Phone",
+    email: "Email",
+    niu: "NIU",
+    rccm: "RCCM",
+    description: "Description",
+    qty: "Qty",
+    unitPrice: "Unit price",
+    amount: "Amount",
+    subtotal: "Subtotal",
+    discount: "Discount",
+    totalExclVat: "Total excl. VAT",
+    vat: (rate) => `VAT ${rate}`,
+    total: "Total",
+    totalInclVat: "Total incl. VAT",
+    paid: "Paid",
+    amountDue: "Amount due",
+    inWords: (words) => `Amount in words: ${words} CFA francs.`,
+    payWithMomo: "Pay with MTN Mobile Money by dialling",
+    otherPayment: "Other ways to pay",
+    notes: "Notes",
+    fromOrder: (reference) => `Website order ${reference}`,
+    stampPaid: "Paid",
+    stampCancelled: "Cancelled",
+    proformaNote:
+      "This proforma is a quote, valid until the date above. It isn't a request for payment.",
+    thanks: "Thank you for your business.",
+    print: "Print or save as PDF",
+  },
   privacy: {
     title: "Privacy policy",
     description: "What information Fruidry collects, why, and how you stay in control of it.",
-    updated: "Last updated: 22 October 2026",
+    updated: "Last updated: 26 October 2026",
     sections: [
       {
         heading: "Who we are",
@@ -550,9 +597,15 @@ const en = {
         ],
       },
       {
+        heading: "If you buy from us as a business",
+        paragraphs: [
+          "When we make an invoice or a proforma for you, we keep the business name, contact person, phone number, email, address and taxpayer number (NIU) you give us, what you bought and what you've paid. We use them only for your invoices and their payment, and to send them to you on WhatsApp. We may also keep your details as a client so we don't have to ask again: you can ask us to remove them at any time. The invoices themselves are kept as long as accounting rules require.",
+        ],
+      },
+      {
         heading: "Where your information is kept",
         paragraphs: [
-          "Orders, reviews and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
+          "Orders, invoices, reviews and waiting-list numbers are stored in our database (Supabase), and the website is hosted by Vercel. Their servers may be outside Cameroon. Only we can see your orders, in our private admin panel.",
           "So that nothing is lost if the database has a problem, we also keep a private backup copy of this information on our own phone and in our private cloud storage. We keep only the latest copies and delete older ones.",
           "We don't sell your information or share it with anyone else, except the person delivering your order.",
         ],
@@ -566,7 +619,7 @@ const en = {
       {
         heading: "Your order link",
         paragraphs: [
-          "After ordering, you get a private link to your order and receipt. Anyone who has this link can see your order, so only share it with people you trust.",
+          "After ordering, you get a private link to your order and receipt. Anyone who has this link can see your order, so only share it with people you trust. The same goes for the private link of an invoice we send you.",
         ],
       },
       {
@@ -1052,11 +1105,50 @@ const fr = {
     transactionId: "N° de transaction",
     print: "Imprimer ou enregistrer en PDF",
   },
+  invoice: {
+    pageTitle: "Facture",
+    invoice: "Facture",
+    proforma: "Facture proforma",
+    number: "N°",
+    issued: "Date",
+    dueDate: "Échéance",
+    validUntil: "Valable jusqu'au",
+    billTo: "Facturé à",
+    attention: "À l'attention de",
+    phone: "Téléphone",
+    email: "E-mail",
+    niu: "NIU",
+    rccm: "RCCM",
+    description: "Désignation",
+    qty: "Qté",
+    unitPrice: "Prix unitaire",
+    amount: "Montant",
+    subtotal: "Sous-total",
+    discount: "Remise",
+    totalExclVat: "Total HT",
+    vat: (rate) => `TVA ${rate}`,
+    total: "Total",
+    totalInclVat: "Total TTC",
+    paid: "Déjà payé",
+    amountDue: "Reste à payer",
+    inWords: (words, proforma) =>
+      `Arrêtée la présente ${proforma ? "facture proforma" : "facture"} à la somme de ${words} francs CFA.`,
+    payWithMomo: "Payez par MTN Mobile Money en composant",
+    otherPayment: "Autres moyens de paiement",
+    notes: "Remarques",
+    fromOrder: (reference) => `Commande en ligne ${reference}`,
+    stampPaid: "Payée",
+    stampCancelled: "Annulée",
+    proformaNote:
+      "Cette facture proforma est un devis, valable jusqu'à la date indiquée. Elle ne vaut pas demande de paiement.",
+    thanks: "Merci pour votre confiance.",
+    print: "Imprimer ou enregistrer en PDF",
+  },
   privacy: {
     title: "Politique de confidentialité",
     description:
       "Quelles informations Fruidry collecte, pourquoi, et comment vous gardez le contrôle.",
-    updated: "Dernière mise à jour : 22 octobre 2026",
+    updated: "Dernière mise à jour : 26 octobre 2026",
     sections: [
       {
         heading: "Qui sommes-nous",
@@ -1094,9 +1186,15 @@ const fr = {
         ],
       },
       {
+        heading: "Si vous achetez pour une entreprise",
+        paragraphs: [
+          "Quand nous établissons une facture ou une facture proforma à votre nom, nous conservons le nom de l'entreprise, la personne à contacter, le téléphone, l'e-mail, l'adresse et le numéro de contribuable (NIU) que vous nous donnez, ce que vous avez acheté et ce que vous avez payé. Nous les utilisons uniquement pour vos factures et leur paiement, et pour vous les envoyer sur WhatsApp. Nous pouvons aussi garder vos coordonnées de client pour ne pas vous les redemander : vous pouvez nous demander de les supprimer à tout moment. Les factures elles-mêmes sont conservées aussi longtemps que les règles comptables l'exigent.",
+        ],
+      },
+      {
         heading: "Où sont conservées vos informations",
         paragraphs: [
-          "Les commandes, les avis et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
+          "Les commandes, les factures, les avis et les numéros de la liste d'attente sont enregistrés dans notre base de données (Supabase), et le site est hébergé par Vercel. Leurs serveurs peuvent se trouver hors du Cameroun. Nous seuls pouvons voir vos commandes, dans notre espace d'administration privé.",
           "Pour ne rien perdre en cas de problème avec la base de données, nous en gardons aussi une copie de sauvegarde privée sur notre propre téléphone et dans notre stockage en ligne privé. Nous ne gardons que les copies les plus récentes et supprimons les anciennes.",
           "Nous ne vendons pas vos informations et ne les partageons avec personne d'autre, sauf avec la personne qui livre votre commande.",
         ],
@@ -1110,7 +1208,7 @@ const fr = {
       {
         heading: "Le lien de votre commande",
         paragraphs: [
-          "Après votre commande, vous recevez un lien privé vers votre commande et votre reçu. Toute personne qui possède ce lien peut voir votre commande : ne le partagez qu'avec des personnes de confiance.",
+          "Après votre commande, vous recevez un lien privé vers votre commande et votre reçu. Toute personne qui possède ce lien peut voir votre commande : ne le partagez qu'avec des personnes de confiance. Il en va de même pour le lien privé d'une facture que nous vous envoyons.",
         ],
       },
       {

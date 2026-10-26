@@ -10,6 +10,7 @@ import {
   monthReport,
   salesRows,
 } from "@/lib/ledger";
+import { listInvoicesIfSetUp } from "@/lib/invoices";
 import { listOrders } from "@/lib/orders";
 import { buildXlsx } from "@/lib/xlsx";
 
@@ -28,8 +29,8 @@ export async function GET(request) {
   } catch (error) {
     if (!ledgerTableMissing(error)) throw error;
   }
-  const orders = await listOrders();
-  const report = monthReport({ month, orders, entries });
+  const [orders, invoices] = await Promise.all([listOrders(), listInvoicesIfSetUp()]);
+  const report = monthReport({ month, orders, entries, invoices });
   const inMonth = (type) => entries.filter((e) => e.type === type && e.date.startsWith(month));
 
   const summary = [
@@ -46,6 +47,7 @@ export async function GET(request) {
       `   of which ${label}`,
       report.inPerson.byPayment[method],
     ]),
+    [`Invoices (${report.invoiced.invoices} paid)`, report.invoiced.amount, report.invoiced.packs],
     { bold: true, cells: ["Total sales", report.totalSales] },
     [],
     { bold: true, cells: ["Costs", "FCFA", "Packs"] },
@@ -77,7 +79,7 @@ export async function GET(request) {
       "Paid by",
       "Note",
     ],
-    ...salesRows({ month, orders, entries }).map((r) => [
+    ...salesRows({ month, orders, entries, invoices }).map((r) => [
       { date: r.date },
       r.channel,
       r.reference,

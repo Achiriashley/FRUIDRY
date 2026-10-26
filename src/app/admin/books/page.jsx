@@ -12,6 +12,7 @@ import {
   monthReport,
   shiftMonth,
 } from "@/lib/ledger";
+import { listInvoicesIfSetUp } from "@/lib/invoices";
 import { listOrders } from "@/lib/orders";
 import { formatPrice, stockLeft } from "@/lib/products";
 import { AdminPage, AdminShell } from "../AdminShell";
@@ -27,13 +28,22 @@ export default function BooksPage({ searchParams }) {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="books">
           {async () => {
-            const [params, orders, products, ledger] = await Promise.all([
+            const [params, orders, products, ledger, invoices] = await Promise.all([
               searchParams,
               listOrders(),
               getProducts(),
               loadEntries(),
+              listInvoicesIfSetUp(),
             ]);
-            return <Books params={params} orders={orders} products={products} {...ledger} />;
+            return (
+              <Books
+                params={params}
+                orders={orders}
+                products={products}
+                invoices={invoices}
+                {...ledger}
+              />
+            );
           }}
         </AdminShell>
       </Suspense>
@@ -124,11 +134,11 @@ function describe(entry) {
 const navLink =
   "rounded-full border border-stone-300 bg-white px-4 py-2 text-sm whitespace-nowrap hover:border-brand";
 
-function Books({ params, orders, products, entries, setupNeeded }) {
+function Books({ params, orders, products, invoices, entries, setupNeeded }) {
   const today = cameroonDate();
   const thisMonth = today.slice(0, 7);
   const month = isMonth(params.month) && params.month <= thisMonth ? params.month : thisMonth;
-  const report = monthReport({ month, orders, entries });
+  const report = monthReport({ month, orders, entries, invoices });
   const monthEntries = entries.filter((e) => e.date.startsWith(month));
   const counted = products.filter((p) => stockLeft(p) !== null);
   const previous = shiftMonth(month, -1);
@@ -140,7 +150,8 @@ function Books({ params, orders, products, entries, setupNeeded }) {
         <h1 className="text-3xl font-extrabold tracking-tight">Books</h1>
         <p className="mt-2 text-sm text-stone-600">
           Record what happens outside the website: sales in person, stock that arrives and other
-          costs. Website orders count by themselves once you press <strong>Mark as paid</strong>.
+          costs. Website orders count by themselves once you press <strong>Mark as paid</strong>,
+          and invoices once they&apos;re paid in full.
         </p>
         {setupNeeded && (
           <p className="mt-3 rounded-xl bg-yellow-100 p-4 text-sm text-stone-800">
@@ -189,6 +200,12 @@ function Books({ params, orders, products, entries, setupNeeded }) {
               indent
             />
           ))}
+          {report.invoiced.invoices > 0 && (
+            <Line
+              label={`Invoices (${report.invoiced.invoices} paid, ${packs(report.invoiced.packs)})`}
+              value={formatPrice(report.invoiced.amount)}
+            />
+          )}
           <Line label="Total sales" value={formatPrice(report.totalSales)} strong />
         </Card>
         <Card title="Costs">

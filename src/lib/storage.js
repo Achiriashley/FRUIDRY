@@ -42,6 +42,24 @@ export async function supabaseRequest(config, table, query, init = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+// True when Supabase is set up but a table hasn't been created yet (supabase/schema.sql
+// needs running again after an update adds one).
+export function tableMissing(error) {
+  return /PGRST205|42P01|Could not find the table|does not exist/i.test(error?.message ?? "");
+}
+
+// Reads every row of a table, 1,000 at a time (Supabase's default "Max rows" per
+// request), as { data } objects: `query` selects and orders, e.g. "select=data&order=…".
+export async function supabaseListAll(config, table, query) {
+  const rows = [];
+  for (;;) {
+    const page = await supabaseRequest(config, table, `?${query}&limit=1000&offset=${rows.length}`);
+    if (!page?.length) break;
+    rows.push(...page);
+  }
+  return rows;
+}
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const locks = new Map();
 

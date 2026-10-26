@@ -1,6 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
 import { Suspense } from "react";
+import { invoicesByOrder, listInvoicesIfSetUp } from "@/lib/invoices";
 import { ORDER_STATUS, STATUS_LABELS, isNew, listOrders } from "@/lib/orders";
 import { getSiteUrl } from "@/lib/site-url";
 import { AdminPage, AdminShell } from "../AdminShell";
@@ -24,12 +25,20 @@ export default function OrdersPage({ searchParams }) {
       <Suspense fallback={<p className="text-stone-600">Loading…</p>}>
         <AdminShell active="orders" autoRefresh>
           {async () => {
-            const [params, orders, siteUrl] = await Promise.all([
+            const [params, orders, siteUrl, invoices] = await Promise.all([
               searchParams,
               listOrders(),
               getSiteUrl(),
+              listInvoicesIfSetUp(),
             ]);
-            return <OrdersList params={params} orders={orders} siteUrl={siteUrl} />;
+            return (
+              <OrdersList
+                params={params}
+                orders={orders}
+                siteUrl={siteUrl}
+                invoices={invoicesByOrder(invoices)}
+              />
+            );
           }}
         </AdminShell>
       </Suspense>
@@ -51,7 +60,7 @@ function filterHref(status, q) {
   return `/admin/orders${query ? `?${query}` : ""}`;
 }
 
-function OrdersList({ params, orders, siteUrl }) {
+function OrdersList({ params, orders, siteUrl, invoices }) {
   const status = FILTERS.some((f) => f.id === params.status) ? params.status : "all";
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const needle = q.toLowerCase().replace(/\s/g, "");
@@ -112,7 +121,12 @@ function OrdersList({ params, orders, siteUrl }) {
       ) : (
         <div className="space-y-4">
           {visible.map((order) => (
-            <OrderCard key={order.id} order={order} siteUrl={siteUrl} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              siteUrl={siteUrl}
+              invoice={invoices[order.id]}
+            />
           ))}
         </div>
       )}

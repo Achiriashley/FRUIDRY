@@ -66,6 +66,40 @@ create index if not exists ledger_entry_date_idx on public.ledger (entry_date de
 
 alter table public.ledger enable row level security;
 
+-- Invoices and proformas (/admin/invoices). The number is unique: two invoices saved
+-- at the same moment can't get the same one.
+create table if not exists public.invoices (
+  id text primary key,
+  number text not null unique,
+  kind text not null check (kind in ('invoice', 'proforma')),
+  issue_date date not null,
+  created_at timestamptz not null default now(),
+  data jsonb not null
+);
+
+create index if not exists invoices_created_at_idx on public.invoices (created_at desc);
+
+alter table public.invoices enable row level security;
+
+-- Business clients saved for invoices (/admin/invoices/clients).
+create table if not exists public.clients (
+  id text primary key,
+  name text not null,
+  created_at timestamptz not null default now(),
+  data jsonb not null
+);
+
+alter table public.clients enable row level security;
+
+-- Settings edited in the admin panel, one row per subject (e.g. 'invoices').
+create table if not exists public.settings (
+  key text primary key,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.settings enable row level security;
+
 -- Public folder for product photos uploaded from the admin panel.
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)

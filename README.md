@@ -144,7 +144,7 @@ reload it and after 30 minutes without activity (see Security below).
   reviews to check.
 - **Full copy**: **Download a full copy** (at the bottom of the dashboard) saves one Excel
   file with every order (customer details included), every Books entry, the products,
-  reviews and the waiting list. Save one each month and keep it private (iCloud Drive or
+  reviews, the waiting list, invoices and clients. Save one each month and keep it private (iCloud Drive or
   the Files app); delete older copies, as the privacy page promises. When the last copy
   saved on this phone is more than 30 days old, or there's none, a reminder shows at the
   top of the dashboard. The date is remembered on the phone only.
@@ -206,6 +206,41 @@ reviews appear on the product page with the average, and the rating is given to 
 down. A hidden field catches robots, each connection can send 5 reviews an hour, and
 deleting a product deletes its reviews. With Supabase, run `supabase/schema.sql` again
 to create the `reviews` table.
+
+**Invoices** (`/admin/invoices`): invoices and proformas for businesses (shops, gyms,
+cafés, offices) and for any website order on request, in French or English.
+
+- **Settings**: your details printed on every invoice (name, address, phone, email, **NIU**
+  and **RCCM**), whether to show the MTN MoMo code to dial (with the amount still to pay),
+  other ways to pay (e.g. your bank account), how many days clients have to pay and how
+  long a proforma is valid, a message at the bottom, and **TVA** (19.25%): off unless
+  you're registered to collect VAT. Invoices keep the details they were made with.
+- **New invoice / New proforma**: pick a saved client or type a new one (tick "Save to my
+  clients"), choose products (their price is filled in) or write your own lines (delivery,
+  a gift box…), a discount, the dates and notes; the total updates as you type. Numbers
+  follow on each year: `FAC-2026-0001` for invoices, `PRO-2026-0001` for proformas. A
+  number is never reused: cancel an invoice made by mistake (it can be undone) rather than
+  delete it. Invoices state the total in words ("Arrêtée la présente facture à la somme
+  de …").
+- **Send on WhatsApp** opens a message to the client with the invoice's private link,
+  where they see it, print it or save it as a PDF. **Remind on WhatsApp** (unpaid
+  invoices) says what's left to pay and gives the MoMo code for it. **Copy link** for
+  email.
+- **Payments**: record what the client paid (amount, date, MoMo, cash, bank transfer…), in
+  one or several payments. The invoice shows as unpaid, part paid, overdue (after its due
+  date) or paid. Once **paid in full** it counts as a sale in **Books** (on the day of the
+  last payment) and its packs come off the stock count. Deleting a payment recorded by
+  mistake undoes both.
+- A proforma is a quote: **Turn into an invoice** makes the invoice in one tap.
+- **Edit** works until a payment is recorded. **New invoice like this** copies one.
+- On a website order, **Make an invoice** starts one from the customer and what they
+  ordered (already paid if the order is). It doesn't count again in Books or the stock:
+  the order already does.
+- **Clients**: saved business clients (name, contact person, phone, email, address, NIU,
+  a private note), with one tap to invoice them.
+
+With Supabase, run `supabase/schema.sql` again to create the `invoices`, `clients` and
+`settings` tables (it only adds what's missing).
 
 Prices are in FCFA (XAF). The starting product details are in `src/lib/products.js`.
 
@@ -279,9 +314,9 @@ filesystem is read-only, so set up Supabase before deploying there.
 ## Tests
 
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
-panel (sign-in rules, orders and their Undo buttons, products, stock, books, the full
-copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, what
-search engines see, accessibility basics and security protections (about 400 checks in
+panel (sign-in rules, orders and their Undo buttons, products, stock, books, invoices, the
+full copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, what
+search engines see, accessibility basics and security protections (about 450 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

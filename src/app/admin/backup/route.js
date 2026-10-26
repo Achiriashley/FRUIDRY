@@ -1,5 +1,14 @@
 import { isAdmin } from "@/lib/admin-auth";
 import { getProducts } from "@/lib/catalog";
+import { listClients } from "@/lib/clients";
+import {
+  INVOICE_PAYMENT_METHODS,
+  INVOICE_STATUS_LABELS,
+  amountDue,
+  invoiceStatus,
+  paidAmount,
+} from "@/lib/invoice-math";
+import { listInvoices } from "@/lib/invoices";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
@@ -11,25 +20,29 @@ import { STATUS_LABELS, listOrders } from "@/lib/orders";
 import { DEFAULT_LOW_STOCK_AT } from "@/lib/products";
 import { listReviews, reviewsTableMissing } from "@/lib/reviews";
 import { getSiteUrl } from "@/lib/site-url";
+import { tableMissing } from "@/lib/storage";
 import { listWaitlist, waitlistTableMissing } from "@/lib/waitlist";
 import { buildXlsx } from "@/lib/xlsx";
 
 // A full copy of the shop as one Excel file (Dashboard → Download a full copy): every
-// order with the customer's details, every Books entry, the products, the reviews and the
-// waiting list. Only for a signed-in admin, and never cached: it holds customers'
+// order with the customer's details, every Books entry, the products, the reviews, the
+// waiting list, every invoice and proforma, and the saved clients. Only for a signed-in admin, and never cached: it holds customers'
 // personal details.
 export async function GET() {
   if (!(await isAdmin())) {
     return new Response("Please sign in to the admin panel.", { status: 401 });
   }
-  const [orders, books, products, reviews, waitlist, siteUrl] = await Promise.all([
-    listOrders(),
-    readTable(listEntries, ledgerTableMissing),
-    getProducts(),
-    readTable(listReviews, reviewsTableMissing),
-    readTable(() => listWaitlist(), waitlistTableMissing),
-    getSiteUrl(),
-  ]);
+  const [orders, books, products, reviews, waitlist, invoices, clients, siteUrl] =
+    await Promise.all([
+      listOrders(),
+      readTable(listEntries, ledgerTableMissing),
+      getProducts(),
+      readTable(listReviews, reviewsTableMissing),
+      readTable(() => listWaitlist(), waitlistTableMissing),
+      readTable(listInvoices, tableMissing),
+      readTable(listClients, tableMissing),
+      getSiteUrl(),
+    ]);
   const now = new Date();
   const productName = (slug) => products.find((p) => p.slug === slug)?.name ?? slug;
   const language = (lang) => (lang === "fr" ? "French" : lang === "en" ? "English" : "");
@@ -45,6 +58,8 @@ export async function GET() {
     ["Products", products.length],
     ["Reviews", reviews.rows.length],
     ["Waiting list", waitlist.rows.length],
+    ["Invoices and proformas", invoices.rows.length],
+    ["Clients", clients.rows.length],
     [],
     ["This file holds customers' names, phone numbers and addresses. Keep it private, don't"],
     ["forward it, and delete older copies once you have a newer one."],
@@ -52,6 +67,8 @@ export async function GET() {
       [books, "Books"],
       [reviews, "Reviews"],
       [waitlist, "Waiting list"],
+      [invoices, "Invoices"],
+      [clients, "Clients"],
     ]
       .filter(([table]) => table.missing)
       .map(([, name]) => [`${name}: its table isn't set up in Supabase yet, so it's empty.`]),
@@ -177,6 +194,77 @@ export async function GET() {
     ]),
   ];
 
+  const invoiceRows = [
+    [
+      "Number",
+      "Type",
+      "Status",
+      "Date",
+      "Pay by / valid until",
+      "Client",
+      "Contact",
+      "Phone",
+      "Email",
+      "Address",
+      "Client NIU",
+      "Lines",
+      "Discount (FCFA)",
+      "VAT (FCFA)",
+      "Total (FCFA)",
+      "Paid (FCFA)",
+      "Still to pay (FCFA)",
+      "Payments",
+      "Language",
+      "Website order",
+      "Notes",
+      "Client's page",
+    ],
+    ...invoices.rows.map((i) => [
+      i.number,
+      i.kind === "proforma" ? "Proforma" : "Invoice",
+      INVOICE_STATUS_LABELS[invoiceStatus(i)],
+      { date: i.issueDate },
+      { date: i.dueDate },
+      i.client.name,
+      i.client.contact,
+      i.client.phone,
+      i.client.email,
+      i.client.address,
+      i.client.niu,
+      i.items.map((item) => `${item.description} × ${item.quantity} @ ${item.price}`).join(", "),
+      i.totals.discount,
+      i.totals.vat,
+      i.totals.total,
+      i.kind === "invoice" ? paidAmount(i) : "",
+      i.kind === "invoice" && !i.cancelled ? amountDue(i) : "",
+      i.payments
+        .map(
+          (p) =>
+            `${p.date} ${p.amount} ${INVOICE_PAYMENT_METHODS[p.method] ?? p.method}` +
+            (p.note ? ` (${p.note})` : ""),
+        )
+        .join("; "),
+      language(i.lang),
+      i.orderReference,
+      i.notes,
+      `${siteUrl}/${i.lang === "en" ? "en" : "fr"}/invoice/${i.id}`,
+    ]),
+  ];
+
+  const clientRows = [
+    ["Name", "Contact", "Phone", "Email", "Address", "NIU", "Note", "Added on"],
+    ...clients.rows.map((c) => [
+      c.name,
+      c.contact,
+      c.phone,
+      c.email,
+      c.address,
+      c.niu,
+      c.note,
+      { date: cameroonDate(c.createdAt) },
+    ]),
+  ];
+
   const file = buildXlsx([
     { name: "About this copy", rows: about },
     { name: "Orders", rows: orderRows },
@@ -184,6 +272,8 @@ export async function GET() {
     { name: "Products", rows: productRows },
     { name: "Reviews", rows: reviewRows },
     { name: "Waiting list", rows: waitlistRows },
+    { name: "Invoices", rows: invoiceRows },
+    { name: "Clients", rows: clientRows },
   ]);
   return new Response(file, {
     headers: {

@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
+import { INVOICE_PAYMENT_METHODS } from "./invoice-math";
 import { isPaid } from "./orders";
 import { jsonFile, supabaseConfig, supabaseRequest } from "./storage";
 
 // The shop's books, kept in the admin panel (/admin/books): sales made in person, stock
-// that arrives and other costs. Website orders aren't copied here: they count from the
-// orders themselves once marked as paid.
+// that arrives and other costs. Website orders and invoices aren't copied here: they
+// count from the orders (once marked as paid) and invoices (once paid in full) themselves.
 //
 // Each entry has an id, a type, the date it happened (YYYY-MM-DD, Cameroon time) and:
 // - sale:    slug, name, sku, quantity, price (per pack), total, payment, note
@@ -199,11 +200,27 @@ export function paidOrdersIn(orders, month) {
   );
 }
 
+// Invoices paid in full in the month (by the day of their last payment). Invoices made
+// from a website order aren't here: the order itself counts.
+export function paidInvoicesIn(invoices, month) {
+  return invoices.filter(
+    (i) => i.kind === "invoice" && !i.orderId && !i.cancelled && i.paidAt?.startsWith(month),
+  );
+}
+
 const sum = (list, value) => list.reduce((total, item) => total + value(item), 0);
 const orderPacks = (order) => sum(order.items, (item) => item.quantity);
+const invoicePacks = (invoice) =>
+  sum(
+    invoice.items.filter((item) => item.slug),
+    (item) => item.quantity,
+  );
+// What an invoice brought in: its total before VAT (VAT isn't the shop's money).
+const invoiceSales = (invoice) => invoice.totals.taxable;
 
-// Every sale in the month, one row per product: website orders and sales in person.
-export function salesRows({ month, orders, entries }) {
+// Every sale in the month, one row per product: website orders, sales in person and paid
+// invoices (whose other lines, such as delivery, and discount are rows without a product).
+export function salesRows({ month, orders, entries, invoices = [] }) {
   const rows = [];
   for (const order of paidOrdersIn(orders, month)) {
     for (const item of order.items) {
@@ -238,13 +255,51 @@ export function salesRows({ month, orders, entries }) {
       note: e.note ?? "",
     });
   }
+  for (const invoice of paidInvoicesIn(invoices, month)) {
+    const payment = [...new Set(invoice.payments.map((p) => INVOICE_PAYMENT_METHODS[p.method]))]
+      .filter(Boolean)
+      .join(" + ");
+    const row = (fields) => ({
+      date: invoice.paidAt,
+      channel: "Invoice",
+      reference: invoice.number,
+      sku: "",
+      payment,
+      note: invoice.client.name,
+      ...fields,
+    });
+    for (const item of invoice.items) {
+      rows.push(
+        row({
+          slug: item.slug,
+          product: item.description,
+          sku: item.sku ?? "",
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity,
+        }),
+      );
+    }
+    if (invoice.totals.discount > 0) {
+      rows.push(
+        row({
+          slug: null,
+          product: "Discount",
+          quantity: "",
+          price: "",
+          total: -invoice.totals.discount,
+        }),
+      );
+    }
+  }
   return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // The month's figures: sales by channel and payment, stock bought, expenses, money left
 // and an estimated profit.
-export function monthReport({ month, orders, entries }) {
+export function monthReport({ month, orders, entries, invoices = [] }) {
   const paid = paidOrdersIn(orders, month);
+  const paidInvoices = paidInvoicesIn(invoices, month);
   const inMonth = entries.filter((e) => e.date.startsWith(month));
   const sales = inMonth.filter((e) => e.type === "sale");
   const arrivals = inMonth.filter((e) => e.type === "stock");
@@ -285,13 +340,19 @@ export function monthReport({ month, orders, entries }) {
       ]),
     ),
   };
-  const totalSales = website.amount + inPerson.amount;
+  const invoiced = {
+    invoices: paidInvoices.length,
+    packs: sum(paidInvoices, invoicePacks),
+    amount: sum(paidInvoices, invoiceSales),
+  };
+  const totalSales = website.amount + inPerson.amount + invoiced.amount;
 
   // Estimated profit: sales, minus what the packs sold cost you, minus expenses.
   const costs = costPerPack(entries, month);
   let costOfPacksSold = 0;
   let packsWithoutCost = 0;
-  for (const row of salesRows({ month, orders, entries })) {
+  for (const row of salesRows({ month, orders, entries, invoices })) {
+    if (!row.slug) continue; // delivery, discount and other lines that aren't packs
     if (costs[row.slug] === undefined) packsWithoutCost += row.quantity;
     else costOfPacksSold += costs[row.slug] * row.quantity;
   }
@@ -301,6 +362,7 @@ export function monthReport({ month, orders, entries }) {
     month,
     website,
     inPerson,
+    invoiced,
     totalSales,
     stockBought,
     expenses: spent,
