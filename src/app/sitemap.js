@@ -14,6 +14,7 @@ export default async function sitemap() {
     "/guide",
     "/contact",
     "/privacy",
+    "/returns",
     ...products.map((p) => `/shop/${p.slug}`),
   ];
   const absolute = (path) => `${origin}${path}`;

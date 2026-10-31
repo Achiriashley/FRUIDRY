@@ -123,10 +123,13 @@ export default async function ProductPage({ params }) {
                   transitTime: days(DELIVERY_DAYS.min, DELIVERY_DAYS.max - 1),
                 },
               },
+              // No returns for a change of mind; a damaged, wrong or missing pack is
+              // replaced or refunded (the returns page).
               hasMerchantReturnPolicy: {
                 "@type": "MerchantReturnPolicy",
                 applicableCountry: "CM",
                 returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+                merchantReturnLink: `${origin}${localePath(lang, "/returns")}`,
               },
             },
             // Only real, approved reviews shown on this page (Google's rules).
@@ -256,6 +259,12 @@ export default async function ProductPage({ params }) {
                   );
                 })}
               </ul>
+              <Link
+                href={localePath(lang, "/returns")}
+                className="mt-2 inline-block text-sm font-semibold text-brand hover:underline"
+              >
+                {t.product.returnsLink} →
+              </Link>
             </section>
           )}
         </div>

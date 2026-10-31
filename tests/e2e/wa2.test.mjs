@@ -104,6 +104,13 @@ await p.waitForTimeout(800);
       receipt.includes("5 000 FCFA"),
     receipt.replace(/\n/g, " | "),
   );
+  check(
+    "the receipt says what to do if a pack is damaged, wrong or missing",
+    (await p
+      .getByText(/within 4 days of delivery/)
+      .first()
+      .isVisible()) && (await p.locator('main a[href="/en/returns"]:visible').count()) === 1,
+  );
 }
 check("no page errors", errs.length === 0, errs.join(" | "));
 finish();

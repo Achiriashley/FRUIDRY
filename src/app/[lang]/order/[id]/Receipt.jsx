@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/products";
 import { PrintButton } from "@/components/PrintButton";
 
 export function Receipt({ order, lang }) {
-  const t = getDictionary(lang).receipt;
+  const { receipt: t, footer } = getDictionary(lang);
   return (
     <div className="space-y-6">
       <div className="text-center print:hidden">
@@ -36,6 +36,15 @@ export function Receipt({ order, lang }) {
             </ul>
           </div>
         )}
+        <p className="mx-auto mt-4 max-w-md text-sm text-stone-600">
+          {t.problem}{" "}
+          <Link
+            href={localePath(lang, "/returns")}
+            className="font-semibold whitespace-nowrap text-brand hover:underline"
+          >
+            {footer.returns}
+          </Link>
+        </p>
       </div>
 
       <article className="rounded-2xl border border-stone-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none">

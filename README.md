@@ -73,6 +73,16 @@ same page on your domain, and links in receipts, the sitemap and search results 
 In Google Search Console, add `fruidry.com` as a **Domain** property (verified with a DNS
 record); it covers `www` too.
 
+## Returns and refunds
+
+`/fr/returns` and `/en/returns` give the returns policy: a pack that arrives damaged, isn't
+the one ordered or is missing is replaced (delivery paid by Fruidry) or refunded by MoMo
+within 2 days, if the customer tells you on WhatsApp within 4 days of delivery, with
+photos and videos of the packs. Opened packs and changes of mind aren't taken back, and a
+paid order can't be cancelled. The texts are in `src/lib/i18n.js` (`returns`); update the
+date there when you change them. The footer, each product page, the questions page,
+checkout and the receipt link to it, and Google is given the link with the products.
+
 ## Privacy and visitor statistics
 
 - `/fr/privacy` and `/en/privacy` explain what the site collects (order details), why,
@@ -331,7 +341,7 @@ filesystem is read-only, so set up Supabase before deploying there.
 `npm run test:e2e` checks the whole shop in a real browser: ordering on WhatsApp, the admin
 panel (sign-in rules, orders and their Undo buttons, products, stock, books, invoices, the
 full copy, waiting lists, reviews), the help when WhatsApp doesn't open, both languages, the
-cookie notice, what search engines see, accessibility basics and security protections (about 450 checks in
+cookie notice, the returns page, what search engines see, accessibility basics and security protections (about 450 checks in
 `tests/e2e/`). Run it before deploying a change. It takes about 20–30 minutes;
 `npm run test:e2e -- stock reload` runs only some suites.
 

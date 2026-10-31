@@ -78,9 +78,10 @@ const jsonLd = (page) =>
     JSON.stringify(shipping),
   );
   check(
-    "product data: returns policy for Cameroon",
+    "product data: returns policy for Cameroon, with a link to the returns page",
     offer.hasMerchantReturnPolicy?.applicableCountry === "CM" &&
-      /MerchantReturnNotPermitted$/.test(offer.hasMerchantReturnPolicy?.returnPolicyCategory),
+      /MerchantReturnNotPermitted$/.test(offer.hasMerchantReturnPolicy?.returnPolicyCategory) &&
+      /^https?:\/\/[^/]+\/fr\/returns$/.test(offer.hasMerchantReturnPolicy?.merchantReturnLink),
     JSON.stringify(offer.hasMerchantReturnPolicy),
   );
   check(

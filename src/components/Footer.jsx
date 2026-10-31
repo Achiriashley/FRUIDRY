@@ -72,6 +72,10 @@ export function Footer({ lang }) {
         © 2026 Fruidry. {t.footer.rights} ·{" "}
         <Link href={localePath(lang, "/privacy")} className="underline hover:text-white">
           {t.footer.privacy}
+        </Link>{" "}
+        ·{" "}
+        <Link href={localePath(lang, "/returns")} className="underline hover:text-white">
+          {t.footer.returns}
         </Link>
       </p>
     </footer>

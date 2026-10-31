@@ -189,6 +189,12 @@ function CheckoutFormInner() {
             {t.footer.privacy}
           </Link>
         </p>
+        <p className="mt-1 text-xs text-stone-500">
+          {t.checkout.noCancel}{" "}
+          <Link href={href("/returns")} className="underline hover:text-brand">
+            {t.footer.returns}
+          </Link>
+        </p>
       </aside>
     </form>
   );

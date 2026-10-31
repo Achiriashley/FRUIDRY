@@ -58,11 +58,12 @@ export default async function Home() {
                 areaServed: "CM",
               },
               sameAs: SOCIAL_LINKS.filter((s) => s.url).map((s) => s.url),
-              // Same as on each product: returns only for a damaged or wrong pack.
+              // Same as on each product: returns only for a damaged, wrong or missing pack.
               hasMerchantReturnPolicy: {
                 "@type": "MerchantReturnPolicy",
                 applicableCountry: "CM",
                 returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+                merchantReturnLink: `${origin}${localePath(lang, "/returns")}`,
               },
             },
             {

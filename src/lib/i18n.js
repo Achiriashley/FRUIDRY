@@ -91,6 +91,7 @@ const en = {
     ],
     rights: "All rights reserved.",
     privacy: "Privacy policy",
+    returns: "Returns and refunds",
   },
   cookieNotice: {
     label: "Cookies",
@@ -231,9 +232,10 @@ const en = {
       },
       {
         icon: "↩️",
-        text: "Returns only if a pack arrives damaged or isn't the one you ordered: we replace or refund it.",
+        text: "A pack damaged, wrong or missing? Tell us within 4 days of delivery: we replace it or refund you.",
       },
     ],
+    returnsLink: "Our returns policy",
     related: "You might also like",
     soldOut: "Sold out",
     decrease: "Decrease quantity",
@@ -307,8 +309,9 @@ const en = {
       {
         q: "Can I return a pack?",
         a: [
-          "Only if a pack arrives damaged or isn't the one you ordered: message us on WhatsApp and we'll replace or refund it.",
+          "Only if a pack arrives damaged, isn't the one you ordered or is missing: message us on WhatsApp within 4 days of delivery, with photos and videos of the packs, and we'll replace it or refund you by MoMo. Opened packs can't be taken back.",
         ],
+        link: { path: "/returns", label: "Returns and refunds" },
       },
       {
         q: "How long does freeze-dried fruit keep?",
@@ -451,6 +454,7 @@ const en = {
     preparing: "Preparing your order…",
     orderOnWhatsApp: "Order on WhatsApp",
     consent: "By ordering, you agree that we use your details to prepare and deliver your order.",
+    noCancel: "Once paid, an order can't be cancelled.",
     almostDone: "Almost done!",
     readyBefore: "Your order ",
     readyMiddle: " is ready in WhatsApp. Press ",
@@ -510,6 +514,8 @@ const en = {
     thanksDelivered: (name, date) => `Thank you, ${name}! Your order was delivered on ${date}.`,
     thanks: (name) => `Thank you, ${name}! We'll call you to arrange delivery.`,
     reviewPrompt: "Enjoyed it? Tell other customers what you think:",
+    problem:
+      "A pack damaged, wrong or missing? Message us on WhatsApp within 4 days of delivery, with photos and videos.",
     reviewLink: (name) => `Review ${name} →`,
     brandLine: "Freeze-dried fruit",
     receipt: "Receipt",
@@ -652,6 +658,62 @@ const en = {
       },
     ],
   },
+  returns: {
+    title: "Returns and refunds",
+    description:
+      "A pack damaged, wrong or missing? Tell us within 4 days of delivery, with photos and videos, and we'll replace it or refund you by MoMo.",
+    updated: "Last updated: 31 October 2026",
+    sections: [
+      {
+        paragraphs: [
+          "Our fruit is food, so we can't take a pack back if you change your mind. But if something is wrong with your order, we put it right.",
+        ],
+      },
+      {
+        heading: "If something is wrong with your order",
+        intro: "We replace the pack or refund you if:",
+        items: [
+          "a pack arrives damaged (torn, pierced or open);",
+          "a pack isn't the one you ordered;",
+          "a pack is missing from your order.",
+        ],
+      },
+      {
+        heading: "How to tell us",
+        steps: [
+          "Message us on WhatsApp at {phone} within 4 days of delivery.",
+          "Send photos and videos of the packs that show the problem.",
+          "Give your order number (it starts with FD-), or the name and phone number you ordered with.",
+        ],
+      },
+      {
+        heading: "Replacement or refund",
+        intro: "We agree with you on WhatsApp whether we replace the pack or refund it:",
+        items: [
+          "Replacement: we deliver a new pack to you, and we pay for the delivery.",
+          "Refund: we send you the price of the packs concerned by MTN Mobile Money (MoMo), within 2 days of seeing your photos and videos.",
+        ],
+      },
+      {
+        heading: "What we can't take back",
+        items: [
+          "Opened packs: it's food, so for hygiene reasons we can't take them back.",
+          "Packs you no longer want, or ordered by mistake.",
+          "Problems reported more than 4 days after delivery.",
+        ],
+      },
+      {
+        heading: "Cancelling an order",
+        paragraphs: [
+          "Once you've paid, your order can't be cancelled. So before paying, check the packs, the quantities and the delivery address we confirm with you on WhatsApp.",
+        ],
+      },
+      {
+        heading: "Questions",
+        paragraphs: ["Message us on WhatsApp or call us at {phone}."],
+      },
+    ],
+  },
   notFound: {
     title: "Page not found",
     text: "This page has dried up. Try the shop instead.",
@@ -691,6 +753,7 @@ const fr = {
     ],
     rights: "Tous droits réservés.",
     privacy: "Confidentialité",
+    returns: "Retours et remboursements",
   },
   cookieNotice: {
     label: "Cookies",
@@ -828,9 +891,10 @@ const fr = {
       },
       {
         icon: "↩️",
-        text: "Retour seulement si un sachet arrive abîmé ou si ce n'est pas celui commandé : nous le remplaçons ou vous remboursons.",
+        text: "Un sachet abîmé, différent ou manquant ? Prévenez-nous dans les 4 jours suivant la livraison : nous le remplaçons ou vous remboursons.",
       },
     ],
+    returnsLink: "Notre politique de retour",
     related: "Vous aimerez aussi",
     soldOut: "Épuisé",
     decrease: "Diminuer la quantité",
@@ -902,8 +966,9 @@ const fr = {
       {
         q: "Puis-je retourner un sachet ?",
         a: [
-          "Seulement si un sachet arrive abîmé ou si ce n'est pas celui que vous avez commandé : écrivez-nous sur WhatsApp, nous le remplaçons ou vous remboursons.",
+          "Seulement si un sachet arrive abîmé, n'est pas celui que vous avez commandé ou manque : écrivez-nous sur WhatsApp dans les 4 jours suivant la livraison, avec des photos et des vidéos des sachets, et nous le remplaçons ou vous remboursons par MoMo. Les sachets ouverts ne sont pas repris.",
         ],
+        link: { path: "/returns", label: "Retours et remboursements" },
       },
       {
         q: "Combien de temps se conservent les fruits lyophilisés ?",
@@ -1046,6 +1111,7 @@ const fr = {
     orderOnWhatsApp: "Commander sur WhatsApp",
     consent:
       "En commandant, vous acceptez que nous utilisions vos coordonnées pour préparer et livrer votre commande.",
+    noCancel: "Une fois payée, une commande ne peut plus être annulée.",
     almostDone: "Presque fini !",
     readyBefore: "Votre commande ",
     readyMiddle: " est prête dans WhatsApp. Appuyez sur ",
@@ -1108,6 +1174,8 @@ const fr = {
     thanksDelivered: (name, date) => `Merci, ${name} ! Votre commande a été livrée le ${date}.`,
     thanks: (name) => `Merci, ${name} ! Nous vous appellerons pour organiser la livraison.`,
     reviewPrompt: "Vous avez aimé ? Donnez votre avis aux autres clients :",
+    problem:
+      "Un sachet abîmé, différent ou manquant ? Écrivez-nous sur WhatsApp dans les 4 jours suivant la livraison, avec photos et vidéos.",
     reviewLink: (name) => `Donner mon avis : ${name} →`,
     brandLine: "Fruits lyophilisés",
     receipt: "Reçu",
@@ -1249,6 +1317,63 @@ const fr = {
         paragraphs: [
           "Vous pouvez nous demander de consulter, corriger ou supprimer les informations personnelles que nous détenons sur vous. Contactez-nous sur WhatsApp ou par téléphone et nous vous aiderons.",
         ],
+      },
+    ],
+  },
+  returns: {
+    title: "Retours et remboursements",
+    description:
+      "Un sachet abîmé, différent ou manquant ? Prévenez-nous dans les 4 jours suivant la livraison, avec photos et vidéos : nous le remplaçons ou vous remboursons par MoMo.",
+    updated: "Dernière mise à jour : 31 octobre 2026",
+    sections: [
+      {
+        paragraphs: [
+          "Nos fruits sont des aliments : nous ne pouvons donc pas reprendre un sachet si vous changez d'avis. Mais si votre commande pose problème, nous arrangeons les choses.",
+        ],
+      },
+      {
+        heading: "Si votre commande pose problème",
+        intro: "Nous remplaçons le sachet ou vous remboursons si :",
+        items: [
+          "un sachet arrive abîmé (déchiré, percé ou ouvert) ;",
+          "un sachet n'est pas celui que vous avez commandé ;",
+          "un sachet manque dans votre commande.",
+        ],
+      },
+      {
+        heading: "Comment nous prévenir",
+        steps: [
+          "Écrivez-nous sur WhatsApp au {phone} dans les 4 jours suivant la livraison.",
+          "Envoyez des photos et des vidéos des sachets qui montrent le problème.",
+          "Donnez le numéro de votre commande (il commence par FD-), ou le nom et le numéro de téléphone utilisés pour commander.",
+        ],
+      },
+      {
+        heading: "Remplacement ou remboursement",
+        intro:
+          "Nous convenons avec vous sur WhatsApp de remplacer le sachet ou de vous le rembourser :",
+        items: [
+          "Remplacement : nous vous livrons un nouveau sachet, et la livraison est à nos frais.",
+          "Remboursement : nous vous renvoyons le prix des sachets concernés par MTN Mobile Money (MoMo), dans les 2 jours après avoir vu vos photos et vidéos.",
+        ],
+      },
+      {
+        heading: "Ce que nous ne reprenons pas",
+        items: [
+          "Les sachets ouverts : ce sont des aliments, nous ne pouvons pas les reprendre pour des raisons d'hygiène.",
+          "Les sachets dont vous ne voulez plus, ou commandés par erreur.",
+          "Les problèmes signalés plus de 4 jours après la livraison.",
+        ],
+      },
+      {
+        heading: "Annuler une commande",
+        paragraphs: [
+          "Une fois payée, votre commande ne peut plus être annulée. Avant de payer, vérifiez donc les sachets, les quantités et l'adresse de livraison que nous confirmons avec vous sur WhatsApp.",
+        ],
+      },
+      {
+        heading: "Une question ?",
+        paragraphs: ["Écrivez-nous sur WhatsApp ou appelez-nous au {phone}."],
       },
     ],
   },
